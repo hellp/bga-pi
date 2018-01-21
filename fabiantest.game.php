@@ -90,11 +90,11 @@ class fabiantest extends Table
         // be simple string-based information for the user.
 
         // Create Evidence cards
-        $cards = array ();
-        foreach ( $this->evidence_cards as $card_id => $card ) {
-            $cards [] = array ('type' => 'evidence', 'type_arg' => $card['name'], 'nbr' => 1 );
+        $cards = array();
+        foreach ( $this->evidence_cards as $card_id => $card) {
+            $cards[] = array('type' => 'evidence', 'type_arg' => $card_id, 'nbr' => 1);
         }
-        $this->cards->createCards( $cards, 'deck' );
+        $this->cards->createCards($cards, 'deck');
 
         // Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
@@ -104,12 +104,7 @@ class fabiantest extends Table
         // TODO: setup the initial game situation here
         // We start with minigame number 1. There will be 3 minigames in total.
         self::setGameStateInitialValue( 'minigame', 1 );
-
-        $this->cards->shuffle( 'deck' );
-        $this->cards->pickCardsForLocation(9, 'deck', 'evidence_display');
-
-        // Activate first player (which is in general a good idea :) )
-        $this->activeNextPlayer();
+        $this->startNewMinigame(1);
 
         /************ End of the game initialization *****/
     }
@@ -136,11 +131,14 @@ class fabiantest extends Table
 
         // Gather all information about current game situation (visible by player $current_player_id).
 
+        // Global / static information
+        $result['evidence_cards'] = $this->evidence_cards;
+
         // Cards in player hand (the other player's case cards)
-        $result['hand'] = $this->cards->getCardsInLocation( 'hand', $current_player_id );
-        
+        $result['hand'] = $this->cards->getCardsInLocation('hand', $current_player_id);
+
         // Evidence cards on display
-        $result['evidence_display'] = $this->cards->getCardsInLocation( 'evidence_display' );
+        $result['evidence_display'] = $this->cards->getCardsInLocation('evidence_display');
 
         return $result;
     }
@@ -175,7 +173,18 @@ class fabiantest extends Table
         In this space, you can put any utility methods useful for your game logic
     */
 
+    function startNewMinigame($n) {
+        self::setGameStateValue('minigame', $n);
 
+        // Reset evidence cards
+        $this->cards->moveAllCardsInLocation(null, "deck");
+        $this->cards->shuffle('deck');
+        $this->cards->pickCardsForLocation($this->constants['EVIDENCE_DISPLAY_SIZE'], 'deck', 'evidence_display');
+
+        // TODO
+        // Select a new first player. In minigame 1 it's player_no 1, minigame 2 player_no 2 etc.
+        $this->activeNextPlayer();
+    }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
@@ -215,28 +224,45 @@ class fabiantest extends Table
     function selectEvidence($card_id) {
         self::checkAction("selectEvidence");
         $player_id = self::getActivePlayerId();
+        $currentCard = $this->cards->getCard($card_id);
+
+        if ($currentCard['location'] != "evidence_display") {
+            throw new BgaUserException(self::_("Card is not on display") . ": $card_id" . $currentCard['location']);
+        }
 
         // TODO: implement rules
-        $evidenceIsUseful = true;
+        $evidenceIsUseful = boolval(rand(0, 1));
 
         if ($evidenceIsUseful) {
             // Put card on discard
-            $this->cards->insertCardOnExtremePosition( $card_id, "discard", true );
-        } else {
+            $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
+            self::notifyAllPlayers(
+                'evidenceSelected',
+                clienttranslate('${player_name} found a useful evidence: ${card_name}'), array (
+                    'i18n' => array ('card_name'),
+                    'card_id' => $card_id,
+                    'useful' => true,
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                    'value' => $currentCard['type_arg'],
+                    'card_name' => $currentCard['type_arg'],
+                ));
+            } else {
             // Put card in front of user to remember the "useless evidence".
-            // $this->cards->moveCard($card_id, "discard");
-        }
-        $currentCard = $this->cards->getCard($card_id);
-        self::notifyAllPlayers(
-            'evidenceSelected',
-            clienttranslate('${player_name} plays evidence ${card_name}'), array (
-                'i18n' => array ('card_name'),
-                'card_id' => $card_id,
-                'player_id' => $player_id,
-                'player_name' => self::getActivePlayerName(),
-                'value' => $currentCard['type_arg'],
-                'card_name' => $currentCard['type_arg'],
-            ));
+            $this->cards->moveCard($card_id, "player_display", $player_id);
+            self::notifyAllPlayers(
+                'evidenceSelected',
+                clienttranslate('${player_name} had no luck following evidence ${card_name}'), array (
+                    'i18n' => array ('card_name'),
+                    'useful' => false,
+                    'card_id' => $card_id,
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                    'value' => $currentCard['type_arg'],
+                    'card_name' => $currentCard['type_arg'],
+                ));
+            }
+
         // Next player
         $this->gamestate->nextState('selectEvidence');
     }
@@ -294,7 +320,10 @@ class fabiantest extends Table
                 'i18n' => array ('card_name'),
                 'card_id' => $newCard['id'],
             ));
-        // Next player
+
+        // Case: Player solved
+        // Notify: {Player} solved ...
+
 
         $player_id = self::activeNextPlayer();
         self::giveExtraTime($player_id);

@@ -24,14 +24,9 @@ define([
 function (dojo, declare) {
     return declare("bgagame.fabiantest", ebg.core.gamegui, {
         constructor: function(){
-            console.log('fabiantest constructor');
+            // Here, you can init the global variables of your user interface
             this.cardwidth = 102;
             this.cardheight = 156;
-
-            // Here, you can init the global variables of your user interface
-            // Example:
-            // this.myGlobalValue = 0;
-
         },
 
         /*
@@ -47,7 +42,7 @@ function (dojo, declare) {
             "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
 
-        setup: function( gamedatas )
+        setup: function(gamedatas)
         {
             console.log( "Starting game setup" );
 
@@ -72,17 +67,13 @@ function (dojo, declare) {
             this.evidenceDisplay = new ebg.stock();
             this.evidenceDisplay.setSelectionMode(1); // max 1 card can be selected
             this.evidenceDisplay.create( this, $('evidence'), this.cardwidth, this.cardheight );
-            this.evidenceDisplay.image_items_per_row = 12;
+            this.evidenceDisplay.image_items_per_row = 9;
 
             // Create cards types:
             for (var value = 1; value <= 36; value++) {
-                // // Build card type id
-                var card_type_id = value;
-                // var card_type_id = this.getCardUniqueId(color, value);
-                // this.playerHand.addItemType(card_type_id, card_type_id, g_gamethemeurl + 'img/cards.jpg', card_type_id);
-                this.evidenceDisplay.addItemType(card_type_id, card_type_id, g_gamethemeurl + 'img/cards.jpg', card_type_id);
+                var pos_in_img = value - 1;  // it's zero-based
+                this.evidenceDisplay.addItemType(value, value, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
             }
-            // this.playerHand.addToStockWithId(1, 1);
 
             // // Cards in player's hand
             // for ( var i in this.gamedatas.hand) {
@@ -95,16 +86,14 @@ function (dojo, declare) {
             // Put evidence cards on the table
             for (i in this.gamedatas.evidence_display) {
                 var card = this.gamedatas.evidence_display[i];
-                this.evidenceDisplay.addToStockWithId(card.id, card.id);
-                this.addTooltip('evidence_item_' + card.id, _('Evidence') + card.type_arg, _('Follow this evidence…'))
+                this.evidenceDisplay.addToStockWithId(card.type_arg, card.id);
+                this.addTooltip('evidence_item_' + card.id, _(this.gamedatas.evidence_cards[card.type_arg].name), _('Follow this evidence…'));
             }
 
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
 
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
-
-            console.log( "Ending game setup" );
         },
 
 
@@ -131,7 +120,6 @@ function (dojo, declare) {
                 break;
            */
 
-
             case 'dummmy':
                 break;
             }
@@ -142,7 +130,7 @@ function (dojo, declare) {
         //
         onLeavingState: function( stateName )
         {
-            console.log( 'Leaving state: '+stateName );
+            console.log('Leaving state: ' + stateName);
 
             switch( stateName )
             {
@@ -311,15 +299,16 @@ function (dojo, declare) {
             console.log( 'notif_newEvidence' );
             var card_id = toint(notif.args.card_id);
             console.log(card_id);
-            this.evidenceDisplay.addToStock(card_id);
+            this.evidenceDisplay.addToStockWithId(card_id);
         },
         
         notif_evidenceSelected: function( notif )
         {
-            console.log( 'notif_cardPlayed' );
-            console.log( notif );
-            this.evidenceDisplay.removeFromStock(notif.args.card_id);
-            // TODO: move to player if applicable
+            if (notif.args.useful) {
+                this.evidenceDisplay.removeFromStock(notif.args.card_id, 'evidence_discard');
+            } else {
+                this.evidenceDisplay.removeFromStock(notif.args.card_id, 'evidence_discard');
+            }
         },
    });
 });

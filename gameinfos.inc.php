@@ -66,7 +66,7 @@ $gameinfos = array(
 // Note: if you are NOT using any tie breaker, leave the empty string.
 //
 // Example: 'tie_breaker_description' => totranslate( "Number of remaining cards in hand" ),
-'tie_breaker_description' => "",
+'tie_breaker_description' => totranslate("Number of remaining investigators, then fewest penalty points."),
 
 // Game is "beta". A game MUST set is_beta=1 when published on BGA for the first time, and must remains like this until all bugs are fixed.
 'is_beta' => 1,
@@ -89,11 +89,11 @@ $gameinfos = array(
 
 // Colors attributed to players
 'player_colors' => array(
-    "ff3300",  # red
-    "ffaa00",  # yellow
-    "00cc00",  # green
-    "0066ff",  # blue
-    "cc00cc",  # purple
+    "ff0000",  # red
+    "ffa500",  # yellow
+    "008000",  # green
+    "0000ff",  # blue
+    "ff00ff",  # purple
 ),
 
 // Favorite colors support : if set to "true", support attribution of favorite colors based on player's preferences (see reattributeColorsBasedOnPreferences PHP method)
@@ -123,7 +123,7 @@ $gameinfos = array(
 //  http://en.doc.boardgamearena.com/Game_meta-information:_gameinfos.inc.php
 //  IMPORTANT: this list should be ORDERED, with the most important tag first.
 //  IMPORTANT: it is mandatory that the FIRST tag is 1, 2, 3 and 4 (= game category)
-'tags' => array( 3, 100, 200, 205, 208 ),
+'tags' => array(2, 12, 207),
 
 
 //////// BGA SANDBOX ONLY PARAMETERS (DO NOT MODIFY)
