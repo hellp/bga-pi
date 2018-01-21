@@ -2,7 +2,7 @@
  /**
   *------
   * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
-  * fabiantest implementation : © <Your name here> <Your email address here>
+  * fabiantest implementation : © Fabian Neumann <fabian.neumann@posteo.de>
   *
   * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
   * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -139,6 +139,7 @@ class fabiantest extends Table
 
         // Evidence cards on display
         $result['evidence_display'] = $this->cards->getCardsInLocation('evidence_display');
+        $result['evidence_discard'] = $this->cards->getCardsInLocation('discard');
 
         return $result;
     }
@@ -241,11 +242,11 @@ class fabiantest extends Table
                 clienttranslate('${player_name} found a useful evidence: ${card_name}'), array (
                     'i18n' => array ('card_name'),
                     'card_id' => $card_id,
+                    'card_name' => $this->evidence_cards[$currentCard['type_arg']]['name'],
+                    'card_type' => $currentCard['type_arg'],
                     'useful' => true,
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName(),
-                    'value' => $currentCard['type_arg'],
-                    'card_name' => $currentCard['type_arg'],
                 ));
             } else {
             // Put card in front of user to remember the "useless evidence".
@@ -256,10 +257,10 @@ class fabiantest extends Table
                     'i18n' => array ('card_name'),
                     'useful' => false,
                     'card_id' => $card_id,
+                    'card_name' => $this->evidence_cards[$currentCard['type_arg']]['name'],
+                    'card_type' => $currentCard['type_arg'],
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName(),
-                    'value' => $currentCard['type_arg'],
-                    'card_name' => $currentCard['type_arg'],
                 ));
             }
 
@@ -308,19 +309,40 @@ class fabiantest extends Table
         The action method of state X is called everytime the current game state is set to X.
     */
 
-
     function stNextPlayer() {
-        // Standard case (not the end of the trick)
-        // Draw a new card
-        $this->cards->pickCardForLocation("deck", "evidence_display");
-        $newCard = $this->cards->getCardOnTop("evidence_display");
-        self::notifyAllPlayers(
-            'newEvidence',
-            clienttranslate('New evidence…'), array (
-                'i18n' => array ('card_name'),
-                'card_id' => $newCard['id'],
-            ));
+        // Standard case
+        // Draw a new card for evidence display
 
+        // While auto-reshuffle is still a mystery to me, check here manually.
+        if ($this->cards->countCardInLocation('deck') == 0
+                && $this->cards->countCardInLocation('discard') > 0) {
+            $this->cards->moveAllCardsInLocation('discard', 'deck');
+            $this->cards->shuffle('deck');
+        }
+
+        if ($this->cards->countCardInLocation('deck') > 0) {
+            $newCard = $this->cards->pickCardForLocation("deck", "evidence_display");
+            self::notifyAllPlayers(
+                'newEvidence', '',
+                array(
+                    'card_id' => $newCard['id'],
+                    'card_type' => $newCard['type_arg'],
+                    'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
+                ));
+        } else {
+            self::notifyAllPlayers(
+                'newEvidence', 'Deck and discard pile are exhausted.',
+                array(
+                    'deck_is_empty' => $this->cards->countCardInLocation('discard') == 0,
+                    'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
+                ));
+        }
+
+        // TODO: what happens, where there is now new card anymore? Neither in
+        // deck nor in discard? Next player is forced to do something else then.
+        // But this is implicit: no more cards, no more clicks on them. Solving
+        // is always the last ressort.
+            
         // Case: Player solved
         // Notify: {Player} solved ...
 

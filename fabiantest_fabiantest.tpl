@@ -2,7 +2,7 @@
 <!--
 --------
 -- BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
--- fabiantest implementation : © Fabian Neumann <Your email address here>
+-- fabiantest implementation : © Fabian Neumann <fabian.neumann@posteo.de>
 --
 -- This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
 -- See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -12,7 +12,7 @@
 <div id="evidence_wrap" class="whiteblock">
     <div id="evidence"></div>
     Discard:
-    <div id="evidence_discard" style="border:solid 1px red"></div>
+    <div id="evidence_discard"></div>
 </div>
 
 <div id="board">
@@ -37,13 +37,13 @@
     <div class="location_slot" style="top:282px; left:348px; transform:rotate(2.5deg);"></div>
 
     <div class="investigator" style="background: red; top:218px; left:160px"></div>
-    <div class="investigator" style="background: gold; top:218px; left:220px"></div>
+    <div class="investigator" style="background: #fe0; top:218px; left:220px"></div>
     <div class="investigator" style="background: lime; top:218px; left:280px"></div>
     <div class="investigator" style="background: magenta; top:218px; left:340px"></div>
     <div class="investigator" style="background: blue; top:218px; left:400px"></div>
 
     <div class="loc_tokens loc_forestpark" style="">
-        <div class="investigator" style="background: gold;"></div>
+        <div class="investigator" style="background: #fe0;"></div>
         <div class="investigator" style="background: magenta;"></div>
         <div class="investigator" style="background: red;"></div>
         <div class="investigator" style="background: lime;"></div>

@@ -1,7 +1,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * fabiantest implementation : © <Your name here> <Your email address here>
+ * fabiantest implementation : © Fabian Neumann <fabian.neumann@posteo.de>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -69,10 +69,18 @@ function (dojo, declare) {
             this.evidenceDisplay.create( this, $('evidence'), this.cardwidth, this.cardheight );
             this.evidenceDisplay.image_items_per_row = 9;
 
+            this.evidenceDiscard = new ebg.stock();
+            this.evidenceDiscard.setSelectionMode(0); // max 1 card can be selected
+            this.evidenceDiscard.setOverlap(2, 0);
+            this.evidenceDiscard.create( this, $('evidence_discard'), this.cardwidth, this.cardheight );
+            this.evidenceDiscard.image_items_per_row = 9;
+
             // Create cards types:
             for (var value = 1; value <= 36; value++) {
                 var pos_in_img = value - 1;  // it's zero-based
-                this.evidenceDisplay.addItemType(value, value, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
+                // weight is 0 for all as they have no inherent value
+                this.evidenceDisplay.addItemType(value, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
+                this.evidenceDiscard.addItemType(value, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
             }
 
             // // Cards in player's hand
@@ -83,11 +91,17 @@ function (dojo, declare) {
             //     this.playerHand.addToStockWithId(this.getCardUniqueId(color, value), card.id);
             // }
 
+            console.log(this.gamedatas);
+
             // Put evidence cards on the table
             for (i in this.gamedatas.evidence_display) {
                 var card = this.gamedatas.evidence_display[i];
                 this.evidenceDisplay.addToStockWithId(card.type_arg, card.id);
                 this.addTooltip('evidence_item_' + card.id, _(this.gamedatas.evidence_cards[card.type_arg].name), _('Follow this evidence…'));
+            }
+            for (i in this.gamedatas.evidence_discard) {
+                var card = this.gamedatas.evidence_discard[i];
+                this.evidenceDiscard.addToStockWithId(card.type_arg, card.id);
             }
 
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
@@ -217,8 +231,6 @@ function (dojo, declare) {
                     }, function(is_error) {
                     });
                     this.evidenceDisplay.unselectAll();
-                    // Depending on server
-                    this.evidenceDisplay.removeFromStockById(card_id);
                 } else {
                     this.evidenceDisplay.unselectAll();
                 }
@@ -293,22 +305,27 @@ function (dojo, declare) {
             //
         },
 
-        notif_newEvidence: function( notif )
+        notif_newEvidence: function(notif)
         {
             // Note: notif.args contains the arguments specified during you "notifyAllPlayers" / "notifyPlayer" PHP call
-            console.log( 'notif_newEvidence' );
-            var card_id = toint(notif.args.card_id);
-            console.log(card_id);
-            this.evidenceDisplay.addToStockWithId(card_id);
+            console.log("NEW EV", notif);
+            if (notif.args.card_id) {
+                this.evidenceDisplay.addToStockWithId(notif.args.card_type, notif.args.card_id);
+            }
+            if (notif.args.discard_is_empty) {
+                this.evidenceDiscard.removeAll();
+            }
         },
         
-        notif_evidenceSelected: function( notif )
+        notif_evidenceSelected: function(notif)
         {
             if (notif.args.useful) {
-                this.evidenceDisplay.removeFromStock(notif.args.card_id, 'evidence_discard');
+                this.evidenceDiscard.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
+                // this.evidenceDisplay.removeFromStockById(notif.args.card_id, 'evidence_discard');
             } else {
-                this.evidenceDisplay.removeFromStock(notif.args.card_id, 'evidence_discard');
+                // TODO: move to player display
             }
+            this.evidenceDisplay.removeFromStockById(notif.args.card_id);
         },
    });
 });
