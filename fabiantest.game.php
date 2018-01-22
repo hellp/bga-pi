@@ -18,6 +18,7 @@
 
 
 require_once( APP_GAMEMODULE_PATH.'module/table/table.game.php' );
+require_once( 'modules/utils.php' );
 
 
 class fabiantest extends Table
@@ -91,10 +92,16 @@ class fabiantest extends Table
 
         // Create Evidence cards
         $cards = array();
-        foreach ( $this->evidence_cards as $card_id => $card) {
+        foreach ($this->cardBasis as $card_id => $card) {
             $cards[] = array('type' => 'evidence', 'type_arg' => $card_id, 'nbr' => 1);
         }
-        $this->cards->createCards($cards, 'deck');
+        // Create Case cards
+        foreach ($this->cardBasis as $card_id => $card) {
+            $cards[] = array('type' => $card['casetype'], 'type_arg' => 36 + $card_id, 'nbr' => 1);
+        }
+        // Create all, but don't put them into 'deck' yet, the piles have to be
+        // sorted first.
+        $this->cards->createCards($cards, 'offtable'); 
 
         // Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
@@ -132,7 +139,7 @@ class fabiantest extends Table
         // Gather all information about current game situation (visible by player $current_player_id).
 
         // Global / static information
-        $result['evidence_cards'] = $this->evidence_cards;
+        $result['card_basis'] = $this->cardBasis;
 
         // Cards in player hand (the other player's case cards)
         $result['hand'] = $this->cards->getCardsInLocation('hand', $current_player_id);
@@ -174,17 +181,45 @@ class fabiantest extends Table
         In this space, you can put any utility methods useful for your game logic
     */
 
-    function startNewMinigame($n) {
+    function startNewMinigame($n)
+    {
         self::setGameStateValue('minigame', $n);
 
-        // Reset evidence cards
-        $this->cards->moveAllCardsInLocation(null, "deck");
+        // Get all cards, sort into piles, shuffle piles.
+        $this->cards->moveAllCardsInLocation(null, "offtable");
+        $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('evidence'), 'id'), 'deck');
         $this->cards->shuffle('deck');
+        $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('crime'), 'id'), 'crime_deck');
+        $this->cards->shuffle('crime_deck');
+        $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('location'), 'id'), 'location_deck');
+        $this->cards->shuffle('location_deck');
+        $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('suspect'), 'id'), 'suspect_deck');
+        $this->cards->shuffle('suspect_deck');
+
+        // Main display of evidence cards
         $this->cards->pickCardsForLocation($this->constants['EVIDENCE_DISPLAY_SIZE'], 'deck', 'evidence_display');
+
+        // Set up a case for every player and distribute the case cards to their
+        // right neighbor.
+        $players = self::loadPlayersBasicInfos();
+        foreach($players as $player_id => $player) {
+            $this->cards->pickCard('crime_deck', $player_id);
+            $this->cards->pickCard('location_deck', $player_id);
+            $this->cards->pickCard('suspect_deck', $player_id);
+        }
 
         // TODO
         // Select a new first player. In minigame 1 it's player_no 1, minigame 2 player_no 2 etc.
         $this->activeNextPlayer();
+    }
+
+    /**
+     * Return the cards cards that represent the solution for the given player.
+     * These are the player's right neighbors hand cards.
+     */
+    function getPlayerCaseCards($player_id)
+    {
+        return $this->cards->getPlayerHand(self::getPlayerBefore($player_id));
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -227,11 +262,13 @@ class fabiantest extends Table
         $player_id = self::getActivePlayerId();
         $currentCard = $this->cards->getCard($card_id);
 
+        // Should not happen
         if ($currentCard['location'] != "evidence_display") {
-            throw new BgaUserException(self::_("Card is not on display") . ": $card_id" . $currentCard['location']);
+            throw new BgaUserException(self::_("Card is not on display. Press F5 in case of problems."));
         }
 
         // TODO: implement rules
+        $this->getPlayerCaseCards($player_id);
         $evidenceIsUseful = boolval(rand(0, 1));
 
         if ($evidenceIsUseful) {
@@ -242,7 +279,7 @@ class fabiantest extends Table
                 clienttranslate('${player_name} found a useful evidence: ${card_name}'), array (
                     'i18n' => array ('card_name'),
                     'card_id' => $card_id,
-                    'card_name' => $this->evidence_cards[$currentCard['type_arg']]['name'],
+                    'card_name' => $this->cardBasis[$currentCard['type_arg']]['name'],
                     'card_type' => $currentCard['type_arg'],
                     'useful' => true,
                     'player_id' => $player_id,
@@ -257,7 +294,7 @@ class fabiantest extends Table
                     'i18n' => array ('card_name'),
                     'useful' => false,
                     'card_id' => $card_id,
-                    'card_name' => $this->evidence_cards[$currentCard['type_arg']]['name'],
+                    'card_name' => $this->cardBasis[$currentCard['type_arg']]['name'],
                     'card_type' => $currentCard['type_arg'],
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName(),
@@ -330,40 +367,26 @@ class fabiantest extends Table
                     'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
                 ));
         } else {
+            // Rare case, but it could happen. Players are now forced to do
+            // something else. But this is implicit from the UI: no more cards,
+            // no more clicks on them. Solving is always the last ressort.
             self::notifyAllPlayers(
-                'newEvidence', 'Deck and discard pile are exhausted.',
+                'newEvidence',
+                clienttranslate('Evidence cards are exhausted and cannot be played anymore.'),
                 array(
                     'deck_is_empty' => $this->cards->countCardInLocation('discard') == 0,
                     'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
                 ));
         }
 
-        // TODO: what happens, where there is now new card anymore? Neither in
-        // deck nor in discard? Next player is forced to do something else then.
-        // But this is implicit: no more cards, no more clicks on them. Solving
-        // is always the last ressort.
-            
         // Case: Player solved
         // Notify: {Player} solved ...
-
 
         $player_id = self::activeNextPlayer();
         self::giveExtraTime($player_id);
         $this->gamestate->nextState('nextPlayer');
     }
 
-    /*
-
-    Example for game state "MyGameState":
-
-    function stMyGameState()
-    {
-        // Do some stuff ...
-
-        // (very often) go to another gamestate
-        $this->gamestate->nextState( 'some_gamestate_transition' );
-    }
-    */
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Zombie

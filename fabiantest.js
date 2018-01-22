@@ -91,13 +91,11 @@ function (dojo, declare) {
             //     this.playerHand.addToStockWithId(this.getCardUniqueId(color, value), card.id);
             // }
 
-            console.log(this.gamedatas);
-
             // Put evidence cards on the table
             for (i in this.gamedatas.evidence_display) {
                 var card = this.gamedatas.evidence_display[i];
                 this.evidenceDisplay.addToStockWithId(card.type_arg, card.id);
-                this.addTooltip('evidence_item_' + card.id, _(this.gamedatas.evidence_cards[card.type_arg].name), _('Follow this evidence…'));
+                this.addTooltip('evidence_item_' + card.id, _(this.gamedatas.card_basis[card.type_arg].name), _('Follow this evidence…'));
             }
             for (i in this.gamedatas.evidence_discard) {
                 var card = this.gamedatas.evidence_discard[i];
