@@ -44,52 +44,61 @@ function (dojo, declare) {
 
         setup: function(gamedatas)
         {
-            console.log( "Starting game setup" );
+            var CARD_ITEM_MARGIN = 3;
+            var CARD_ITEMS_PER_ROW = 9;
 
-            // Setting up player boards
-            for( var player_id in gamedatas.players )
-            {
-                var player = gamedatas.players[player_id];
-
-                // TODO: Setting up players boards if needed
-            }
-
-            // TODO: Set up your game interface here, according to "gamedatas"
-
-            // Player hand; the secret case cards for your left neighbor This
-            // hand is "not actionable", i.e. read-only, during a whole round.
-            // It could probably be handled in the template only, without JS.
-            // this.playerHand = new ebg.stock(); // new stock object for hand
-            // this.playerHand.create( this, $('myhand'), this.cardwidth, this.cardheight );
-            // this.playerHand.image_items_per_row = 12;
-
-            // The evidence card display
+            // Set up player hand, i.e. the secret case cards of their left neighbor
+            this.playerHand = new ebg.stock();
+            this.playerHand.create(this, $('myhand'), this.cardwidth, this.cardheight);
+            this.playerHand.setSelectionMode(0); // no selection possible
+            this.playerHand.image_items_per_row = CARD_ITEMS_PER_ROW;
+            this.playerHand.item_margin = CARD_ITEM_MARGIN;
+            
+            // The stocks where evidence cards can live: display, discard, player displays
             this.evidenceDisplay = new ebg.stock();
             this.evidenceDisplay.setSelectionMode(1); // max 1 card can be selected
-            this.evidenceDisplay.create( this, $('evidence'), this.cardwidth, this.cardheight );
-            this.evidenceDisplay.image_items_per_row = 9;
-
+            this.evidenceDisplay.create(this, $('evidence'), this.cardwidth, this.cardheight);
+            this.evidenceDisplay.image_items_per_row = CARD_ITEMS_PER_ROW;
+            this.evidenceDisplay.item_margin = CARD_ITEM_MARGIN;
             this.evidenceDiscard = new ebg.stock();
-            this.evidenceDiscard.setSelectionMode(0); // max 1 card can be selected
-            this.evidenceDiscard.setOverlap(2, 0);
-            this.evidenceDiscard.create( this, $('evidence_discard'), this.cardwidth, this.cardheight );
-            this.evidenceDiscard.image_items_per_row = 9;
+            this.evidenceDiscard.setSelectionMode(0); // no selection possible
+            this.evidenceDiscard.create(this, $('evidence_discard'), this.cardwidth, this.cardheight);
+            this.evidenceDiscard.image_items_per_row = CARD_ITEMS_PER_ROW;
+            this.evidenceDiscard.setOverlap(.01, 0); // basically on top of eachother
+            this.evidenceDiscard.item_margin = 0;
+            this.addTooltip('evidence_discard', _("Discard pile"), _('View discarded cards.'));
+            // TODO: onclick expand the discard pile, so it can be inspected
+
+            this.playerDisplays = {};
+            for (var player_id in gamedatas.players) {
+                var pdstock = new ebg.stock();
+                this.playerDisplays[player_id] = pdstock;
+                var node_id = (player_id == this.player_id) ? 'myevidence' : 'playerdisplay_' + player_id;
+                pdstock.setSelectionMode(0); // no selection possible
+                pdstock.create(this, $(node_id), this.cardwidth, this.cardheight);
+                pdstock.setOverlap(66, 0); // basically on top of eachother
+                pdstock.image_items_per_row = CARD_ITEMS_PER_ROW;
+                pdstock.item_margin = CARD_ITEM_MARGIN;
+            }
+            this.playerDisplay = this.playerDisplays[this.player_id];  // shortcut for current player
 
             // Create cards types:
-            for (var value = 1; value <= 36; value++) {
-                var pos_in_img = value - 1;  // it's zero-based
-                // weight is 0 for all as they have no inherent value
-                this.evidenceDisplay.addItemType(value, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
-                this.evidenceDiscard.addItemType(value, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
+            for (var i = 1; i <= 36; i++) {
+                var pos_in_img = i - 1;  // it's zero-based
+                // weight is 0 for all as they have no inherent weight
+                this.playerHand.addItemType(i + 36, 0, g_gamethemeurl + 'img/casecards.jpg', pos_in_img);
+                this.evidenceDisplay.addItemType(i, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
+                this.evidenceDiscard.addItemType(i, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
+                for (var player_id in gamedatas.players) {
+                    this.playerDisplays[player_id].addItemType(i, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
+                }
             }
 
-            // // Cards in player's hand
-            // for ( var i in this.gamedatas.hand) {
-            //     var card = this.gamedatas.hand[i];
-            //     var color = card.type;
-            //     var value = card.type_arg;
-            //     this.playerHand.addToStockWithId(this.getCardUniqueId(color, value), card.id);
-            // }
+            // Cards in player's hand
+            for (i in this.gamedatas.hand) {
+                var card = this.gamedatas.hand[i];
+                this.playerHand.addToStockWithId(card.type_arg, card.id);
+            }
 
             // Put evidence cards on the table
             for (i in this.gamedatas.evidence_display) {
@@ -101,8 +110,17 @@ function (dojo, declare) {
                 var card = this.gamedatas.evidence_discard[i];
                 this.evidenceDiscard.addToStockWithId(card.type_arg, card.id);
             }
-
+            for (i in this.gamedatas.player_display_cards) {
+                // All cards have same location 'player_display' with `location_arg` being the player_id
+                var card = this.gamedatas.player_display_cards[i];
+                this.playerDisplays[card.location_arg].addToStockWithId(card.type_arg, card.id);
+            }
+            
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
+            
+            // "Static" quick help tooltips
+            this.addTooltip('myhand-wrap', _("TOP SECRET! Only you can see these."), '');
+            this.addTooltip('myevidence-wrap', _("These cards remind you which evidence is unrelated to your case. They are visible to everybody."), '');
 
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
@@ -235,42 +253,6 @@ function (dojo, declare) {
             }
         },
 
-        /* Example:
-
-        
-        onMyMethodToCall1: function( evt )
-        {
-            console.log( 'onMyMethodToCall1' );
-
-            // Preventing default browser reaction
-            dojo.stopEvent( evt );
-
-            // Check that this action is possible (see "possibleactions" in states.inc.php)
-            if( ! this.checkAction( 'myAction' ) )
-            {   return; }
-
-            this.ajaxcall( "/fabiantest/fabiantest/myAction.html", {
-                                                                    lock: true,
-                                                                    myArgument1: arg1,
-                                                                    myArgument2: arg2,
-                                                                    ...
-                                                                 },
-                         this, function( result ) {
-
-                            // What to do after the server call if it succeeded
-                            // (most of the time: nothing)
-
-                         }, function( is_error) {
-
-                            // What to do after the server call in anyway (success or failure)
-                            // (most of the time: nothing)
-
-                         } );
-        },
-
-        */
-
-
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
 
@@ -305,8 +287,6 @@ function (dojo, declare) {
 
         notif_newEvidence: function(notif)
         {
-            // Note: notif.args contains the arguments specified during you "notifyAllPlayers" / "notifyPlayer" PHP call
-            console.log("NEW EV", notif);
             if (notif.args.card_id) {
                 this.evidenceDisplay.addToStockWithId(notif.args.card_type, notif.args.card_id);
             }
@@ -317,12 +297,9 @@ function (dojo, declare) {
         
         notif_evidenceSelected: function(notif)
         {
-            if (notif.args.useful) {
-                this.evidenceDiscard.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
-                // this.evidenceDisplay.removeFromStockById(notif.args.card_id, 'evidence_discard');
-            } else {
-                // TODO: move to player display
-            }
+            // Useless evidences goes to player display; valueable evidence to discard.
+            var targetStock = (notif.args.useful) ? this.evidenceDiscard : this.playerDisplays[notif.args.player_id];
+            targetStock.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
             this.evidenceDisplay.removeFromStockById(notif.args.card_id);
         },
    });

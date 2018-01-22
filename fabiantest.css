@@ -47,6 +47,27 @@
 /********* You can start writing your CSS below this line: **********/
 
 
+@import url('https://fonts.googleapis.com/css?family=Copse');
+
+
+.whiteblock {
+    border-radius: 6px;
+    margin-bottom:6px;
+    margin-top:6px;
+}
+
+.whiteblock h3,
+.whiteblock h4 {
+    font-family:Copse, Roboto, Arial, sans-serif;
+    color:#222;
+    margin-top:0;
+    text-transform: uppercase;
+    text-shadow: 0 1px #fff;
+}
+.whiteblock h4 {
+    font-size: .8rem;
+}
+
 #board {
     position: relative;
     background-image: url(img/board.jpg);
@@ -147,14 +168,8 @@
     border-radius: 6px;
 }
 
-
-.playertable {
-    display: inline-block;
-    min-width: 20%;
-}
-.playertable h4 {
-    margin-top:0;
-}
+#myhand-wrap { float:left; height:180px; width: 316px; margin-right:.5em; }
+#myevidence-wrap { float:left; height:180px; width: 700px; }
 
 
 /*

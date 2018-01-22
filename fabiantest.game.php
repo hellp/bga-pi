@@ -70,9 +70,9 @@ class fabiantest extends Table
         // Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
         $sql = "INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar) VALUES ";
         $values = array();
-        foreach( $players as $player_id => $player )
+        foreach($players as $player_id => $player)
         {
-            $color = array_shift( $default_colors );
+            $color = array_shift($default_colors);
             $values[] = "('".$player_id."','$color','".$player['player_canal']."','".addslashes( $player['player_name'] )."','".addslashes( $player['player_avatar'] )."')";
         }
         $sql .= implode( $values, ',' );
@@ -89,26 +89,29 @@ class fabiantest extends Table
         // - 14 Locations
         // TODO: do we need all the cards as actual assets? Could
         // be simple string-based information for the user.
-
-        // Create Evidence cards
         $cards = array();
+        // Create Evidence cards
         foreach ($this->cardBasis as $card_id => $card) {
-            $cards[] = array('type' => 'evidence', 'type_arg' => $card_id, 'nbr' => 1);
+            $cards[] = array('type' => 'evidence',
+                             'type_arg' => $this->getCardTypeArg('evidence', $card_id),
+                             'nbr' => 1);
         }
         // Create Case cards
         foreach ($this->cardBasis as $card_id => $card) {
-            $cards[] = array('type' => $card['casetype'], 'type_arg' => 36 + $card_id, 'nbr' => 1);
+            $cards[] = array('type' => $card['casetype'],
+                             'type_arg' => $this->getCardTypeArg($card['casetype'], $card_id),
+                             'nbr' => 1);
         }
         // Create all, but don't put them into 'deck' yet, the piles have to be
         // sorted first.
-        $this->cards->createCards($cards, 'offtable'); 
+        $this->cards->createCards($cards, 'offtable');
 
-        // Init game statistics
+        // TODO: Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
         //self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
         //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
         
-        // TODO: setup the initial game situation here
+        // Setup the initial game situation here
         // We start with minigame number 1. There will be 3 minigames in total.
         self::setGameStateInitialValue( 'minigame', 1 );
         $this->startNewMinigame(1);
@@ -147,6 +150,7 @@ class fabiantest extends Table
         // Evidence cards on display
         $result['evidence_display'] = $this->cards->getCardsInLocation('evidence_display');
         $result['evidence_discard'] = $this->cards->getCardsInLocation('discard');
+        $result['player_display_cards'] = $this->cards->getCardsInLocation('player_display');
 
         return $result;
     }
@@ -208,9 +212,28 @@ class fabiantest extends Table
             $this->cards->pickCard('suspect_deck', $player_id);
         }
 
-        // TODO
-        // Select a new first player. In minigame 1 it's player_no 1, minigame 2 player_no 2 etc.
+        // TODO: Select a new first player. In minigame 1 it's player_no 1,
+        // minigame 2 player_no 2 etc.
         $this->activeNextPlayer();
+    }
+
+    function getCardTypeArg($type, $i) {
+        if ($type == 'evidence') {
+            $offset = 0;
+        } else if (in_array($type, array('crime', 'location', 'suspect'))) {
+            $offset = 36;
+        }
+        return $offset + $i;
+    }
+
+    function getCardNames($ids)
+    {
+        return array_pluck(
+            array_filter($this->cardBasis, function($k) {
+                return in_array($k, $ids);
+            }, ARRAY_FILTER_USE_KEY),
+            'name'
+        );
     }
 
     /**
@@ -268,7 +291,7 @@ class fabiantest extends Table
         }
 
         // TODO: implement rules
-        $this->getPlayerCaseCards($player_id);
+        $case_card_ids = array_pluck($this->getPlayerCaseCards($player_id), 'id');
         $evidenceIsUseful = boolval(rand(0, 1));
 
         if ($evidenceIsUseful) {

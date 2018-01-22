@@ -44,9 +44,9 @@
         /*********** Place your code below:  ************/
 
         // Display a translated version of "My hand" at the place of the variable in the template
-        $this->tpl['MY_HAND'] = self::_("My hand");
+        $this->tpl['MY_EVIDENCE_CARDS'] = self::_("Evidence cards I collected");
+        $this->tpl['EVIDENCE_CARDS_OF_PLAYER'] = self::_("Evidence cards collected by");
         $this->tpl['CASE_CARDS_OF_PLAYER'] = self::_("Case cards of player");
-        $this->tpl['NO_EVIDENCE_CARDS'] = self::_("Evidence cards that brought no new information to the investigating player");
 
         $template = self::getGameName() . "_" . self::getGameName();
 
@@ -54,9 +54,14 @@
         $this->page->begin_block($template, "player");
         foreach ( $players as $player_id => $info ) {
             if ($player_id == $current_player_id) continue;
-            $this->page->insert_block("player", array ("PLAYER_ID" => $player_id,
-                    "PLAYER_NAME" => $players [$player_id] ['player_name'],
-                    "PLAYER_COLOR" => $players [$player_id] ['player_color'] ));
+            $this->page->insert_block(
+                "player",
+                array (
+                    "PLAYER_ID" => $player_id,
+                    "PLAYER_NAME" => $players[$player_id]['player_name'],
+                    "PLAYER_COLOR" => $players[$player_id]['player_color'],
+                )
+            );
         }
 
         /*
