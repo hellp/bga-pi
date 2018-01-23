@@ -31,7 +31,18 @@
     <div class="cube yellow" style="top:300px; left:200px"></div>
     <div class="cube yellow" style="top:250px; left:251px"></div>
     <div class="cube yellow" style="top:240px; left:251px"></div>
-    <div class="location_slot" style="top:282px; left:348px; transform:rotate(2.5deg);"></div>
+
+    <!-- BEGIN locslot -->
+      <div id="locslot_{STRID}" class="locslot"
+           style="top:{TOP}px; left:{LEFT}px; transform:rotate({ROTATION}deg);"></div>
+    <!-- END locslot -->
+
+    <!-- <div id="locslot_centralstation_suspect" class="locslot" style="top:50.8%; left:25.8%; transform:rotate(2.5deg);"></div>
+    <div id="locslot_littleitaly_crime" class="locslot" style="top:30.4%; left:29.7%; transform:rotate(2.5deg);"></div>
+    <div id="locslot_littleitaly_suspect" class="locslot" style="top:30.8%; left:15.8%; transform:rotate(2.5deg);"></div>
+    <div id="locslot_mainstreet_crime" class="locslot" style="top:50.4%; left:64.7%; transform:rotate(0deg);"></div>
+    <div id="locslot_mainstreet_suspect" class="locslot" style="top:50.8%; left:50.8%; transform:rotate(0deg);"></div> -->
+
     <div class="investigator" style="background: red; top:218px; left:160px"></div>
     <div class="investigator" style="background: #fe0; top:218px; left:220px"></div>
     <div class="investigator" style="background: lime; top:218px; left:280px"></div>

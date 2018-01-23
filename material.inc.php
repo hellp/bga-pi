@@ -24,6 +24,8 @@ $this->constants = array(
   "MINIGAMES" => 3,
   "DISCS_PER_PLAYER" => 3,
   "CUBES_PER_PLAYER" => 10,
+  "BOARD_H" => 900,
+  "BOARD_W" => 1073,
 );
 
 // We use this as the basis to create all cards, evidence and base cards, but
@@ -175,3 +177,90 @@ $this->cardBasis = array(
              'casetype' => 'location',
             ),
 );
+
+// DUMMY FOR NOW
+$this->tiles = array(
+  1 => array('name' => clienttranslate('Murder'),
+             'nametr' => self::_('Murder'),
+             'tiletype' => 'crime',
+            ),
+  2 => array('name' => clienttranslate('Shorty'),
+             'nametr' => self::_('Shorty'),
+             'tiletype' => 'suspect',
+            ),
+  3 => array('name' => clienttranslate('NO CRIME'),
+             'nametr' => self::_('NO CRIME'),
+             'tiletype' => 'no_crime',
+            ),
+  4 => array('name' => clienttranslate('NO SUSPECT'),
+             'nametr' => self::_('NO SUSPECT'),
+             'tiletype' => 'no_suspect',
+            ),
+  5 => array('name' => clienttranslate('Smuggling'),
+             'nametr' => self::_('Smuggling'),
+             'tiletype' => 'crime',
+            ),
+  6 => array('name' => clienttranslate('Frenchy'),
+             'nametr' => self::_('Frenchy'),
+             'tiletype' => 'suspect',
+            ),
+);
+
+/**
+ * THE LOCATIONS
+ *
+ * Backend and frontend data.
+ *
+ * `sid`: string id, for easier overview here
+ *
+ * `coords`: The (top, left, rotation) coords (in percent) of the location slot
+ * (middle); the crime and suspect slot locations can be calculated from this.
+ *
+ * `neighbors`: ids of adjacent locations
+ *
+ * slots: 1 => crime, 2 => suspect
+ */
+$this->locations = array(
+  1 => array(
+    'strid' => 'centralstation',
+    'nametr' => self::_('Central Station'),
+    'neighbors_by_strid' => array('littleitaly', 'trocadero', 'chinatown', 'mainstreet', 'unionsquare', 'downtown'),
+    'coords' => array(50.0, 35.1, -10.5),
+  ),
+  2 => array(
+    'strid' => 'mainstreet',
+    'nametr' => self::_('Main Street'),
+    'neighbors_by_strid' => array('trocadero', 'oceandrive', 'roadhouse', 'rickscafe', 'downtown', 'centralstation'),
+    'coords' => array(49.4, 59.0, 0),
+  ),
+  3 => array(
+    'strid' => 'rickscafe',
+    'nametr' => self::_('Ricks Café'),
+    // TODO
+    'neighbors_by_strid' => array('trocadero', 'oceandrive', 'roadhouse', 'rickscafe', 'downtown', 'centralstation'),
+    'coords' => array(69.2, 71.0, 0),
+  ),
+  4 => array(
+    'strid' => 'forestpark',
+    'nametr' => self::_('Forest Park'),
+    // TODO
+    'neighbors_by_strid' => array('trocadero', 'oceandrive', 'roadhouse', 'rickscafe', 'downtown', 'centralstation'),
+    'coords' => array(12.0, 59.0, 2.5),
+  ),
+);
+
+foreach ($this->locations as $loc_id => $loc) {
+  list($top, $left, $angle) = $loc['coords'];
+  $this->locations[$loc_id]['slots'] = array(
+    // crime
+    array('strid' => $loc['strid'] . '_crime',
+          'coords' => array(calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * 0.07),
+                            calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * 0.07),
+                            $angle)),
+    // suspect
+    array('strid' => $loc['strid'] . '_suspect',
+          'coords' => array(calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * -0.07),
+                            calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * -0.07),
+                            $angle)),
+  );
+}

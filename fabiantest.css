@@ -104,11 +104,13 @@
     box-shadow: 1px 1px 1px 0px rgba(0, 0, 0, 0.5);
 }
 
-.location_slot {
+/* Location slots */
+.locslot {
     position: absolute;
     height:72px;
     width:72px;
     box-shadow: 0 0 3px 3px hsla(0, 0%, 100%, 0.75);
+    outline:solid 1px magenta;
 }
 
 .loc_tokens {

@@ -102,6 +102,13 @@ class fabiantest extends Table
                              'type_arg' => $this->getCardTypeArg($card['casetype'], $card_id),
                              'nbr' => 1);
         }
+        // Create tiles
+        foreach ($this->tiles as $tile_id => $tile) {
+            $cards[] = array('type' => 'tile_' . $tile['tiletype'],
+                             'type_arg' => $tile_id,
+                             'nbr' => 1);
+        }
+
         // Create all, but don't put them into 'deck' yet, the piles have to be
         // sorted first.
         $this->cards->createCards($cards, 'offtable');
@@ -199,6 +206,9 @@ class fabiantest extends Table
         $this->cards->shuffle('location_deck');
         $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('suspect'), 'id'), 'suspect_deck');
         $this->cards->shuffle('suspect_deck');
+
+        // TODO: Get all tiles, shuffle them, associate them with location slots.
+        
 
         // Main display of evidence cards
         $this->cards->pickCardsForLocation($this->constants['EVIDENCE_DISPLAY_SIZE'], 'deck', 'evidence_display');

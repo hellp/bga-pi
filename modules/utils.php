@@ -13,3 +13,11 @@ function array_pluck($array, $key) {
     return is_object($v) ? $v->$key : $v[$key];
   }, $array);
 }
+
+function calcX($x, $deg, $len) {
+  return $x + cos(deg2rad($deg)) * $len;
+}
+
+function calcY($y, $deg, $len) {
+  return $y + sin(deg2rad($deg)) * $len;
+}

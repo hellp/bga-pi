@@ -34,12 +34,13 @@
     function build_page( $viewArgs )
     {
         global $g_user;
+        $template = self::getGameName() . "_" . self::getGameName();
+
         $current_player_id = $g_user->get_id();
 
         // Get players & players number
         $players = $this->game->loadPlayersBasicInfos();
         $players_nbr = count( $players );
-
 
         /*********** Place your code below:  ************/
 
@@ -47,12 +48,32 @@
         $this->tpl['MY_EVIDENCE_CARDS'] = self::_("Evidence cards I collected");
         $this->tpl['EVIDENCE_CARDS_OF_PLAYER'] = self::_("Evidence cards collected by");
         $this->tpl['CASE_CARDS_OF_PLAYER'] = self::_("Case cards of player");
-
-        $template = self::getGameName() . "_" . self::getGameName();
+        
+        // Inject location slots into the template
+        $this->page->begin_block($template, "locslot");
+        foreach ($this->game->locations as $loc_id => $loc) {
+            // location
+            $this->page->insert_block(
+                "locslot",
+                array(
+                    "ID" => $loc_id,
+                    "STRID" => $loc['strid'],
+                    "TOP" => $loc['coords'][0],
+                    "LEFT" => $loc['coords'][1],
+                    "ROTATION" => $loc['coords'][2],
+                    )
+                );
+            foreach ($loc['slots'] as $slot) {
+                $this->page->insert_block(
+                    "locslot",
+                    array("STRID" => $slot['strid'], "TOP" => $slot['coords'][0], "LEFT" => $slot['coords'][1], "ROTATION" => $slot['coords'][2])
+                );
+            }
+        }
 
         // this will inflate our player block with actual players data
         $this->page->begin_block($template, "player");
-        foreach ( $players as $player_id => $info ) {
+        foreach ($players as $player_id => $info) {
             if ($player_id == $current_player_id) continue;
             $this->page->insert_block(
                 "player",
