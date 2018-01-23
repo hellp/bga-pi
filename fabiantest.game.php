@@ -33,13 +33,13 @@ class fabiantest extends Table
         // Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
         parent::__construct();
 
-        self::initGameStateLabels( array(
+        self::initGameStateLabels(array(
             // P.I. is played over 3 "mini games". Here we store in which of these games we are. Valid values: 1, 2, 3
             "minigame" => 10,
             // "my_second_global_variable" => 11,
             // "my_first_game_variant" => 100,
             // "my_second_game_variant" => 101,
-        ) );
+        ));
 
         $this->cards = self::getNew("module.common.deck");
         $this->cards->init("card");
@@ -222,9 +222,12 @@ class fabiantest extends Table
             $this->cards->pickCard('suspect_deck', $player_id);
         }
 
-        // TODO: Select a new first player. In minigame 1 it's player_no 1,
-        // minigame 2 player_no 2 etc.
-        $this->activeNextPlayer();
+        // Select a new first player. In minigame 1 it's player_no 1, in
+        // minigame 2 player_no 2 etc.; using module to cover the 'more rounds
+        // than players' case.
+        $next_player_no = ((self::getGameStateValue("minigame") - 1) % count($players)) + 1;
+        $next_player_id = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = $next_player_no");
+        $this->gamestate->changeActivePlayer($next_player_id);
     }
 
     function getCardTypeArg($type, $i) {
