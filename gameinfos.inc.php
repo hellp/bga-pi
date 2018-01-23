@@ -48,15 +48,15 @@ $gameinfos = array(
 
 
 // Estimated game duration, in minutes (used only for the launch, afterward the real duration is computed)
-'estimated_duration' => 45,
+'estimated_duration' => 30,
 
-// Time in second add to a player when "giveExtraTime" is called (speed profile = fast)
+// TODO: Time in second add to a player when "giveExtraTime" is called (speed profile = fast)
 'fast_additional_time' => 30,
 
-// Time in second add to a player when "giveExtraTime" is called (speed profile = medium)
+// TODO: Time in second add to a player when "giveExtraTime" is called (speed profile = medium)
 'medium_additional_time' => 40,
 
-// Time in second add to a player when "giveExtraTime" is called (speed profile = slow)
+// TODO: Time in second add to a player when "giveExtraTime" is called (speed profile = slow)
 'slow_additional_time' => 50,
 
 // If you are using a tie breaker in your game (using "player_score_aux"), you must describe here

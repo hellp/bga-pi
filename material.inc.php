@@ -2,7 +2,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * fabiantest implementation : © Fabian Neumann <fabian.neumann@posteo.de>
+ * fabiantest implementation: © Fabian Neumann <fabian.neumann@posteo.de>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -20,12 +20,13 @@
  */
 
 $this->constants = array(
+  "EVIDENCE_DECK_SIZE" => 36,
   "EVIDENCE_DISPLAY_SIZE" => 9,
   "MINIGAMES" => 3,
   "DISCS_PER_PLAYER" => 3,
   "CUBES_PER_PLAYER" => 10,
-  "BOARD_H" => 900,
-  "BOARD_W" => 1073,
+  "BOARD_H" => 740,
+  "BOARD_W" => 980,
 );
 
 // We use this as the basis to create all cards, evidence and base cards, but
@@ -190,11 +191,11 @@ $this->tiles = array(
             ),
   3 => array('name' => clienttranslate('NO CRIME'),
              'nametr' => self::_('NO CRIME'),
-             'tiletype' => 'no_crime',
+             'tiletype' => 'crime',
             ),
   4 => array('name' => clienttranslate('NO SUSPECT'),
              'nametr' => self::_('NO SUSPECT'),
-             'tiletype' => 'no_suspect',
+             'tiletype' => 'suspect',
             ),
   5 => array('name' => clienttranslate('Smuggling'),
              'nametr' => self::_('Smuggling'),
@@ -252,15 +253,17 @@ $this->locations = array(
 foreach ($this->locations as $loc_id => $loc) {
   list($top, $left, $angle) = $loc['coords'];
   $this->locations[$loc_id]['slots'] = array(
-    // crime
-    array('strid' => $loc['strid'] . '_crime',
-          'coords' => array(calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * 0.07),
-                            calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * 0.07),
-                            $angle)),
-    // suspect
-    array('strid' => $loc['strid'] . '_suspect',
-          'coords' => array(calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * -0.07),
-                            calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * -0.07),
-                            $angle)),
+    'crime' => array(
+      'id' => $loc_id * 100 + 1,
+      'strid' => $loc['strid'] . '_crime',
+      'coords' => array(calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * 0.07),
+      calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * 0.07),
+      $angle)),
+    'suspect' => array(
+      'id' => $loc_id * 100 + 3,
+      'strid' => $loc['strid'] . '_suspect',
+      'coords' => array(calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * -0.07),
+                        calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * -0.07),
+                        $angle)),
   );
 }

@@ -2,7 +2,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * fabiantest implementation : © Fabian Neumann <fabian.neumann@posteo.de>
+ * fabiantest implementation: © Fabian Neumann <fabian.neumann@posteo.de>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -66,7 +66,7 @@
             foreach ($loc['slots'] as $slot) {
                 $this->page->insert_block(
                     "locslot",
-                    array("STRID" => $slot['strid'], "TOP" => $slot['coords'][0], "LEFT" => $slot['coords'][1], "ROTATION" => $slot['coords'][2])
+                    array("ID" => $slot['id'], "TOP" => $slot['coords'][0], "LEFT" => $slot['coords'][1], "ROTATION" => $slot['coords'][2])
                 );
             }
         }

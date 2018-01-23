@@ -1,7 +1,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * fabiantest implementation : © Fabian Neumann <fabian.neumann@posteo.de>
+ * fabiantest implementation: © Fabian Neumann <fabian.neumann@posteo.de>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -68,11 +68,24 @@
     font-size: .8rem;
 }
 
-#board {
+/* #board {
     position: relative;
     background-image: url(img/board.jpg);
     height:900px;
     width:1173px;
+} */
+
+#board {
+    position: relative;
+    background-image: url(img/board_big.jpg);
+    height: 740px;
+    width: 980px;
+    background-size: 1000px;
+    background-position: -10px -12px;
+    margin:.5em .25em;
+    box-shadow: 2px 2px 1px 0 rgba(0, 0, 0, 0.66);
+    border: solid 2px #333;
+    border-radius: 3px;
 }
 
 .disc {
@@ -107,10 +120,18 @@
 /* Location slots */
 .locslot {
     position: absolute;
-    height:72px;
-    width:72px;
+    height:60px;
+    width:60px;
     box-shadow: 0 0 3px 3px hsla(0, 0%, 100%, 0.75);
     outline:solid 1px magenta;
+}
+.tile {
+    position: absolute;
+    height:60px;
+    width:60px;
+    background-color: orange;
+    border: solid 4px rgba(0, 0, 0, 0.5);
+    box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.5);
 }
 
 .loc_tokens {
@@ -143,6 +164,7 @@
     margin-right:0;
 }
 
+
 .cube {
     z-index:300;
     position: absolute;
@@ -172,22 +194,3 @@
 
 #myhand-wrap { float:left; height:180px; width: 316px; margin-right:.5em; }
 #myevidence-wrap { float:left; height:180px; width: 700px; }
-
-
-/*
-    Example of CSS sprites (a black token and a white token, 20x20px each, embedded in the same "tokens.png" 40x20px image):
-
-    .white_token {
-        background-image: url('img/tokens.png');
-        background-position: 0px 0px;
-    }
-    .black_token {
-        background-image: url('img/tokens.png');
-        background-position: -20px 0px;
-    }
-    .token {
-        width: 20px;
-        height: 20px;
-        background-repeat: none;
-    }
-*/

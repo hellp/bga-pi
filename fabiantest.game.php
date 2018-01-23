@@ -2,7 +2,7 @@
  /**
   *------
   * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
-  * fabiantest implementation : © Fabian Neumann <fabian.neumann@posteo.de>
+  * fabiantest implementation: © Fabian Neumann <fabian.neumann@posteo.de>
   *
   * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
   * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -87,8 +87,7 @@ class fabiantest extends Table
         // - 12 Suspects
         // - 10 Crimes
         // - 14 Locations
-        // TODO: do we need all the cards as actual assets? Could
-        // be simple string-based information for the user.
+
         $cards = array();
         // Create Evidence cards
         foreach ($this->cardBasis as $card_id => $card) {
@@ -102,7 +101,7 @@ class fabiantest extends Table
                              'type_arg' => $this->getCardTypeArg($card['casetype'], $card_id),
                              'nbr' => 1);
         }
-        // Create tiles
+        // Create tiles -- not actual cards, but handled similarly
         foreach ($this->tiles as $tile_id => $tile) {
             $cards[] = array('type' => 'tile_' . $tile['tiletype'],
                              'type_arg' => $tile_id,
@@ -138,26 +137,27 @@ class fabiantest extends Table
     protected function getAllDatas()
     {
         $result = array();
-
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
 
         // Get information about players
         // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-        $sql = "SELECT player_id id, player_score score FROM player ";
-        $result['players'] = self::getCollectionFromDb( $sql );
+        $sql = "SELECT player_id id, player_score score FROM player";
+        $result['players'] = self::getCollectionFromDb($sql);
 
         // Gather all information about current game situation (visible by player $current_player_id).
 
         // Global / static information
-        $result['card_basis'] = $this->cardBasis;
+        $result['cardinfos'] = $this->cardBasis;
+        $result['tileinfos'] = $this->tiles;
 
         // Cards in player hand (the other player's case cards)
         $result['hand'] = $this->cards->getCardsInLocation('hand', $current_player_id);
-
+        
         // Evidence cards on display
         $result['evidence_display'] = $this->cards->getCardsInLocation('evidence_display');
         $result['evidence_discard'] = $this->cards->getCardsInLocation('discard');
         $result['player_display_cards'] = $this->cards->getCardsInLocation('player_display');
+        $result['tiles'] = $this->cards->getCardsInLocation('locslot');
 
         return $result;
     }
@@ -174,13 +174,19 @@ class fabiantest extends Table
     */
     function getGameProgression()
     {
-        // TODO: compute and return the game progression
-
+        // TODO: improve
         // The base percentage is based on the minigame we are in: 1=0%; 2=33%;
         // 3=66%. For the in-minigame percentage we average over each user's
         // progress (how many clues have they figured out yet, again:
         // 0/33/66/100%).
-        return 0;
+        $max = self::getGameStateValue("minigame") * 33;
+
+        // Very naive, but we rarely should exhaust the deck in one minigame, so
+        // let's treat the drawn cards as an indicator.
+        $progress = ($this->cards->countCardInLocation('discard')
+                     + $this->cards->countCardInLocation('player_display')) / $this->constants['EVIDENCE_DECK_SIZE'];
+        $progress *= $max;
+        return floor($progress);
     }
 
 
@@ -206,9 +212,18 @@ class fabiantest extends Table
         $this->cards->shuffle('location_deck');
         $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('suspect'), 'id'), 'suspect_deck');
         $this->cards->shuffle('suspect_deck');
-
-        // TODO: Get all tiles, shuffle them, associate them with location slots.
         
+        // Get all tiles, shuffle them in two decks, associate them with
+        // location slots. Decks are called "cri_tile_d" (crime tile deck) and
+        // "sus_tile_d" (suspect tile deck). VARCHAR(16) ftw!
+        $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('tile_crime'), 'id'), 'cri_tile_d');
+        $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('tile_suspect'), 'id'), 'sus_tile_d');
+        $this->cards->shuffle('cri_tile_d');
+        $this->cards->shuffle('sus_tile_d');
+        foreach($this->locations as $loc_id => $loc) {
+            $this->cards->pickCardForLocation('cri_tile_d', 'locslot', $loc['slots']['crime']['id']);
+            $this->cards->pickCardForLocation('sus_tile_d', 'locslot', $loc['slots']['suspect']['id']);
+        }
 
         // Main display of evidence cards
         $this->cards->pickCardsForLocation($this->constants['EVIDENCE_DISPLAY_SIZE'], 'deck', 'evidence_display');
@@ -239,15 +254,24 @@ class fabiantest extends Table
         return $offset + $i;
     }
 
-    function getCardNames($ids)
-    {
-        return array_pluck(
-            array_filter($this->cardBasis, function($k) {
-                return in_array($k, $ids);
-            }, ARRAY_FILTER_USE_KEY),
-            'name'
-        );
+    /**
+     * Return if it is the last turn for this minigame.
+     *
+     * It's the last turn if all other players have already solved their cases.
+     */
+    function isLastTurn() {
+        // TODO
     }
+
+    // function getCardNames($ids)
+    // {
+    //     return array_pluck(
+    //         array_filter($this->cardBasis, function($k) {
+    //             return in_array($k, $ids);
+    //         }, ARRAY_FILTER_USE_KEY),
+    //         'name'
+    //     );
+    // }
 
     /**
      * Return the cards cards that represent the solution for the given player.
@@ -298,7 +322,7 @@ class fabiantest extends Table
         $player_id = self::getActivePlayerId();
         $currentCard = $this->cards->getCard($card_id);
 
-        // Should not happen
+        // Should not happen; also anti-cheat
         if ($currentCard['location'] != "evidence_display") {
             throw new BgaUserException(self::_("Card is not on display. Press F5 in case of problems."));
         }
@@ -382,7 +406,7 @@ class fabiantest extends Table
         The action method of state X is called everytime the current game state is set to X.
     */
 
-    function stNextPlayer() {
+    function st_gameTurn() {
         // Standard case
         // Draw a new card for evidence display
 
@@ -420,7 +444,7 @@ class fabiantest extends Table
 
         $player_id = self::activeNextPlayer();
         self::giveExtraTime($player_id);
-        $this->gamestate->nextState('nextPlayer');
+        $this->gamestate->nextState('next');
     }
 
 

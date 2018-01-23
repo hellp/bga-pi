@@ -1,7 +1,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * fabiantest implementation : © Fabian Neumann <fabian.neumann@posteo.de>
+ * fabiantest implementation: © Fabian Neumann <fabian.neumann@posteo.de>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -69,6 +69,8 @@ function (dojo, declare) {
             this.addTooltip('evidence_discard', _("Discard pile"), _('View discarded cards.'));
             // TODO: onclick expand the discard pile, so it can be inspected
 
+            // Tiles
+
             this.playerDisplays = {};
             for (var player_id in gamedatas.players) {
                 var pdstock = new ebg.stock();
@@ -104,7 +106,7 @@ function (dojo, declare) {
             for (i in this.gamedatas.evidence_display) {
                 var card = this.gamedatas.evidence_display[i];
                 this.evidenceDisplay.addToStockWithId(card.type_arg, card.id);
-                this.addTooltip('evidence_item_' + card.id, _(this.gamedatas.card_basis[card.type_arg].name), _('Follow this evidence…'));
+                this.addTooltip('evidence_item_' + card.id, _(this.gamedatas.cardinfos[card.type_arg].name), _('Follow this evidence…'));
             }
             for (i in this.gamedatas.evidence_discard) {
                 var card = this.gamedatas.evidence_discard[i];
@@ -115,7 +117,54 @@ function (dojo, declare) {
                 var card = this.gamedatas.player_display_cards[i];
                 this.playerDisplays[card.location_arg].addToStockWithId(card.type_arg, card.id);
             }
+
+            console.log(this.gamedatas.tiles);
+            // // Setup tiles
+            // for( var id in gamedatas.intersections )
+            // {
+            //     var intersection = gamedatas.intersections[id];
+
+            for (i in this.gamedatas.tiles) {
+                var tile = this.gamedatas.tiles[i];
+                dojo.place(
+                    this.format_block('jstpl_tile', {tile: tile, name: this.gamedatas.tileinfos[tile.type_arg].name}),
+                    $('board'));
+                dojo.place( $('tile_' + tile.id), $('locslot_' + tile.location_arg) );
+                // this.slideToObject( $('tile_' + tile.id), $('locslot_' + tile.location_arg) ).play();
+            }
             
+            // var slide = this.slideToObject( $( 'stone_' + notif.args.coord_x + '_' + notif.args.coord_y ), $( 'intersection_' + notif.args.coord_x + '_' + notif.args.coord_y ), 1000 );
+            //     var x_pix = this.getXPixelCoordinates(intersection.coord_x);
+            //     var y_pix = this.getYPixelCoordinates(intersection.coord_y);
+                
+
+            //     if (intersection.stone_color != null) {
+            //         // This intersection is taken, it shouldn't appear as clickable anymore
+            //         dojo.removeClass( 'intersection_' + intersection.coord_x + '_' + intersection.coord_y, 'clickable' );
+            //     }
+            // } 
+
+
+            // // Place it on the player panel
+            // this.placeOnObject( $( 'stone_' + notif.args.coord_x + '_' + notif.args.coord_y ), $( 'player_board_' + notif.args.player_id ) );
+
+            // // Animate a slide from the player panel to the intersection
+            // dojo.style( 'stone_' + notif.args.coord_x + '_' + notif.args.coord_y, 'zIndex', 1 );
+            // var slide = this.slideToObject( $( 'stone_' + notif.args.coord_x + '_' + notif.args.coord_y ), $( 'intersection_' + notif.args.coord_x + '_' + notif.args.coord_y ), 1000 );
+            // dojo.connect( slide, 'onEnd', this, dojo.hitch( this, function() {
+            //             // At the end of the slide, update the intersection 
+            //             dojo.removeClass( 'intersection_' + notif.args.coord_x + '_' + notif.args.coord_y, 'no_stone' );
+            //             dojo.addClass( 'intersection_' + notif.args.coord_x + '_' + notif.args.coord_y, 'stone_'  + notif.args.color );
+            //             dojo.removeClass( 'intersection_' + notif.args.coord_x + '_' + notif.args.coord_y, 'clickable' );
+        			
+            //             // We can now destroy the stone since it is now visible through the change in style of the intersection
+            //             dojo.destroy( 'stone_' + notif.args.coord_x + '_' + notif.args.coord_y );
+       	    // }));
+            // slide.play();
+
+
+
+            // Connect user actions
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
             
             // "Static" quick help tooltips
@@ -184,26 +233,23 @@ function (dojo, declare) {
         // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
         //                        action status bar (ie: the HTML links in the status bar).
         //
-        onUpdateActionButtons: function( stateName, args )
+        onUpdateActionButtons: function(stateName, args)
         {
-            console.log( 'onUpdateActionButtons: '+stateName );
-
-            if( this.isCurrentPlayerActive() )
-            {
-                switch( stateName )
-                {
-/*
-                 Example:
-
-                 case 'myGameState':
-
-                    // Add 3 action buttons in the action status bar:
-
-                    this.addActionButton( 'button_1_id', _('Button 1 label'), 'onMyMethodToCall1' );
-                    this.addActionButton( 'button_2_id', _('Button 2 label'), 'onMyMethodToCall2' );
-                    this.addActionButton( 'button_3_id', _('Button 3 label'), 'onMyMethodToCall3' );
-                    break;
-*/
+            if (this.isCurrentPlayerActive()) {
+                switch (stateName) {
+                    case "playerTurn":
+                        // TODO: if player.hasInvestigatorsLeft ... else show
+                        // inactive button that simply spits a warning if
+                        // clicked
+                        this.addActionButton(
+                            'btn_send_investigator',
+                            dojo.string.substitute(_('Send investigator (${n} left)'), {n: 99}),
+                            'onSendInvestigatorClicked');
+                        this.addActionButton(
+                            'btn_solve_case',
+                            _('Solve case'),
+                            'onSolveCaseClicked');
+                        break;
                 }
             }
         },
@@ -233,7 +279,7 @@ function (dojo, declare) {
 
         */
 
-        onEvidenceDisplaySelectionChanged : function() {
+        onEvidenceDisplaySelectionChanged: function() {
             var items = this.evidenceDisplay.getSelectedItems();
             if (items.length > 0) {
                 var action = 'selectEvidence';
@@ -253,23 +299,35 @@ function (dojo, declare) {
             }
         },
 
+        onSendInvestigatorClicked: function () {
+            // TODO
+            // Alert: "Click on a location to send your investigator (X left)."
+            console.log('sending investigator')
+        },
+        
+        onSolveCaseClicked: function () {
+            // TODO
+            // Alert: "Click the correct location, crime, and suspect to solve your case..."
+            console.log('trying to solve the case')
+        },
+
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
 
-        /*
+        /**
             setupNotifications:
 
-            In this method, you associate each of your game notifications with your local method to handle it.
+            In this method, you associate each of your game notifications with
+            your local method to handle it.
 
-            Note: game notification names correspond to "notifyAllPlayers" and "notifyPlayer" calls in
-                  your fabiantest.game.php file.
-
+            Note: game notification names correspond to "notifyAllPlayers" and
+            "notifyPlayer" calls in your fabiantest.game.php file.
         */
         setupNotifications: function()
         {
-            console.log( 'notifications subscriptions setup' );
-
             dojo.subscribe('evidenceSelected', this, "notif_evidenceSelected");
+            this.notifqueue.setSynchronous('evidenceSelected', 500);
+
             dojo.subscribe('newEvidence', this, "notif_newEvidence");
 
             // TODO: here, associate your game notifications with local methods
