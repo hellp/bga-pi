@@ -25,8 +25,10 @@ function (dojo, declare) {
     return declare("bgagame.fabiantest", ebg.core.gamegui, {
         constructor: function(){
             // Here, you can init the global variables of your user interface
-            this.cardwidth = 102;
-            this.cardheight = 156;
+            this.CARD_WIDTH = 102;
+            this.CARD_HEIGHT = 156;
+            this.TILE_HEIGHT = 60;
+            this.TILE_WIDTH = 60;
         },
 
         /*
@@ -46,10 +48,11 @@ function (dojo, declare) {
         {
             var CARD_ITEM_MARGIN = 3;
             var CARD_ITEMS_PER_ROW = 9;
+            var TILE_ITEMS_PER_ROW = 7;
 
             // Set up player hand, i.e. the secret case cards of their left neighbor
             this.playerHand = new ebg.stock();
-            this.playerHand.create(this, $('myhand'), this.cardwidth, this.cardheight);
+            this.playerHand.create(this, $('myhand'), this.CARD_WIDTH, this.CARD_HEIGHT);
             this.playerHand.setSelectionMode(0); // no selection possible
             this.playerHand.image_items_per_row = CARD_ITEMS_PER_ROW;
             this.playerHand.item_margin = CARD_ITEM_MARGIN;
@@ -57,19 +60,17 @@ function (dojo, declare) {
             // The stocks where evidence cards can live: display, discard, player displays
             this.evidenceDisplay = new ebg.stock();
             this.evidenceDisplay.setSelectionMode(1); // max 1 card can be selected
-            this.evidenceDisplay.create(this, $('evidence'), this.cardwidth, this.cardheight);
+            this.evidenceDisplay.create(this, $('evidence'), this.CARD_WIDTH, this.CARD_HEIGHT);
             this.evidenceDisplay.image_items_per_row = CARD_ITEMS_PER_ROW;
             this.evidenceDisplay.item_margin = CARD_ITEM_MARGIN;
             this.evidenceDiscard = new ebg.stock();
             this.evidenceDiscard.setSelectionMode(0); // no selection possible
-            this.evidenceDiscard.create(this, $('evidence_discard'), this.cardwidth, this.cardheight);
+            this.evidenceDiscard.create(this, $('evidence_discard'), this.CARD_WIDTH, this.CARD_HEIGHT);
             this.evidenceDiscard.image_items_per_row = CARD_ITEMS_PER_ROW;
             this.evidenceDiscard.setOverlap(.01, 0); // basically on top of eachother
             this.evidenceDiscard.item_margin = 0;
             this.addTooltip('evidence_discard', _("Discard pile"), _('View discarded cards.'));
             // TODO: onclick expand the discard pile, so it can be inspected
-
-            // Tiles
 
             this.playerDisplays = {};
             for (var player_id in gamedatas.players) {
@@ -77,7 +78,7 @@ function (dojo, declare) {
                 this.playerDisplays[player_id] = pdstock;
                 var node_id = (player_id == this.player_id) ? 'myevidence' : 'playerdisplay_' + player_id;
                 pdstock.setSelectionMode(0); // no selection possible
-                pdstock.create(this, $(node_id), this.cardwidth, this.cardheight);
+                pdstock.create(this, $(node_id), this.CARD_WIDTH, this.CARD_HEIGHT);
                 pdstock.setOverlap(66, 0); // basically on top of eachother
                 pdstock.image_items_per_row = CARD_ITEMS_PER_ROW;
                 pdstock.item_margin = CARD_ITEM_MARGIN;
@@ -119,17 +120,39 @@ function (dojo, declare) {
             }
 
             console.log(this.gamedatas.tiles);
-            // // Setup tiles
             // for( var id in gamedatas.intersections )
             // {
             //     var intersection = gamedatas.intersections[id];
 
+            // Set up tiles
+            this.tiles = new ebg.stock();
+            this.tiles.setSelectionMode(0); // Initially not selectable; later during solve action yes.
+            this.tiles.create(this, $('tilestock'), this.TILE_WIDTH, this.TILE_HEIGHT);
+            this.tiles.setOverlap(0.01, 0); // basically on top of eachother
+            this.tiles.image_items_per_row = TILE_ITEMS_PER_ROW;
+            this.tiles.item_margin = 0;
+            // Create cards types:
+            for (var i = 1; i <= 28; i++) {
+                var pos_in_img = i - 1;  // it's zero-based
+                // weight is 0 for all as they have no inherent weight
+                this.tiles.addItemType(i, 0, g_gamethemeurl + 'img/tiles-front.jpg', pos_in_img);
+                // for (var player_id in gamedatas.players) {
+                //     this.playerDisplays[player_id].addItemType(i, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
+                // }
+            }
+
             for (i in this.gamedatas.tiles) {
                 var tile = this.gamedatas.tiles[i];
-                dojo.place(
-                    this.format_block('jstpl_tile', {tile: tile, name: this.gamedatas.tileinfos[tile.type_arg].name}),
-                    $('board'));
-                dojo.place( $('tile_' + tile.id), $('locslot_' + tile.location_arg) );
+                this.tiles.addToStockWithId(tile.type_arg, tile.id);
+                dojo.place($(this.tiles.getItemDivId(tile.id)), $('locslot_' + tile.location_arg));
+                // this.slideToObject($('tile_' + tile.id), $('locslot_' + tile.location_arg)).play();
+                
+                // dojo.place(
+                //     this.format_block('jstpl_tile', {tile: tile, name: this.gamedatas.tileinfos[tile.type_arg].name}),
+                //     $('board'));
+                // dojo.place(
+                //     this.format_block('jstpl_tile', {tile: tile, name: this.gamedatas.tileinfos[tile.type_arg].name}),
+                //     $('board'));
                 // this.slideToObject( $('tile_' + tile.id), $('locslot_' + tile.location_arg) ).play();
             }
             
@@ -250,6 +273,21 @@ function (dojo, declare) {
                             _('Solve case'),
                             'onSolveCaseClicked');
                         break;
+                    case "client_playerPicksSolution":
+                        // Add Cancel button for the 'player picks solution' client state
+                        if (this.on_client_state && !$('button_cancel')) {
+                            this.tiles.setSelectionMode(2); // put into own function; check on each selection: no more than 3, correct type etc
+                            this.addActionButton(
+                                'button_confirm',
+                                _('Confirm'),
+                                'onConfirmCaseSelection');
+                            this.addActionButton(
+                                'button_cancel',
+                                _('Cancel'),
+                                dojo.hitch(this, function() {this.restoreServerGameState();}),
+                                null, null, 'gray');
+                        }
+                        break;
                 }
             }
         },
@@ -299,6 +337,10 @@ function (dojo, declare) {
             }
         },
 
+        onConfirmCaseSelection: function () {
+            // TODO
+        },
+
         onSendInvestigatorClicked: function () {
             // TODO
             // Alert: "Click on a location to send your investigator (X left)."
@@ -309,6 +351,10 @@ function (dojo, declare) {
             // TODO
             // Alert: "Click the correct location, crime, and suspect to solve your case..."
             console.log('trying to solve the case')
+            this.setClientState(
+                "client_playerPicksSolution", {
+                    descriptionmyturn: _("Solve Case: ${you} must select the correct location, crime, and suspect…"),
+                });
         },
 
         ///////////////////////////////////////////////////

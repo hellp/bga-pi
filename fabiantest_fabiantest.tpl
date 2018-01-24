@@ -15,6 +15,7 @@
 </div>
 
 <div id="board" style="clear:both">
+    <div id="tilestock"></div>
     <!-- <div class="disc" style="top:230px; left:150px"></div>
     <div class="disc red" style="top:100px; left:500px"></div>
     <div class="disc blue" style="top:150px; left:500px"></div>
