@@ -116,11 +116,9 @@ class fabiantest extends Table
         // (note: statistics used in this file must be defined in your stats.inc.php file)
         //self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
         //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
-        
+
         // Setup the initial game situation here
-        // We start with minigame number 1. There will be 3 minigames in total.
-        self::setGameStateInitialValue( 'minigame', 1 );
-        $this->startNewMinigame(1);
+        self::setGameStateInitialValue('minigame', 0);  // will be increased in st_setupMinigame
 
         /************ End of the game initialization *****/
     }
@@ -152,7 +150,7 @@ class fabiantest extends Table
 
         // Cards in player hand (the other player's case cards)
         $result['hand'] = $this->cards->getCardsInLocation('hand', $current_player_id);
-        
+
         // Evidence cards on display
         $result['evidence_display'] = $this->cards->getCardsInLocation('evidence_display');
         $result['evidence_discard'] = $this->cards->getCardsInLocation('discard');
@@ -193,14 +191,217 @@ class fabiantest extends Table
 //////////////////////////////////////////////////////////////////////////////
 //////////// Utility functions
 ////////////
-
     /*
         In this space, you can put any utility methods useful for your game logic
     */
 
-    function startNewMinigame($n)
+    function getCardTypeArg($type, $i) {
+        if ($type == 'evidence') {
+            $offset = 0;
+        } else if (in_array($type, array('crime', 'location', 'suspect'))) {
+            $offset = 36;
+        }
+        return $offset + $i;
+    }
+
+    /**
+     * Return if it is the last turn for this minigame.
+     *
+     * It's the last turn if all other players have already solved their cases.
+     */
+    function isLastTurn() {
+        // TODO
+    }
+
+    // function getCardNames($ids)
+    // {
+    //     return array_pluck(
+    //         array_filter($this->cardBasis, function($k) {
+    //             return in_array($k, $ids);
+    //         }, ARRAY_FILTER_USE_KEY),
+    //         'name'
+    //     );
+    // }
+
+    /**
+     * Return the cards cards that represent the solution for the given player.
+     * These are the player's right neighbors hand cards.
+     */
+    function getPlayerCaseCards($player_id)
     {
-        self::setGameStateValue('minigame', $n);
+        return $this->cards->getPlayerHand(self::getPlayerBefore($player_id));
+    }
+
+    /**
+     * Put a new evidence cards on display. Also takes care about reshuffling
+     * the deck if we run out.
+     */
+    function replenishEvidenceDisplay()
+    {
+        // While auto-reshuffle is still a mystery to me, check here manually.
+        if ($this->cards->countCardInLocation('deck') == 0
+                && $this->cards->countCardInLocation('discard') > 0) {
+            $this->cards->moveAllCardsInLocation('discard', 'deck');
+            $this->cards->shuffle('deck');
+        }
+
+        if ($this->cards->countCardInLocation('deck') > 0) {
+            $newCard = $this->cards->pickCardForLocation("deck", "evidence_display");
+            self::notifyAllPlayers(
+                'newEvidence', '',
+                array(
+                    'card_id' => $newCard['id'],
+                    'card_type' => $newCard['type_arg'],
+                    'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
+                ));
+        } else {
+            // Rare case, but it could happen. Players are now forced to do
+            // something else. But this is implicit from the UI: no more cards,
+            // no more clicks on them. Solving is always the last ressort.
+            self::notifyAllPlayers(
+                'newEvidence',
+                clienttranslate('Evidence cards are exhausted and cannot be played anymore.'),
+                array(
+                    'deck_is_empty' => $this->cards->countCardInLocation('discard') == 0,
+                    'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
+                ));
+        }
+    }
+
+
+//////////////////////////////////////////////////////////////////////////////
+//////////// Player actions
+////////////
+
+    /*
+        Each time a player is doing some game action, one of the methods below is called.
+        (note: each method below must match an input method in fabiantest.action.php)
+    */
+
+    function selectEvidence($card_id)
+    {
+        self::checkAction("selectEvidence");
+        $player_id = self::getActivePlayerId();
+        $currentCard = $this->cards->getCard($card_id);
+
+        // Should not happen; also anti-cheat
+        if ($currentCard['location'] != "evidence_display") {
+            throw new BgaUserException(self::_("Card is not on display. Press F5 in case of problems."));
+        }
+
+        // TODO: implement rules
+        $case_card_ids = array_pluck($this->getPlayerCaseCards($player_id), 'id');
+        $evidenceIsUseful = boolval(rand(0, 1));
+
+        if ($evidenceIsUseful) {
+            // Put card on discard
+            $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
+            self::notifyAllPlayers(
+                'evidenceSelected',
+                clienttranslate('${player_name} found a useful evidence: ${card_name}'), array(
+                    'i18n' => array('card_name'),
+                    'card_id' => $card_id,
+                    'card_name' => $this->cardBasis[$currentCard['type_arg']]['name'],
+                    'card_type' => $currentCard['type_arg'],
+                    'useful' => true,
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                ));
+            } else {
+            // Put card in front of user to remember the "useless evidence".
+            $this->cards->moveCard($card_id, "player_display", $player_id);
+            self::notifyAllPlayers(
+                'evidenceSelected',
+                clienttranslate('${player_name} had no luck following evidence ${card_name}'), array(
+                    'i18n' => array('card_name'),
+                    'useful' => false,
+                    'card_id' => $card_id,
+                    'card_name' => $this->cardBasis[$currentCard['type_arg']]['name'],
+                    'card_type' => $currentCard['type_arg'],
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                ));
+            }
+
+        // Next player
+        $this->gamestate->nextState('selectEvidence');
+    }
+
+    function solveCase($tile_ids) {
+        self::checkAction("solveCase");
+        $player_id = self::getActivePlayerId();
+        $case_cards = getPlayerCaseCards($player_id);
+
+        // Check if player was correct
+        if ($playerCorrect) {
+
+            // If it was the last player to solve this round, we are done and
+            // can start a new minigame; or even end the game.
+        } else {
+            $this->increasePenalty($player_id);
+        }
+
+
+
+        self::notifyPlayer(
+            self::getActivePlayerId(),
+            'playerTriedToSolve',
+            clienttranslate('You tried to solve'),
+            array()
+        );
+        // self::notifyAllPlayers(
+        //     'evidenceSelected',
+        //     clienttranslate('${player_name} had no luck following evidence ${card_name}'),
+        //     array (
+        //         'i18n' => array ('card_name'),
+        //         'useful' => false,
+        //         'card_id' => $card_id,
+        //         'card_name' => $this->cardBasis[$currentCard['type_arg']]['name'],
+        //         'card_type' => $currentCard['type_arg'],
+        //         'player_id' => $player_id,
+        //         'player_name' => self::getActivePlayerName(),
+        //     )
+        // );
+
+    }
+
+//////////////////////////////////////////////////////////////////////////////
+//////////// Game state arguments
+////////////
+
+    /*
+        Here, you can create methods defined as "game state arguments" (see "args" property in states.inc.php).
+        These methods function is to return some additional information that is specific to the current
+        game state.
+    */
+
+    /*
+    Example for game state "MyGameState":
+
+    function argMyGameState()
+    {
+        // Get some values from the current game situation in database...
+        // return values:
+        return array(
+            'variable1' => $value1,
+            'variable2' => $value2,
+            ...
+        );
+    }
+    */
+
+//////////////////////////////////////////////////////////////////////////////
+//////////// Game state actions
+////////////
+
+    /*
+        Here, you can create methods defined as "game state actions" (see "action" property in states.inc.php).
+        The action method of state X is called everytime the current game state is set to X.
+    */
+
+    function st_setupMinigame()
+    {
+        self::incGameStateValue('minigame', 1);
 
         // Get all cards, sort into piles, shuffle piles.
         $this->cards->moveAllCardsInLocation(null, "offtable");
@@ -212,7 +413,7 @@ class fabiantest extends Table
         $this->cards->shuffle('location_deck');
         $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('suspect'), 'id'), 'suspect_deck');
         $this->cards->shuffle('suspect_deck');
-        
+
         // Get all tiles, shuffle them in two decks, associate them with
         // location slots. Decks are called "cri_tile_d" (crime tile deck) and
         // "sus_tile_d" (suspect tile deck). VARCHAR(16) ftw!
@@ -258,208 +459,32 @@ class fabiantest extends Table
         $next_player_no = ((self::getGameStateValue("minigame") - 1) % count($players)) + 1;
         $next_player_id = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = $next_player_no");
         $this->gamestate->changeActivePlayer($next_player_id);
+        $this->gamestate->nextState();  // always a player turn
     }
 
-    function getCardTypeArg($type, $i) {
-        if ($type == 'evidence') {
-            $offset = 0;
-        } else if (in_array($type, array('crime', 'location', 'suspect'))) {
-            $offset = 36;
-        }
-        return $offset + $i;
-    }
-
-    /**
-     * Return if it is the last turn for this minigame.
-     *
-     * It's the last turn if all other players have already solved their cases.
-     */
-    function isLastTurn() {
-        // TODO
-    }
-
-    // function getCardNames($ids)
-    // {
-    //     return array_pluck(
-    //         array_filter($this->cardBasis, function($k) {
-    //             return in_array($k, $ids);
-    //         }, ARRAY_FILTER_USE_KEY),
-    //         'name'
-    //     );
-    // }
-
-    /**
-     * Return the cards cards that represent the solution for the given player.
-     * These are the player's right neighbors hand cards.
-     */
-    function getPlayerCaseCards($player_id)
+    function st_gameTurn()
     {
-        return $this->cards->getPlayerHand(self::getPlayerBefore($player_id));
-    }
+        // TODO: First check if the round is over; then we start a new minigame,
+        // or even end the game completely, if we are already in the last
+        // minigame. Round is over once all players solved; or even if a new
+        // round starts and only 1 player remains with an unsolved case.
 
-//////////////////////////////////////////////////////////////////////////////
-//////////// Player actions
-////////////
+        // TODO: Warn the active player when it's their last chance to solve,
+        // i.e. when they are the last one with an unsolved case in the current
+        // minigame.
+        
+        // TODO: only replenish the display if the current minigame keeps going.
+        // Maybe move this code somewhere else?
 
-    /*
-        Each time a player is doing some game action, one of the methods below is called.
-        (note: each method below must match an input method in fabiantest.action.php)
-    */
-
-    /*
-
-    Example:
-
-    function playCard( $card_id )
-    {
-        // Check that this is the player's turn and that it is a "possible action" at this game state (see states.inc.php)
-        self::checkAction( 'playCard' );
-
-        $player_id = self::getActivePlayerId();
-
-        // Add your game logic to play a card there
-        ...
-
-        // Notify all players about the card played
-        self::notifyAllPlayers( "cardPlayed", clienttranslate( '${player_name} plays ${card_name}' ), array(
-            'player_id' => $player_id,
-            'player_name' => self::getActivePlayerName(),
-            'card_name' => $card_name,
-            'card_id' => $card_id
-        ) );
-
-    }
-
-    */
-
-    function selectEvidence($card_id) {
-        self::checkAction("selectEvidence");
-        $player_id = self::getActivePlayerId();
-        $currentCard = $this->cards->getCard($card_id);
-
-        // Should not happen; also anti-cheat
-        if ($currentCard['location'] != "evidence_display") {
-            throw new BgaUserException(self::_("Card is not on display. Press F5 in case of problems."));
-        }
-
-        // TODO: implement rules
-        $case_card_ids = array_pluck($this->getPlayerCaseCards($player_id), 'id');
-        $evidenceIsUseful = boolval(rand(0, 1));
-
-        if ($evidenceIsUseful) {
-            // Put card on discard
-            $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
-            self::notifyAllPlayers(
-                'evidenceSelected',
-                clienttranslate('${player_name} found a useful evidence: ${card_name}'), array (
-                    'i18n' => array ('card_name'),
-                    'card_id' => $card_id,
-                    'card_name' => $this->cardBasis[$currentCard['type_arg']]['name'],
-                    'card_type' => $currentCard['type_arg'],
-                    'useful' => true,
-                    'player_id' => $player_id,
-                    'player_name' => self::getActivePlayerName(),
-                ));
-            } else {
-            // Put card in front of user to remember the "useless evidence".
-            $this->cards->moveCard($card_id, "player_display", $player_id);
-            self::notifyAllPlayers(
-                'evidenceSelected',
-                clienttranslate('${player_name} had no luck following evidence ${card_name}'), array (
-                    'i18n' => array ('card_name'),
-                    'useful' => false,
-                    'card_id' => $card_id,
-                    'card_name' => $this->cardBasis[$currentCard['type_arg']]['name'],
-                    'card_type' => $currentCard['type_arg'],
-                    'player_id' => $player_id,
-                    'player_name' => self::getActivePlayerName(),
-                ));
-            }
-
-        // Next player
-        $this->gamestate->nextState('selectEvidence');
-    }
-
-//////////////////////////////////////////////////////////////////////////////
-//////////// Game state arguments
-////////////
-
-    /*
-        Here, you can create methods defined as "game state arguments" (see "args" property in states.inc.php).
-        These methods function is to return some additional information that is specific to the current
-        game state.
-    */
-
-    function argGiveCards() {
-        return array ();
-    }
-
-    /*
-
-
-    Example for game state "MyGameState":
-
-    function argMyGameState()
-    {
-        // Get some values from the current game situation in database...
-
-        // return values:
-        return array(
-            'variable1' => $value1,
-            'variable2' => $value2,
-            ...
-        );
-    }
-    */
-
-//////////////////////////////////////////////////////////////////////////////
-//////////// Game state actions
-////////////
-
-    /*
-        Here, you can create methods defined as "game state actions" (see "action" property in states.inc.php).
-        The action method of state X is called everytime the current game state is set to X.
-    */
-
-    function st_gameTurn() {
-        // Standard case
         // Draw a new card for evidence display
-
-        // While auto-reshuffle is still a mystery to me, check here manually.
-        if ($this->cards->countCardInLocation('deck') == 0
-                && $this->cards->countCardInLocation('discard') > 0) {
-            $this->cards->moveAllCardsInLocation('discard', 'deck');
-            $this->cards->shuffle('deck');
-        }
-
-        if ($this->cards->countCardInLocation('deck') > 0) {
-            $newCard = $this->cards->pickCardForLocation("deck", "evidence_display");
-            self::notifyAllPlayers(
-                'newEvidence', '',
-                array(
-                    'card_id' => $newCard['id'],
-                    'card_type' => $newCard['type_arg'],
-                    'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
-                ));
-        } else {
-            // Rare case, but it could happen. Players are now forced to do
-            // something else. But this is implicit from the UI: no more cards,
-            // no more clicks on them. Solving is always the last ressort.
-            self::notifyAllPlayers(
-                'newEvidence',
-                clienttranslate('Evidence cards are exhausted and cannot be played anymore.'),
-                array(
-                    'deck_is_empty' => $this->cards->countCardInLocation('discard') == 0,
-                    'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
-                ));
-        }
+        $this->replenishEvidenceDisplay();
 
         // Case: Player solved
         // Notify: {Player} solved ...
 
         $player_id = self::activeNextPlayer();
         self::giveExtraTime($player_id);
-        $this->gamestate->nextState('next');
+        $this->gamestate->nextState('nextPlayer');
     }
 
 

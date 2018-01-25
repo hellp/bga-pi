@@ -171,11 +171,16 @@ function (dojo, declare) {
             switch( stateName )
             {
                 case 'client_playerPicksSolution':
+                    // Enable tile selection and wire up validation callback
+                    this.tiles.setSelectionMode(2);
+                    dojo.connect(this.tiles, 'onChangeSelection', this, 'validateCaseSelection');
+
+                    // Highlight clickable tiles
+                    // TODO: NO CRIME and NO SUSPECT tiles should not be highlighted or selectable
+                    dojo.query('.locslot .stockitem').addClass('highlighted');
+
                     // Clean up UI a bit to let user focus
                     dojo.fx.wipeOut({node: $('carddisplay')}).play(); // hide cards, so user doesn't accidentally click there
-                    // Enable tile selection
-                    this.tiles.setSelectionMode(2); // TODO: check on each selection: no more than 3, correct type etc
-                    dojo.query('.locslot .stockitem').addClass('highlighted');
                     break;
                 }
             },
@@ -241,13 +246,34 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Utility methods
 
-        /*
-
-            Here, you can defines some utility methods that you can use everywhere in your javascript
-            script.
-
-        */
-
+        validateCaseSelection: function (opts) {
+            var opts = opts || {};
+            var selectedTiles = this.tiles.getSelectedItems() || [];
+            tileinfos = this.gamedatas.tileinfos;
+            // Validation
+            if (opts.strict && selectedTiles.length != 3) {
+                this.showMessage(_("You must select exactly 3 tiles."), "error");
+                return false;
+            } else if (selectedTiles.length > 3) {
+                this.showMessage(_("You must not select more than 3 tiles."), "error");
+                return false;
+            }
+            var hasSelected = {'crime': false, 'suspect': false, 'location': false};
+            selectedTiles.forEach(dojo.hitch(this, function (tile) {
+                var tile_type_arg = parseInt(tile.type, 10);
+                if (hasSelected[tileinfos[tile_type_arg].tiletype]) {
+                    this.showMessage(_("You must not select more than one of each type (crime/location/suspect)."), "error");
+                    return false;
+                }
+                hasSelected[tileinfos[tile_type_arg].tiletype] = true;
+                // Tiles 1-6 are "NO CRIME/SUSPECT" tiles.
+                if (parseInt(tile_type_arg, 10) <= 6) {
+                    this.showMessage(_("You cannot select NO CRIME or NO SUSPECT tiles."), "error");
+                    return false;
+                }
+            }));
+            return true;
+        },
 
         ///////////////////////////////////////////////////
         //// Player's action
@@ -271,7 +297,7 @@ function (dojo, declare) {
                     // Can play a card
                     var card_id = items[0].id;
                     this.ajaxcall("/" + this.game_name + "/" + this.game_name + "/" + action + ".html", {
-                        id : card_id,
+                        id: card_id,
                         lock : true
                     }, this, function(result) {
                     }, function(is_error) {
@@ -283,8 +309,23 @@ function (dojo, declare) {
             }
         },
 
+        onCaseSelectionChanged: function (control_name) {
+            this.validateCaseSelection({strict: false});
+        },
+
         onConfirmCaseSelection: function () {
-            // TODO
+            if (!this.validateCaseSelection({strict: true})) return;
+            // Send the solving request to the server
+            var action = 'solveCase';
+            if (this.checkAction(action, true)) {
+                this.ajaxcall("/" + this.game_name + "/" + this.game_name + "/" + action + ".html", {
+                    tile_ids : this.tiles.getSelectedItems().map(function (tile) { return tile.id }).join(';'),
+                    lock : true
+                }, this, function(result) {
+                }, function(is_error) {
+                });
+            } else {
+            }
         },
 
         onPlaceInvestigatorClicked: function () {

@@ -52,33 +52,42 @@
 
 // define contants for state ids
 if (!defined('STATE_END_GAME')) { // guard since this included multiple times
-    define("STATE_PLAYER_TURN", 2);
+    define("STATE_SETUP_MINIGAME", 2);
+    define("STATE_PLAYER_TURN", 10);
     define("STATE_GAME_TURN", 32);
     define("STATE_END_GAME", 99);
 }
 
 $machinestates = array(
-
     // The initial state. Please do not modify.
     1 => array(
         "name" => "gameSetup",
         "description" => "",
         "type" => "manager",
         "action" => "stGameSetup",
-        "transitions" => array("" => STATE_PLAYER_TURN)
+        "transitions" => array("" => STATE_SETUP_MINIGAME)
     ),
 
     // Note: ID=2 => your first state
+    STATE_SETUP_MINIGAME => array(
+        "name" => "setupMinigame",
+        "description" => clienttranslate('Setting up the next minigame.'),
+        "type" => "game",
+        "action" => "st_setupMinigame",
+        "updateGameProgression" => true,
+        "transitions" => array("" => STATE_PLAYER_TURN)
+    ),
+
     STATE_PLAYER_TURN => array(
         "name" => "playerTurn",
         "description" => clienttranslate('${actplayer} must select a card, place an investigator, or try to solve'),
         "descriptionmyturn" => clienttranslate('${you} must select a card or:'),
         "type" => "activeplayer",
-        "possibleactions" => array("selectEvidence", "tryToSolve"),  // TODO add "placeInvestigator", "solve"
+        "possibleactions" => array("selectEvidence", "solveCase"),  // TODO add "placeInvestigator"
         "transitions" => array(
             "selectEvidence" => STATE_GAME_TURN,
+            "solveCase" => STATE_GAME_TURN,
             // "placeInvestigator" => 32,
-            // "tryToSolve" => 10,
         )
     ),
 
@@ -89,7 +98,9 @@ $machinestates = array(
         "action" => "st_gameTurn",
         "updateGameProgression" => true,
         "transitions" => array(
-            "next" => STATE_PLAYER_TURN,
+            "nextPlayer" => STATE_PLAYER_TURN,
+            "nextMinigame" => STATE_SETUP_MINIGAME,
+            "endGame" => STATE_END_GAME,
         )
     ),
 
