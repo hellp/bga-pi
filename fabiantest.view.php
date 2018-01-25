@@ -52,17 +52,6 @@
         // Inject location slots into the template
         $this->page->begin_block($template, "locslot");
         foreach ($this->game->locations as $loc_id => $loc) {
-            // location
-            $this->page->insert_block(
-                "locslot",
-                array(
-                    "ID" => $loc_id,
-                    "STRID" => $loc['strid'],
-                    "TOP" => $loc['coords'][0],
-                    "LEFT" => $loc['coords'][1],
-                    "ROTATION" => $loc['coords'][2],
-                    )
-                );
             foreach ($loc['slots'] as $slot) {
                 $this->page->insert_block(
                     "locslot",

@@ -9,9 +9,11 @@
 -------
 -->
 
-<div id="evidence_wrap" class="whiteblock" style="float:left; width:950px"><div id="evidence"></div></div>
-<div class="whiteblock" style="display:inline-block;background:none; opacity:0.75; width:110px;">
-    <div id="evidence_discard"></div>
+<div id="carddisplay">
+    <div id="evidence_wrap" class="whiteblock" style="float:left; width:950px"><div id="evidence"></div></div>
+    <div class="whiteblock" style="display:inline-block;background:none; opacity:0.75; width:110px;">
+        <div id="evidence_discard"></div>
+    </div>
 </div>
 
 <div id="board" style="clear:both">
@@ -56,7 +58,7 @@
 
     <!-- BEGIN locslot -->
     <div id="locslot_{ID}" class="locslot"
-         style="top:{TOP}px; left:{LEFT}px; transform:rotate({ROTATION}deg);"></div>
+         style="top:{TOP}px; left:{LEFT}px; transform:xxrotate({ROTATION}deg);"></div>
     <!-- END locslot -->
 </div>
 

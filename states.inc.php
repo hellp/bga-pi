@@ -71,8 +71,8 @@ $machinestates = array(
     // Note: ID=2 => your first state
     STATE_PLAYER_TURN => array(
         "name" => "playerTurn",
-        "description" => clienttranslate('${actplayer} must choose a card, place an investigator, or try to solve'),
-        "descriptionmyturn" => clienttranslate('${you} must choose a card or:'),
+        "description" => clienttranslate('${actplayer} must select a card, place an investigator, or try to solve'),
+        "descriptionmyturn" => clienttranslate('${you} must select a card or:'),
         "type" => "activeplayer",
         "possibleactions" => array("selectEvidence", "tryToSolve"),  // TODO add "placeInvestigator", "solve"
         "transitions" => array(

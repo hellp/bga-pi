@@ -212,6 +212,25 @@ $this->tiles = array(
   26 => array('name' => clienttranslate('Pinky'), 'nametr' => self::_('Pinky'), 'tiletype' => 'suspect'),
   27 => array('name' => clienttranslate('Frenchy'), 'nametr' => self::_('Frenchy'), 'tiletype' => 'suspect'),
   28 => array('name' => clienttranslate('Shorty'), 'nametr' => self::_('Shorty'), 'tiletype' => 'suspect'),
+
+  // FAKE TILES for the fixed on-board locations. But having them being handled
+  // the same way as normal tiles makes it easier for us. In the UI these will
+  // be invisible DIVs for the most part, except when highlighted for the Case
+  // solving action.
+  29 => array('name' => clienttranslate('Lakeside'), 'nametr' => self::_('Lakeside'), 'tiletype' => 'location'),
+  30 => array('name' => clienttranslate('Forest Park'), 'nametr' => self::_('Forest Park'), 'tiletype' => 'location'),
+  31 => array('name' => clienttranslate('Little Italy'), 'nametr' => self::_('Little Italy'), 'tiletype' => 'location'),
+  32 => array('name' => clienttranslate('Trocadero'), 'nametr' => self::_('Trocadero'), 'tiletype' => 'location'),
+  33 => array('name' => clienttranslate('Ocean Drive'), 'nametr' => self::_('Ocean Drive'), 'tiletype' => 'location'),
+  34 => array('name' => clienttranslate('China Town'), 'nametr' => self::_('China Town'), 'tiletype' => 'location'),
+  35 => array('name' => clienttranslate('Central Station'), 'nametr' => self::_('Central Station'), 'tiletype' => 'location'),
+  36 => array('name' => clienttranslate('Main Street'), 'nametr' => self::_('Main Street'), 'tiletype' => 'location'),
+  37 => array('name' => clienttranslate('Road House'), 'nametr' => self::_('Road House'), 'tiletype' => 'location'),
+  38 => array('name' => clienttranslate('Union Square'), 'nametr' => self::_('Union Square'), 'tiletype' => 'location'),
+  39 => array('name' => clienttranslate('Downtown'), 'nametr' => self::_('Downtown'), 'tiletype' => 'location'),
+  40 => array('name' => clienttranslate('Rick’s Café'), 'nametr' => self::_('Rick’s Café'), 'tiletype' => 'location'),
+  41 => array('name' => clienttranslate('Waterfront'), 'nametr' => self::_('Waterfront'), 'tiletype' => 'location'),
+  42 => array('name' => clienttranslate('Skid Row'), 'nametr' => self::_('Skid Row'), 'tiletype' => 'location'),
 );
 
 /**
@@ -228,32 +247,95 @@ $this->tiles = array(
  *
  * slots: 1 => crime, 2 => suspect
  */
-$this->locations = array(
-  1 => array(
-    'strid' => 'centralstation',
-    'nametr' => self::_('Central Station'),
-    'neighbors_by_strid' => array('littleitaly', 'trocadero', 'chinatown', 'mainstreet', 'unionsquare', 'downtown'),
-    'coords' => array(50.0, 35.1, -10.5),
+
+if (!defined('LOC_LAKESIDE')) { // guard since this included multiple times
+  define("LOC_LAKESIDE", 1);
+  define("LOC_FORESTPARK", 2);
+  define('LOC_LITTLEITALY', 3);
+  define('LOC_TROCADERO', 4);
+  define('LOC_OCEANDRIVE', 5);
+  define('LOC_CHINATOWN', 6);
+  define('LOC_CENTRALSTATION', 7);
+  define('LOC_MAINSTREET', 8);
+  define('LOC_ROADHOUSE', 9);
+  define('LOC_UNIONSQUARE', 10);
+  define('LOC_DOWNTOWN', 11);
+  define('LOC_RICKSCAFE', 12);
+  define('LOC_WATERFRONT', 13);
+  define('LOC_SKIDROW', 14);
+}
+
+
+ $this->locations = array(
+  LOC_LAKESIDE => array(
+    'strid' => 'lakeside',
+    'neighbors' => array(LOC_FORESTPARK, LOC_TROCADERO, LOC_LITTLEITALY),
+    'coords' => array(11.2, 34.9, 0),
   ),
-  2 => array(
-    'strid' => 'mainstreet',
-    'nametr' => self::_('Main Street'),
-    'neighbors_by_strid' => array('trocadero', 'oceandrive', 'roadhouse', 'rickscafe', 'downtown', 'centralstation'),
-    'coords' => array(49.4, 59.0, 0),
-  ),
-  3 => array(
-    'strid' => 'rickscafe',
-    'nametr' => self::_('Ricks Café'),
-    // TODO
-    'neighbors_by_strid' => array('trocadero', 'oceandrive', 'roadhouse', 'rickscafe', 'downtown', 'centralstation'),
-    'coords' => array(69.2, 71.0, 0),
-  ),
-  4 => array(
+  LOC_FORESTPARK => array(
     'strid' => 'forestpark',
-    'nametr' => self::_('Forest Park'),
-    // TODO
-    'neighbors_by_strid' => array('trocadero', 'oceandrive', 'roadhouse', 'rickscafe', 'downtown', 'centralstation'),
-    'coords' => array(12.0, 59.0, 2.5),
+    'neighbors' => array(LOC_OCEANDRIVE, LOC_TROCADERO, LOC_LAKESIDE),
+    'coords' => array(11.2, 59.0, 2.5),
+  ),
+  LOC_LITTLEITALY => array(
+    'strid' => 'littleitaly',
+    'neighbors' => array(LOC_LAKESIDE, LOC_TROCADERO, LOC_CENTRALSTATION, LOC_CHINATOWN),
+    'coords' => array(31.0, 23.0, 2.0),
+  ),
+  LOC_TROCADERO => array(
+    'strid' => 'trocadero',
+    'neighbors' => array(LOC_LAKESIDE, LOC_FORESTPARK, LOC_OCEANDRIVE, LOC_MAINSTREET, LOC_CENTRALSTATION, LOC_LITTLEITALY),
+    'coords' => array(30.0, 47.0, 0),
+  ),
+  LOC_OCEANDRIVE => array(
+    'strid' => 'oceandrive',
+    'neighbors' => array(LOC_FORESTPARK, LOC_ROADHOUSE, LOC_MAINSTREET, LOC_TROCADERO),
+    'coords' => array(31.0, 71.0, 2.0),
+  ),
+  LOC_CHINATOWN => array(
+    'strid' => 'chinatown',
+    'neighbors' => array(LOC_LITTLEITALY, LOC_CENTRALSTATION, LOC_UNIONSQUARE),
+    'coords' => array(50.0, 11.0, 2.0),
+  ),
+  LOC_CENTRALSTATION => array(
+    'strid' => 'centralstation',
+    'neighbors' => array(LOC_LITTLEITALY, LOC_TROCADERO, LOC_MAINSTREET, LOC_DOWNTOWN, LOC_UNIONSQUARE, LOC_CHINATOWN),
+    'coords' => array(50.0, 35.0, 2.0),
+  ),
+  LOC_MAINSTREET => array(
+    'strid' => 'mainstreet',
+    'neighbors' => array(LOC_TROCADERO, LOC_OCEANDRIVE, LOC_ROADHOUSE, LOC_RICKSCAFE, LOC_DOWNTOWN, LOC_CENTRALSTATION),
+    'coords' => array(50.0, 59.0, 0.0),
+  ),
+  LOC_ROADHOUSE => array(
+    'strid' => 'roadhouse',
+    'neighbors' => array(LOC_OCEANDRIVE, LOC_RICKSCAFE, LOC_MAINSTREET),
+    'coords' => array(50.0, 83.0, 2.0),
+  ),
+  LOC_UNIONSQUARE => array(
+    'strid' => 'unionsquare',
+    'neighbors' => array(LOC_CHINATOWN, LOC_CENTRALSTATION, LOC_DOWNTOWN, LOC_WATERFRONT),
+    'coords' => array(69.0, 23.0, 2.0),
+  ),
+  LOC_DOWNTOWN => array(
+    'strid' => 'downtown',
+    'neighbors' => array(LOC_CENTRALSTATION, LOC_MAINSTREET, LOC_RICKSCAFE, LOC_SKIDROW, LOC_WATERFRONT, LOC_UNIONSQUARE),
+    'coords' => array(69.0, 47.0, 0),
+  ),
+  LOC_RICKSCAFE => array(
+    'strid' => 'rickscafe',
+    'neighbors' => array(LOC_MAINSTREET, LOC_ROADHOUSE, LOC_SKIDROW, LOC_DOWNTOWN),
+    'coords' => array(69.0, 71.0, 0.0),
+  ),
+  LOC_WATERFRONT => array(
+    'strid' => 'waterfront',
+    'neighbors' => array(LOC_UNIONSQUARE, LOC_DOWNTOWN, LOC_SKIDROW),
+    'coords' => array(88.0, 35.0, 2.0),
+  ),
+  LOC_SKIDROW => array(
+    'strid' => 'skidrow',
+    'neighbors' => array(LOC_DOWNTOWN, LOC_RICKSCAFE, LOC_WATERFRONT),
+    'coords' => array(88.0, 59.0, 2.0),
   ),
 );
 
@@ -263,14 +345,19 @@ foreach ($this->locations as $loc_id => $loc) {
     'crime' => array(
       'id' => $loc_id * 100 + 1,
       'strid' => $loc['strid'] . '_crime',
-      'coords' => array(calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * 0.07),
-      calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * 0.07),
-      $angle)),
+      'coords' => array(
+        calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * 0.073),
+        calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * 0.073),
+        $angle)),
+    'location' => array(
+      'id' => $loc_id * 100 + 2,
+      'strid' => $loc['strid'] . '_location',
+      'coords' => array($this->constants['BOARD_H'] * ($top / 100), $this->constants['BOARD_W'] * ($left / 100), $angle)),
     'suspect' => array(
       'id' => $loc_id * 100 + 3,
       'strid' => $loc['strid'] . '_suspect',
-      'coords' => array(calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * -0.07),
-                        calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * -0.07),
+      'coords' => array(calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * -0.073),
+                        calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * -0.073),
                         $angle)),
   );
 }

@@ -27,8 +27,8 @@ function (dojo, declare) {
             // Here, you can init the global variables of your user interface
             this.CARD_WIDTH = 102;
             this.CARD_HEIGHT = 156;
-            this.TILE_HEIGHT = 60;
-            this.TILE_WIDTH = 60;
+            this.TILE_HEIGHT = 64;
+            this.TILE_WIDTH = 64;
         },
 
         /*
@@ -120,72 +120,32 @@ function (dojo, declare) {
             }
 
             console.log(this.gamedatas.tiles);
-            // for( var id in gamedatas.intersections )
-            // {
-            //     var intersection = gamedatas.intersections[id];
-
             // Set up tiles
             this.tiles = new ebg.stock();
             this.tiles.setSelectionMode(0); // Initially not selectable; later during solve action yes.
+            this.tiles.setSelectionAppearance('class');
             this.tiles.create(this, $('tilestock'), this.TILE_WIDTH, this.TILE_HEIGHT);
             this.tiles.setOverlap(0.01, 0); // basically on top of eachother
             this.tiles.image_items_per_row = TILE_ITEMS_PER_ROW;
             this.tiles.item_margin = 0;
-            // Create cards types:
-            for (var i = 1; i <= 28; i++) {
+            this.tiles.onItemCreate = dojo.hitch(this, function (card_div, card_type_id, card_id) {
+                // Delete the background from our "fake tiles" for the locations.
+                if (card_type_id > 28) {
+                    dojo.addClass(card_id, "fake_tile");
+                    dojo.setStyle(card_id, "background", "none");
+                }
+            });
+            for (var i = 1; i <= 42; i++) {
                 var pos_in_img = i - 1;  // it's zero-based
                 // weight is 0 for all as they have no inherent weight
-                this.tiles.addItemType(i, 0, g_gamethemeurl + 'img/tiles-front.jpg', pos_in_img);
-                // for (var player_id in gamedatas.players) {
-                //     this.playerDisplays[player_id].addItemType(i, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
-                // }
+                this.tiles.addItemType(i, 0, g_gamethemeurl + 'img/tiles_64_2x.jpg', pos_in_img);
             }
 
             for (i in this.gamedatas.tiles) {
                 var tile = this.gamedatas.tiles[i];
                 this.tiles.addToStockWithId(tile.type_arg, tile.id);
                 dojo.place($(this.tiles.getItemDivId(tile.id)), $('locslot_' + tile.location_arg));
-                // this.slideToObject($('tile_' + tile.id), $('locslot_' + tile.location_arg)).play();
-                
-                // dojo.place(
-                //     this.format_block('jstpl_tile', {tile: tile, name: this.gamedatas.tileinfos[tile.type_arg].name}),
-                //     $('board'));
-                // dojo.place(
-                //     this.format_block('jstpl_tile', {tile: tile, name: this.gamedatas.tileinfos[tile.type_arg].name}),
-                //     $('board'));
-                // this.slideToObject( $('tile_' + tile.id), $('locslot_' + tile.location_arg) ).play();
             }
-            
-            // var slide = this.slideToObject( $( 'stone_' + notif.args.coord_x + '_' + notif.args.coord_y ), $( 'intersection_' + notif.args.coord_x + '_' + notif.args.coord_y ), 1000 );
-            //     var x_pix = this.getXPixelCoordinates(intersection.coord_x);
-            //     var y_pix = this.getYPixelCoordinates(intersection.coord_y);
-                
-
-            //     if (intersection.stone_color != null) {
-            //         // This intersection is taken, it shouldn't appear as clickable anymore
-            //         dojo.removeClass( 'intersection_' + intersection.coord_x + '_' + intersection.coord_y, 'clickable' );
-            //     }
-            // } 
-
-
-            // // Place it on the player panel
-            // this.placeOnObject( $( 'stone_' + notif.args.coord_x + '_' + notif.args.coord_y ), $( 'player_board_' + notif.args.player_id ) );
-
-            // // Animate a slide from the player panel to the intersection
-            // dojo.style( 'stone_' + notif.args.coord_x + '_' + notif.args.coord_y, 'zIndex', 1 );
-            // var slide = this.slideToObject( $( 'stone_' + notif.args.coord_x + '_' + notif.args.coord_y ), $( 'intersection_' + notif.args.coord_x + '_' + notif.args.coord_y ), 1000 );
-            // dojo.connect( slide, 'onEnd', this, dojo.hitch( this, function() {
-            //             // At the end of the slide, update the intersection 
-            //             dojo.removeClass( 'intersection_' + notif.args.coord_x + '_' + notif.args.coord_y, 'no_stone' );
-            //             dojo.addClass( 'intersection_' + notif.args.coord_x + '_' + notif.args.coord_y, 'stone_'  + notif.args.color );
-            //             dojo.removeClass( 'intersection_' + notif.args.coord_x + '_' + notif.args.coord_y, 'clickable' );
-        			
-            //             // We can now destroy the stone since it is now visible through the change in style of the intersection
-            //             dojo.destroy( 'stone_' + notif.args.coord_x + '_' + notif.args.coord_y );
-       	    // }));
-            // slide.play();
-
-
 
             // Connect user actions
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
@@ -205,51 +165,38 @@ function (dojo, declare) {
         // onEnteringState: this method is called each time we are entering into a new game state.
         //                  You can use this method to perform some user interface changes at this moment.
         //
-        onEnteringState: function( stateName, args )
+        onEnteringState: function(stateName, args)
         {
-            console.log( 'Entering state: '+stateName );
-
+            console.log('Entering state: ' + stateName);
             switch( stateName )
             {
-
-            /* Example:
-
-            case 'myGameState':
-
-                // Show some HTML block at this game state
-                dojo.style( 'my_html_block_id', 'display', 'block' );
-
-                break;
-           */
-
-            case 'dummmy':
-                break;
-            }
-        },
-
-        // onLeavingState: this method is called each time we are leaving a game state.
-        //                 You can use this method to perform some user interface changes at this moment.
-        //
-        onLeavingState: function( stateName )
-        {
-            console.log('Leaving state: ' + stateName);
-
-            switch( stateName )
+                case 'client_playerPicksSolution':
+                    // Clean up UI a bit to let user focus
+                    dojo.fx.wipeOut({node: $('carddisplay')}).play(); // hide cards, so user doesn't accidentally click there
+                    // Enable tile selection
+                    this.tiles.setSelectionMode(2); // TODO: check on each selection: no more than 3, correct type etc
+                    dojo.query('.locslot .stockitem').addClass('highlighted');
+                    break;
+                }
+            },
+            
+            // onLeavingState: this method is called each time we are leaving a game state.
+            //                 You can use this method to perform some user interface changes at this moment.
+            //
+            onLeavingState: function( stateName )
             {
-
-            /* Example:
-
-            case 'myGameState':
-
-                // Hide the HTML block we are displaying only during this game state
-                dojo.style( 'my_html_block_id', 'display', 'none' );
-
-                break;
-           */
-
-
-            case 'dummmy':
-                break;
+                console.log('Leaving state: ' + stateName);
+                switch( stateName )
+                {
+                    case 'client_playerPicksSolution':
+                        dojo.query('.locslot .stockitem').removeClass('highlighted');
+                        this.tiles.setSelectionMode(0);
+                        dojo.fx.wipeIn({node: $('carddisplay')}).play();
+                        // "bug": if window was resized during this cards are in wrong positions; reset.
+                        this.evidenceDisplay.resetItemsPosition();
+                        this.evidenceDiscard.resetItemsPosition();
+                        // TODO unhighlight tiles
+                        break;
             }
         },
 
@@ -265,9 +212,9 @@ function (dojo, declare) {
                         // inactive button that simply spits a warning if
                         // clicked
                         this.addActionButton(
-                            'btn_send_investigator',
-                            dojo.string.substitute(_('Send investigator (${n} left)'), {n: 99}),
-                            'onSendInvestigatorClicked');
+                            'btn_place_investigator',
+                            dojo.string.substitute(_('Place an investigator (${n} left)'), {n: 99}),
+                            'onPlaceInvestigatorClicked');
                         this.addActionButton(
                             'btn_solve_case',
                             _('Solve case'),
@@ -276,7 +223,6 @@ function (dojo, declare) {
                     case "client_playerPicksSolution":
                         // Add Cancel button for the 'player picks solution' client state
                         if (this.on_client_state && !$('button_cancel')) {
-                            this.tiles.setSelectionMode(2); // put into own function; check on each selection: no more than 3, correct type etc
                             this.addActionButton(
                                 'button_confirm',
                                 _('Confirm'),
@@ -341,9 +287,9 @@ function (dojo, declare) {
             // TODO
         },
 
-        onSendInvestigatorClicked: function () {
+        onPlaceInvestigatorClicked: function () {
             // TODO
-            // Alert: "Click on a location to send your investigator (X left)."
+            // Alert: "Click on a location to place your investigator (X left)."
             console.log('sending investigator')
         },
         
