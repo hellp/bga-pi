@@ -63,7 +63,7 @@
 </div>
 
 <div id="myhand-wrap" class="whiteblock">
-    <h4>{CASE_CARDS_OF_PLAYER} XXX</h4>
+    <h4>{CASE_CARDS_OF_PLAYER} <span style="color:#{LEFT_NEIGHBOR_COLOR}">{LEFT_NEIGHBOR_NAME}</span></h4>
     <div id="myhand"></div>
 </div>
 <div id="myevidence-wrap" class="whiteblock">

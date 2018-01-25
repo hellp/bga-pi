@@ -202,11 +202,9 @@
 .card,
 #evidence .stockitem,
 #evidence_discard .stockitem,
+#playerdisplays .stockitem,
 #myevidence .stockitem,
 #myhand .stockitem {
-    /* display: inline-block;
-    height:156px;
-    width:100px; */
     box-shadow:2px 2px 3px 0px rgba(0, 0, 0, 0.66);
     border-radius: 6px;
 }

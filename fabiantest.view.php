@@ -40,7 +40,7 @@
 
         // Get players & players number
         $players = $this->game->loadPlayersBasicInfos();
-        $players_nbr = count( $players );
+        $players_nbr = count($players);
 
         /*********** Place your code below:  ************/
 
@@ -48,7 +48,12 @@
         $this->tpl['MY_EVIDENCE_CARDS'] = self::_("Evidence cards I collected");
         $this->tpl['EVIDENCE_CARDS_OF_PLAYER'] = self::_("Evidence cards collected by");
         $this->tpl['CASE_CARDS_OF_PLAYER'] = self::_("Case cards of player");
-        
+
+        // Display player name to which my hand cards belong
+        $left_neighbor = $this->game->getPlayerAfter($current_player_id);
+        $this->tpl['LEFT_NEIGHBOR_NAME'] = $players[$left_neighbor]['player_name'];
+        $this->tpl['LEFT_NEIGHBOR_COLOR'] = $players[$left_neighbor]['player_color'];
+
         // Inject location slots into the template
         $this->page->begin_block($template, "locslot");
         foreach ($this->game->locations as $loc_id => $loc) {
