@@ -31,7 +31,8 @@
     function getGameName() {
         return "fabiantest";
     }
-    function build_page( $viewArgs )
+
+    function build_page($viewArgs)
     {
         global $g_user;
         $template = self::getGameName() . "_" . self::getGameName();
@@ -54,15 +55,22 @@
         $this->tpl['LEFT_NEIGHBOR_NAME'] = $players[$left_neighbor]['player_name'];
         $this->tpl['LEFT_NEIGHBOR_COLOR'] = $players[$left_neighbor]['player_color'];
 
-        // Inject location slots into the template
+        // The location containers and the location slots, where the tiles we be
+        // player later (by JS).
         $this->page->begin_block($template, "locslot");
+        $this->page->begin_block($template, "loccont");
         foreach ($this->game->locations as $loc_id => $loc) {
-            foreach ($loc['slots'] as $slot) {
-                $this->page->insert_block(
-                    "locslot",
-                    array("ID" => $slot['id'], "TOP" => $slot['coords'][0], "LEFT" => $slot['coords'][1], "ROTATION" => $slot['coords'][2])
-                );
+            $this->page->reset_subblocks("locslot");
+            foreach ($loc['slots'] as $type => $slot) {
+                $this->page->insert_block("locslot", array("ID" => $slot['id'], "TYPE" => $type));
             }
+            $this->page->insert_block(
+                "loccont",
+                array("ID" => $loc_id,
+                      "TOP" => ($loc['coords'][0] / 100) * $this->game->constants['BOARD_H'],
+                      "LEFT" => ($loc['coords'][1] / 100) * $this->game->constants['BOARD_W'],
+                      "ROTATION" => $loc['coords'][2])
+            );
         }
 
         // this will inflate our player block with actual players data

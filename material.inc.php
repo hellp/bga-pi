@@ -265,99 +265,86 @@ if (!defined('LOC_LAKESIDE')) { // guard since this included multiple times
   define('LOC_SKIDROW', 14);
 }
 
-
- $this->locations = array(
+$this->locations = array(
   LOC_LAKESIDE => array(
     'strid' => 'lakeside',
     'neighbors' => array(LOC_FORESTPARK, LOC_TROCADERO, LOC_LITTLEITALY),
-    'coords' => array(11.2, 34.9, 0),
+    'coords' => array(4.2, 27.8, 0),
   ),
   LOC_FORESTPARK => array(
     'strid' => 'forestpark',
     'neighbors' => array(LOC_OCEANDRIVE, LOC_TROCADERO, LOC_LAKESIDE),
-    'coords' => array(11.2, 59.0, 2.5),
+    'coords' => array(3.8, 51.9, 2.5),
   ),
   LOC_LITTLEITALY => array(
     'strid' => 'littleitaly',
     'neighbors' => array(LOC_LAKESIDE, LOC_TROCADERO, LOC_CENTRALSTATION, LOC_CHINATOWN),
-    'coords' => array(31.0, 23.0, 2.0),
+    'coords' => array(23.5, 15.0, 2.0),
   ),
   LOC_TROCADERO => array(
     'strid' => 'trocadero',
     'neighbors' => array(LOC_LAKESIDE, LOC_FORESTPARK, LOC_OCEANDRIVE, LOC_MAINSTREET, LOC_CENTRALSTATION, LOC_LITTLEITALY),
-    'coords' => array(30.0, 47.0, 0),
+    'coords' => array(23.2, 39.7, 0),
   ),
   LOC_OCEANDRIVE => array(
     'strid' => 'oceandrive',
     'neighbors' => array(LOC_FORESTPARK, LOC_ROADHOUSE, LOC_MAINSTREET, LOC_TROCADERO),
-    'coords' => array(31.0, 71.0, 2.0),
+    'coords' => array(23.9, 64.2, 1.3),
   ),
   LOC_CHINATOWN => array(
     'strid' => 'chinatown',
     'neighbors' => array(LOC_LITTLEITALY, LOC_CENTRALSTATION, LOC_UNIONSQUARE),
-    'coords' => array(50.0, 11.0, 2.0),
+    'coords' => array(43.2, 2.8, 0),
   ),
   LOC_CENTRALSTATION => array(
     'strid' => 'centralstation',
     'neighbors' => array(LOC_LITTLEITALY, LOC_TROCADERO, LOC_MAINSTREET, LOC_DOWNTOWN, LOC_UNIONSQUARE, LOC_CHINATOWN),
-    'coords' => array(50.0, 35.0, 2.0),
+    'coords' => array(43.2, 27.5, 1.15),
   ),
   LOC_MAINSTREET => array(
     'strid' => 'mainstreet',
     'neighbors' => array(LOC_TROCADERO, LOC_OCEANDRIVE, LOC_ROADHOUSE, LOC_RICKSCAFE, LOC_DOWNTOWN, LOC_CENTRALSTATION),
-    'coords' => array(50.0, 59.0, 0.0),
+    'coords' => array(42.5, 51.8, 0),
   ),
   LOC_ROADHOUSE => array(
     'strid' => 'roadhouse',
     'neighbors' => array(LOC_OCEANDRIVE, LOC_RICKSCAFE, LOC_MAINSTREET),
-    'coords' => array(50.0, 83.0, 2.0),
+    'coords' => array(43.4, 76.2, 1.7),
   ),
   LOC_UNIONSQUARE => array(
     'strid' => 'unionsquare',
     'neighbors' => array(LOC_CHINATOWN, LOC_CENTRALSTATION, LOC_DOWNTOWN, LOC_WATERFRONT),
-    'coords' => array(69.0, 23.0, 2.0),
+    'coords' => array(63.0, 15.3, -1.5),
   ),
   LOC_DOWNTOWN => array(
     'strid' => 'downtown',
     'neighbors' => array(LOC_CENTRALSTATION, LOC_MAINSTREET, LOC_RICKSCAFE, LOC_SKIDROW, LOC_WATERFRONT, LOC_UNIONSQUARE),
-    'coords' => array(69.0, 47.0, 0),
+    'coords' => array(63.1, 39.4, 0),
   ),
   LOC_RICKSCAFE => array(
     'strid' => 'rickscafe',
     'neighbors' => array(LOC_MAINSTREET, LOC_ROADHOUSE, LOC_SKIDROW, LOC_DOWNTOWN),
-    'coords' => array(69.0, 71.0, 0.0),
+    'coords' => array(63.1, 64.1, 0),
   ),
   LOC_WATERFRONT => array(
     'strid' => 'waterfront',
     'neighbors' => array(LOC_UNIONSQUARE, LOC_DOWNTOWN, LOC_SKIDROW),
-    'coords' => array(88.0, 35.0, 2.0),
+    'coords' => array(82.3, 27.4, 1.5),
   ),
   LOC_SKIDROW => array(
     'strid' => 'skidrow',
     'neighbors' => array(LOC_DOWNTOWN, LOC_RICKSCAFE, LOC_WATERFRONT),
-    'coords' => array(88.0, 59.0, 2.0),
+    'coords' => array(82.5, 51.7, 0),
   ),
 );
 
+// For each location create 3 slots; in the UI these will be anchors to orient
+// our tiles on.
 foreach ($this->locations as $loc_id => $loc) {
   list($top, $left, $angle) = $loc['coords'];
   $this->locations[$loc_id]['slots'] = array(
-    'crime' => array(
-      'id' => $loc_id * 100 + 1,
-      'strid' => $loc['strid'] . '_crime',
-      'coords' => array(
-        calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * 0.073),
-        calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * 0.073),
-        $angle)),
-    'location' => array(
-      'id' => $loc_id * 100 + 2,
-      'strid' => $loc['strid'] . '_location',
-      'coords' => array($this->constants['BOARD_H'] * ($top / 100), $this->constants['BOARD_W'] * ($left / 100), $angle)),
-    'suspect' => array(
-      'id' => $loc_id * 100 + 3,
-      'strid' => $loc['strid'] . '_suspect',
-      'coords' => array(calcY($this->constants['BOARD_H'] * ($top / 100), $angle, $this->constants['BOARD_H'] * -0.073),
-                        calcX($this->constants['BOARD_W'] * ($left / 100), $angle, $this->constants['BOARD_W'] * -0.073),
-                        $angle)),
+    'crime' => array('id' => $loc_id * 100 + 1, 'strid' => $loc['strid'] . '_crime'),
+    'location' => array('id' => $loc_id * 100 + 2, 'strid' => $loc['strid'] . '_location'),
+    'suspect' => array('id' => $loc_id * 100 + 3, 'strid' => $loc['strid'] . '_suspect'),
   );
 }

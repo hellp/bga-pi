@@ -117,13 +117,23 @@
     box-shadow: 1px 1px 1px 0px rgba(0, 0, 0, 0.5);
 }
 
+/* Location containers */
+.loccont {
+    position: absolute;
+    height:114px;
+    width:205px;
+}
 /* Location slots */
 .locslot {
     position: absolute;
     height:64px;
     width:64px;
+    bottom:0;
     /* box-shadow: 0 0 0 4px rgba(255, 0, 255, 0.658); */
 }
+.locslot.location_slot { left:34%; }
+.locslot.crime_slot { right:0; }
+
 .tile {
     position: absolute;
     height:64px;
