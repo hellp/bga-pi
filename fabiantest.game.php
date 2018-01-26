@@ -208,25 +208,6 @@ class fabiantest extends Table
     */
 
     /**
-     * Return if it is the last turn for this minigame.
-     *
-     * It's the last turn if all other players have already solved their cases.
-     */
-    function isLastTurn() {
-        // TODO
-    }
-
-    // function getCardNames($ids)
-    // {
-    //     return array_pluck(
-    //         array_filter($this->cardBasis, function($k) {
-    //             return in_array($k, $ids);
-    //         }, ARRAY_FILTER_USE_KEY),
-    //         'name'
-    //     );
-    // }
-
-    /**
      * Return the cards cards that represent the solution for the given player.
      * These are the player's right neighbors hand cards.
      */

@@ -364,8 +364,6 @@ function (dojo, declare) {
             dojo.subscribe('newScores', this, "notif_newScores");
             dojo.subscribe('playerSolved', this, "notif_playerSolved");
 
-            // TODO: here, associate your game notifications with local methods
-
             // Example 1: standard notification handling
             // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
 

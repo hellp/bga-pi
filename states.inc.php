@@ -86,7 +86,6 @@ $machinestates = array(
         "possibleactions" => array("selectEvidence", "solveCase"),  // TODO add "placeInvestigator"
         "transitions" => array(
             "nextTurn" => STATE_GAME_TURN,
-            // "placeInvestigator" => 32,
         )
     ),
 
