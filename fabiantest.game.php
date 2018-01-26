@@ -150,8 +150,13 @@ class fabiantest extends Table
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
 
         // Get information about players
-        // Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-        $sql = "SELECT player_id id, player_score score FROM player";
+        $sql = "
+            SELECT
+                player_id id,
+                player_score score,
+                player_solved_in_round solved_in_round
+            FROM player
+        ";
         $result['players'] = self::getCollectionFromDb($sql);
 
         // Gather all information about current game situation (visible by player $current_player_id).

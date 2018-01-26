@@ -50,6 +50,13 @@ function (dojo, declare) {
             var CARD_ITEMS_PER_ROW = 9;
             var TILE_ITEMS_PER_ROW = 7;
 
+            // Gray out players who have already solved in this minigame.
+            for (var player_id in gamedatas.players) {
+                if (gamedatas.players[player_id].solved_in_round != null) {
+                    this.disablePlayerPanel(player_id);
+                }
+            }
+
             // Set up player hand, i.e. the secret case cards of their left neighbor
             this.playerHand = new ebg.stock();
             this.playerHand.create(this, $('myhand'), this.CARD_WIDTH, this.CARD_HEIGHT);
