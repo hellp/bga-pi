@@ -361,7 +361,7 @@ function (dojo, declare) {
             this.notifqueue.setSynchronous('evidenceSelected', 500);
 
             dojo.subscribe('newEvidence', this, "notif_newEvidence");
-
+            dojo.subscribe('newScores', this, "notif_newScores");
             dojo.subscribe('playerSolved', this, "notif_playerSolved");
 
             // TODO: here, associate your game notifications with local methods
@@ -391,6 +391,12 @@ function (dojo, declare) {
             var targetStock = (notif.args.useful) ? this.evidenceDiscard : this.playerDisplays[notif.args.player_id];
             targetStock.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
             this.evidenceDisplay.removeFromStockById(notif.args.card_id);
+        },
+
+        notif_newScores: function(notif) {
+            for (var player_id in notif.args.scores) {
+                this.scoreCtrl[player_id].toValue(notif.args.scores[player_id]);
+            }
         },
 
         notif_playerSolved: function(notif) {

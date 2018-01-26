@@ -236,6 +236,15 @@ class fabiantest extends Table
     }
 
     /**
+     * Send a notification to all player with the current scores.
+     */
+    function notifyNewScores()
+    {
+        $scores = self::getCollectionFromDb("SELECT player_id, player_score FROM player", true);
+        self::notifyAllPlayers("newScores", "", array("scores" => $scores));
+    }
+
+    /**
      * Put a new evidence cards on display. Also takes care about reshuffling
      * the deck if we run out.
      */
@@ -365,12 +374,14 @@ class fabiantest extends Table
                 WHERE player_id = $player_id
             ");
             // TODO: use this notification to grey out the player area
-            self::notifyPlayer(
-                self::getActivePlayerId(),
+            self::notifyAllPlayers(
                 'playerSolved',
                 // TODO: improve wording
-                clienttranslate('You were correct, congratulations! You can now relax until the end of the mini-game.'),
-                array()
+                clienttranslate('${player_name} solved their case successfully!'),
+                array(
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                )
             );
         } else {
             // Give penalty points
@@ -388,6 +399,7 @@ class fabiantest extends Table
                 array()
             );
         }
+        $this->notifyNewScores();
         $this->gamestate->nextState('nextTurn');
     }
 
