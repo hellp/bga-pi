@@ -34,9 +34,23 @@ class fabiantest extends Table
         parent::__construct();
 
         self::initGameStateLabels(array(
-            // P.I. is played over 3 "mini games". Here we store in which of these games we are. Valid values: 1, 2, 3
+            // P.I. is played over 3 "mini games". Here we store in which of
+            // these games we are. Valid values: 1, 2, 3
             "minigame" => 10,
-            // "my_second_global_variable" => 11,
+
+            // The inner-minigame round. Required to determine how many points
+            // players score when solving. All players that solve in the same
+            // round score the same, then the score drops. Also a minigame ends
+            // when a new round begins and only 1 player is left with an
+            // unsolved case. That player then scores 0 for that minigame and a
+            // new one starts (or game end).
+            "minigame_round" => 11,
+
+            // The current value of points a player would get if they would
+            // score correctly now. Decreases after rounds in that a player (or
+            // multiple) successfully scored.
+            "points_winnable" => 12,
+
             // "my_first_game_variant" => 100,
             // "my_second_game_variant" => 101,
         ));
@@ -89,23 +103,19 @@ class fabiantest extends Table
         // - 14 Locations
 
         $cards = array();
-        // Create Evidence cards
+        // Create Evidence + Case cards
         foreach ($this->cardBasis as $card_id => $card) {
-            $cards[] = array('type' => 'evidence',
-                             'type_arg' => $this->getCardTypeArg('evidence', $card_id),
-                             'nbr' => 1);
-        }
-        // Create Case cards
-        foreach ($this->cardBasis as $card_id => $card) {
-            $cards[] = array('type' => $card['casetype'],
-                             'type_arg' => $this->getCardTypeArg($card['casetype'], $card_id),
-                             'nbr' => 1);
+            $cards[] = array(
+                'type' => ($card_id <= 36) ? 'evidence' : $card['casetype'],
+                'type_arg' => $card_id,
+                'nbr' => 1);
         }
         // Create tiles -- not actual cards, but handled similarly
         foreach ($this->tiles as $tile_id => $tile) {
-            $cards[] = array('type' => 'tile_' . $tile['tiletype'],
-                             'type_arg' => $tile_id,
-                             'nbr' => 1);
+            $cards[] = array(
+                'type' => 'tile_' . $tile['tiletype'],
+                'type_arg' => $tile_id,
+                'nbr' => 1);
         }
 
         // Create all, but don't put them into 'deck' yet, the piles have to be
@@ -119,6 +129,8 @@ class fabiantest extends Table
 
         // Setup the initial game situation here
         self::setGameStateInitialValue('minigame', 0);  // will be increased in st_setupMinigame
+        self::setGameStateInitialValue('minigame_round', 0);  // will be really set in st_setupMinigame
+        self::setGameStateInitialValue('points_winnable', 7);  // will be really set in st_setupMinigame
 
         /************ End of the game initialization *****/
     }
@@ -195,15 +207,6 @@ class fabiantest extends Table
         In this space, you can put any utility methods useful for your game logic
     */
 
-    function getCardTypeArg($type, $i) {
-        if ($type == 'evidence') {
-            $offset = 0;
-        } else if (in_array($type, array('crime', 'location', 'suspect'))) {
-            $offset = 36;
-        }
-        return $offset + $i;
-    }
-
     /**
      * Return if it is the last turn for this minigame.
      *
@@ -238,6 +241,12 @@ class fabiantest extends Table
      */
     function replenishEvidenceDisplay()
     {
+        // First check, if we have to do so. If the display is full, do nothing.
+        if ($this->cards->countCardInLocation('evidence_display')
+            == $this->constants['EVIDENCE_DISPLAY_SIZE']) {
+            return;
+        }
+
         // While auto-reshuffle is still a mystery to me, check here manually.
         if ($this->cards->countCardInLocation('deck') == 0
                 && $this->cards->countCardInLocation('discard') > 0) {
@@ -322,47 +331,64 @@ class fabiantest extends Table
                     'player_name' => self::getActivePlayerName(),
                 ));
             }
+        $this->gamestate->nextState('nextTurn');
+    }
 
-        // Next player
-        $this->gamestate->nextState('selectEvidence');
+    function getMaterialNames($material, $ids, $sorted=false)
+    {
+        $filtered_material = array_filter(
+            $material,
+            function($id) use ($ids) { return in_array($id, $ids); },
+            ARRAY_FILTER_USE_KEY);
+        $names = array_pluck($filtered_material, 'name');
+        if ($sorted) sort($names);
+        return $names;
     }
 
     function solveCase($tile_ids) {
         self::checkAction("solveCase");
         $player_id = self::getActivePlayerId();
-        $case_cards = getPlayerCaseCards($player_id);
+        $case_cards = $this->getPlayerCaseCards($player_id);
+        $card_mids = array_pluck($case_cards, 'type_arg');  // material ids
+        $card_names = $this->getMaterialNames($this->cardBasis, $card_mids, true);
+        $tile_mids = array_pluck($this->cards->getCards($tile_ids), 'type_arg');
+        $tile_names = $this->getMaterialNames($this->tiles, $tile_mids, true);
+        $player_correct = $card_names == $tile_names;
 
         // Check if player was correct
-        if ($playerCorrect) {
-
-            // If it was the last player to solve this round, we are done and
-            // can start a new minigame; or even end the game.
+        if ($player_correct) {
+            // Score + mark as inactive for the rest of the minigame.
+            self::DbQuery("
+                UPDATE player
+                SET player_score = player_score + " . self::getGameStateValue('points_winnable') . ",
+                    player_solved_in_round = " . self::getGameStateValue('minigame_round') . "
+                WHERE player_id = $player_id
+            ");
+            // TODO: use this notification to grey out the player area
+            self::notifyPlayer(
+                self::getActivePlayerId(),
+                'playerSolved',
+                // TODO: improve wording
+                clienttranslate('You were correct, congratulations! You can now relax until the end of the mini-game.'),
+                array()
+            );
         } else {
-            $this->increasePenalty($player_id);
+            // Give penalty points
+            self::DbQuery("
+                UPDATE player
+                SET player_score = player_score - 2,
+                    player_penalty = player_penalty - 2
+                WHERE player_id = $player_id
+            ");
+            self::notifyAllPlayers(
+                self::getActivePlayerId(),
+                'playerFailed',
+                // TODO: improve wording
+                clienttranslate('You were not correct.'),
+                array()
+            );
         }
-
-
-
-        self::notifyPlayer(
-            self::getActivePlayerId(),
-            'playerTriedToSolve',
-            clienttranslate('You tried to solve'),
-            array()
-        );
-        // self::notifyAllPlayers(
-        //     'evidenceSelected',
-        //     clienttranslate('${player_name} had no luck following evidence ${card_name}'),
-        //     array (
-        //         'i18n' => array ('card_name'),
-        //         'useful' => false,
-        //         'card_id' => $card_id,
-        //         'card_name' => $this->cardBasis[$currentCard['type_arg']]['name'],
-        //         'card_type' => $currentCard['type_arg'],
-        //         'player_id' => $player_id,
-        //         'player_name' => self::getActivePlayerName(),
-        //     )
-        // );
-
+        $this->gamestate->nextState('nextTurn');
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -402,6 +428,9 @@ class fabiantest extends Table
     function st_setupMinigame()
     {
         self::incGameStateValue('minigame', 1);
+        self::setGameStateValue('minigame_round', 1);
+        self::setGameStateValue('points_winnable', 7);
+        self::DbQuery("UPDATE `player` SET `player_solved_in_round` = NULL");
 
         // Get all cards, sort into piles, shuffle piles.
         $this->cards->moveAllCardsInLocation(null, "offtable");
@@ -464,26 +493,51 @@ class fabiantest extends Table
 
     function st_gameTurn()
     {
-        // TODO: First check if the round is over; then we start a new minigame,
-        // or even end the game completely, if we are already in the last
-        // minigame. Round is over once all players solved; or even if a new
-        // round starts and only 1 player remains with an unsolved case.
+        $active_player_id = self::getActivePlayerId(); // not really 'active', as this is a 'game' turn.
+
+        $unsolved_player_ids = self::getObjectListFromDB(
+            "SELECT player_id FROM player WHERE player_solved_in_round IS NULL", true);
+
+        // First check if the round is over; then we start a new minigame, or
+        // even end the game completely, if we are already in the last minigame.
+        // Round is over once all players solved; or even if a new round starts
+        // and only 1 player remains with an unsolved case.
+
+        // A round (within this minigame) is over if the (potential) next player
+        // has `player_no` == current minigame number.
+        $player_after = self::getPlayerAfter($active_player_id);
+        $round_over = $player_after['player_no'] == self::getGameStateValue('minigame');
+
+        if ($round_over) {
+            // Is only one player with unsolved case left? -> start new minigame
+            if (count($unsolved_player_ids) == 1) {
+                $this->gamestate->nextState('nextMinigame');
+                return;
+            }
+            // Did any player solve in that round? Then decrease points_winnable
+            $round = self::incGameStateInitialValue('minigame_round');
+            $sql = "SELECT COUNT(player_id) FROM player WHERE player_solved_in_round = $round";
+            if (self::getUniqueValueFromDB($sql)) {
+                self::setGameStateValue(
+                    'points_winnable',
+                    max(0, self::getGameStateValue('points_winnable') - 2));
+            }
+            self::incGameStateInitialValue('minigame_round', 1);
+        }
 
         // TODO: Warn the active player when it's their last chance to solve,
         // i.e. when they are the last one with an unsolved case in the current
         // minigame.
-        
-        // TODO: only replenish the display if the current minigame keeps going.
-        // Maybe move this code somewhere else?
 
         // Draw a new card for evidence display
         $this->replenishEvidenceDisplay();
 
-        // Case: Player solved
-        // Notify: {Player} solved ...
+        // Look for the next 'unsolved' player to activate.
+        do {
+            $next_active_player_id = self::activeNextPlayer();
+        } while (!in_array($next_active_player_id, $unsolved_player_ids));
 
-        $player_id = self::activeNextPlayer();
-        self::giveExtraTime($player_id);
+        self::giveExtraTime($next_active_player_id);
         $this->gamestate->nextState('nextPlayer');
     }
 

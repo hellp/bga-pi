@@ -119,7 +119,6 @@ function (dojo, declare) {
                 this.playerDisplays[card.location_arg].addToStockWithId(card.type_arg, card.id);
             }
 
-            console.log(this.gamedatas.tiles);
             // Set up tiles
             this.tiles = new ebg.stock();
             this.tiles.setSelectionMode(0); // Initially not selectable; later during solve action yes.
@@ -363,6 +362,8 @@ function (dojo, declare) {
 
             dojo.subscribe('newEvidence', this, "notif_newEvidence");
 
+            dojo.subscribe('playerSolved', this, "notif_playerSolved");
+
             // TODO: here, associate your game notifications with local methods
 
             // Example 1: standard notification handling
@@ -376,8 +377,7 @@ function (dojo, declare) {
             //
         },
 
-        notif_newEvidence: function(notif)
-        {
+        notif_newEvidence: function(notif) {
             if (notif.args.card_id) {
                 this.evidenceDisplay.addToStockWithId(notif.args.card_type, notif.args.card_id);
             }
@@ -386,12 +386,15 @@ function (dojo, declare) {
             }
         },
         
-        notif_evidenceSelected: function(notif)
-        {
+        notif_evidenceSelected: function(notif) {
             // Useless evidences goes to player display; valueable evidence to discard.
             var targetStock = (notif.args.useful) ? this.evidenceDiscard : this.playerDisplays[notif.args.player_id];
             targetStock.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
             this.evidenceDisplay.removeFromStockById(notif.args.card_id);
         },
-   });
+
+        notif_playerSolved: function(notif) {
+            this.disablePlayerPanel(notif.args.player_id);
+        },
+    });
 });

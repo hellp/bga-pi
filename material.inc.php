@@ -180,6 +180,12 @@ $this->cardBasis = array(
 );
 
 
+// The case cards; data-wise a copy of the evidence cards
+for ($i=1; $i<=36; $i++) {
+  $this->cardBasis[36 + $i] = $this->cardBasis[$i];
+}
+
+
 $this->tiles = array(
   1 => array('name' => clienttranslate('NO CRIME'), 'nametr' => self::_('NO CRIME'), 'tiletype' => 'crime'),
   2 => array('name' => clienttranslate('NO CRIME'), 'nametr' => self::_('NO CRIME'), 'tiletype' => 'crime'),

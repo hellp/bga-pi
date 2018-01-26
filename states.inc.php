@@ -85,8 +85,7 @@ $machinestates = array(
         "type" => "activeplayer",
         "possibleactions" => array("selectEvidence", "solveCase"),  // TODO add "placeInvestigator"
         "transitions" => array(
-            "selectEvidence" => STATE_GAME_TURN,
-            "solveCase" => STATE_GAME_TURN,
+            "nextTurn" => STATE_GAME_TURN,
             // "placeInvestigator" => 32,
         )
     ),
