@@ -519,9 +519,6 @@ class fabiantest extends Table
         $player_after_id = self::getPlayerAfter($active_player_id);
         $sql = "SELECT player_no FROM player WHERE player_id = $player_after_id";
         $round_over = self::getUniqueValueFromDB($sql) == self::getGameStateValue('minigame');
-        self::notifyAllPlayers(
-            'roundOver', 'round over'.$round_over, array()
-        );
 
         if ($round_over) {
             // Is only one player with unsolved case left? -> start new minigame
