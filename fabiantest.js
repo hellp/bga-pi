@@ -50,12 +50,22 @@ function (dojo, declare) {
             var CARD_ITEMS_PER_ROW = 9;
             var TILE_ITEMS_PER_ROW = 7;
 
-            // Gray out players who have already solved in this minigame.
+            // Set up player boards
             for (var player_id in gamedatas.players) {
+                // Gray out players who have already solved in this minigame.
+                var player = gamedatas.players[player_id];
                 if (gamedatas.players[player_id].solved_in_round != null) {
                     this.disablePlayerPanel(player_id);
                 }
+                dojo.place(
+                    this.format_block('jstpl_player_board', player),
+                    $('player_board_' + player_id));
+                if (player.is_startplayer == 1) {
+                    dojo.addClass('sp_marker_' + player_id, 'visible');
+                }
             }
+            this.addTooltipToClass('sp_marker', _("Start player"), '');
+
 
             // Set up player hand, i.e. the secret case cards of their left neighbor
             this.playerHand = new ebg.stock();

@@ -90,7 +90,7 @@
 <script type="text/javascript">
 // Javascript HTML templates
 
-var jstpl_tile = '<div class="tile" id="tile_${tile.id}">${name} <small>${tile.type_arg}</small></div>';
+var jstpl_player_board = '<div class="cp_board"><span class="sp_marker" id="sp_marker_${id}">➊</span></div>';
 
 </script>
 

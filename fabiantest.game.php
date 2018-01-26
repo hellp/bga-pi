@@ -148,13 +148,15 @@ class fabiantest extends Table
     {
         $result = array();
         $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
+        $minigame = self::getGameStateValue("minigame");
 
         // Get information about players
         $sql = "
             SELECT
-                player_id id,
-                player_score score,
-                player_solved_in_round solved_in_round
+                player_id as id,
+                player_score as score,
+                player_solved_in_round as solved_in_round,
+                player_no = $minigame as is_startplayer
             FROM player
         ";
         $result['players'] = self::getCollectionFromDb($sql);
@@ -426,6 +428,7 @@ class fabiantest extends Table
     function st_setupMinigame()
     {
         self::incGameStateValue('minigame', 1);
+        $minigame = self::getGameStateValue('minigame');
         self::setGameStateValue('minigame_round', 1);
         self::setGameStateValue('points_winnable', 7);
         self::DbQuery("UPDATE `player` SET `player_solved_in_round` = NULL");
@@ -480,6 +483,16 @@ class fabiantest extends Table
             $this->cards->pickCard('suspect_deck', $player_id);
         }
 
+        $notifText = array(
+            1 => clienttranslate('The first of three mini-games starts.'),
+            2 => clienttranslate('The second mini-game starts.'),
+            3 => clienttranslate('The third and final mini-game starts.'),
+        );
+        self::notifyAllPlayers(
+            "newMinigame",
+            $notifText[$minigame],
+            array("minigame" => $minigame));
+
         // Select a new first player. In minigame 1 it's player_no 1, in
         // minigame 2 player_no 2 etc.; using module to cover the 'more rounds
         // than players' case.
@@ -503,8 +516,12 @@ class fabiantest extends Table
 
         // A round (within this minigame) is over if the (potential) next player
         // has `player_no` == current minigame number.
-        $player_after = self::getPlayerAfter($active_player_id);
-        $round_over = $player_after['player_no'] == self::getGameStateValue('minigame');
+        $player_after_id = self::getPlayerAfter($active_player_id);
+        $sql = "SELECT player_no FROM player WHERE player_id = $player_after_id";
+        $round_over = self::getUniqueValueFromDB($sql) == self::getGameStateValue('minigame');
+        self::notifyAllPlayers(
+            'roundOver', 'round over'.$round_over, array()
+        );
 
         if ($round_over) {
             // Is only one player with unsolved case left? -> start new minigame
@@ -513,14 +530,14 @@ class fabiantest extends Table
                 return;
             }
             // Did any player solve in that round? Then decrease points_winnable
-            $round = self::incGameStateInitialValue('minigame_round');
+            $round = self::getGameStateValue('minigame_round');
             $sql = "SELECT COUNT(player_id) FROM player WHERE player_solved_in_round = $round";
             if (self::getUniqueValueFromDB($sql)) {
                 self::setGameStateValue(
                     'points_winnable',
                     max(0, self::getGameStateValue('points_winnable') - 2));
             }
-            self::incGameStateInitialValue('minigame_round', 1);
+            self::incGameStateValue('minigame_round', 1);
         }
 
         // TODO: Warn the active player when it's their last chance to solve,

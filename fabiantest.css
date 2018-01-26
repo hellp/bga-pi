@@ -68,12 +68,12 @@
     font-size: .8rem;
 }
 
-/* #board {
-    position: relative;
-    background-image: url(img/board.jpg);
-    height:900px;
-    width:1173px;
-} */
+.player-board .sp_marker {
+    visibility:hidden;
+}
+.player-board .sp_marker.visible {
+    visibility: visible;
+}
 
 #board {
     position: relative;
