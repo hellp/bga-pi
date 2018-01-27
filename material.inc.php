@@ -347,7 +347,6 @@ $this->locations = array(
 // For each location create 3 slots; in the UI these will be anchors to orient
 // our tiles on.
 foreach ($this->locations as $loc_id => $loc) {
-  list($top, $left, $angle) = $loc['coords'];
   $this->locations[$loc_id]['slots'] = array(
     'crime' => array('id' => $loc_id * 100 + 1, 'strid' => $loc['strid'] . '_crime'),
     'location' => array('id' => $loc_id * 100 + 2, 'strid' => $loc['strid'] . '_location'),
