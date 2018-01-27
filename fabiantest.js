@@ -169,7 +169,7 @@ function (dojo, declare) {
                 case 'client_playerPicksSolution':
                     // Enable tile selection and wire up validation callback
                     this.tiles.setSelectionMode(2);
-                    dojo.connect(this.tiles, 'onChangeSelection', this, 'validateCaseSelection');
+                    this.vcs_handle = dojo.connect(this.tiles, 'onChangeSelection', this, 'validateCaseSelection');
 
                     // Highlight clickable tiles
                     // TODO: NO CRIME and NO SUSPECT tiles should not be highlighted or selectable
@@ -178,26 +178,26 @@ function (dojo, declare) {
                     // Clean up UI a bit to let user focus
                     dojo.fx.wipeOut({node: $('carddisplay')}).play(); // hide cards, so user doesn't accidentally click there
                     break;
-                }
-            },
-            
-            // onLeavingState: this method is called each time we are leaving a game state.
-            //                 You can use this method to perform some user interface changes at this moment.
-            //
-            onLeavingState: function( stateName )
+            }
+        },
+
+        // onLeavingState: this method is called each time we are leaving a game state.
+        //                 You can use this method to perform some user interface changes at this moment.
+        //
+        onLeavingState: function(stateName)
+        {
+            console.log('Leaving state: ' + stateName);
+            switch (stateName)
             {
-                console.log('Leaving state: ' + stateName);
-                switch (stateName)
-                {
-                    case 'client_playerPicksSolution':
-                        dojo.query('.locslot .stockitem').removeClass('highlighted');
-                        this.tiles.setSelectionMode(0);
-                        dojo.fx.wipeIn({node: $('carddisplay')}).play();
-                        // "bug": if window was resized during this cards are in wrong positions; reset.
-                        this.evidenceDisplay.resetItemsPosition();
-                        this.evidenceDiscard.resetItemsPosition();
-                        // TODO unhighlight tiles
-                        break;
+                case 'client_playerPicksSolution':
+                    dojo.query('.locslot .stockitem').removeClass('highlighted');
+                    this.tiles.setSelectionMode(0);
+                    dojo.fx.wipeIn({node: $('carddisplay')}).play();
+                    // "bug": if window was resized during this cards are in wrong positions; reset.
+                    this.evidenceDisplay.resetItemsPosition();
+                    this.evidenceDiscard.resetItemsPosition();
+                    dojo.disconnect(this.vcs_handle);
+                    break;
             }
         },
 
@@ -373,15 +373,13 @@ function (dojo, declare) {
         },
 
         onPlaceInvestigatorClicked: function () {
-            // TODO
-            // Alert: "Click on a location to place your investigator (X left)."
-            console.log('sending investigator')
+            this.setClientState(
+                "client_playerPlacesInvestigator", {
+                    descriptionmyturn: _("Place investigator: ${you} must select a location…"),
+                });
         },
         
         onSolveCaseClicked: function () {
-            // TODO
-            // Alert: "Click the correct location, crime, and suspect to solve your case..."
-            console.log('trying to solve the case')
             this.setClientState(
                 "client_playerPicksSolution", {
                     descriptionmyturn: _("Solve Case: ${you} must select the correct location, crime, and suspect…"),
