@@ -27,6 +27,11 @@ $this->constants = array(
   "CUBES_PER_PLAYER" => 10,
   "BOARD_H" => 740,
   "BOARD_W" => 980,
+  "CASETYPES" => array(
+    'crime' => clienttranslate('crime'),
+    'location' => clienttranslate('location'),
+    'suspect' => clienttranslate('suspect')
+  ),
 );
 
 // We use this as the basis to create all cards, evidence and base cards, but

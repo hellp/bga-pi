@@ -207,6 +207,73 @@ class fabiantest extends Table
         In this space, you can put any utility methods useful for your game logic
     */
 
+    function getCorrespondingTile($card_id)
+    {
+        $card = $this->cards->getCard($card_id);
+        $cardinfo = $this->cardBasis[$card['type_arg']];
+        $tile_mid = null;
+        foreach ($this->tiles as $mid => $tile) {
+            if ($tile['name'] == $cardinfo['name']) {
+                $tile_mid = $mid;
+                break;
+            }
+        }
+        // only one to be expected, but PHP needs this in-between step...
+        $tiles = $this->cards->getCardsOfType("tile_{$cardinfo['casetype']}", $tile_mid);
+        return array_shift($tiles);
+    }
+
+    /**
+     * For the given card_id, find the tile that it corresponds to and return
+     * all adjacent tiles' names (only considering tiles with the same casetype,
+     * e.g. only suspects).
+     */
+    function getAdjacentTileNames($card_id)
+    {
+        // Get the tile that corresponds to the card.
+        // $card = $this->cards->getCard($card_id);
+        $tile = $this->getCorrespondingTile($card_id);
+
+        // Assert that the tile is actually on the board.
+        if ($tile['location'] != 'locslot') {
+            throw new BgaVisibleSystemException("Tile is not on the board. Please report this.");
+        }
+
+        $tile_slot_id = $tile['location_arg'];
+        $location_mid = floor((int)$tile_slot_id / 100); // the invers of ($loc_id * 100 + 1|2|3)
+        $neighbor_mids = $this->locations[$location_mid]['neighbors'];
+        $adjacent_slot_ids = array_pluck(
+            array_flatten(array_pluck(
+                array_filter_by_keys($this->locations, $neighbor_mids),
+                'slots')),
+            'id');
+        $sql = "SELECT card_type_arg FROM `card`
+                WHERE card_type = '{$tile['type']}'
+                  AND card_location_arg IN (" . implode(',', $adjacent_slot_ids) . ")";
+        $tile_mids = self::getObjectListFromDB($sql, true);
+        return array_pluck(array_filter_by_keys($this->tiles, $tile_mids), 'name');
+    }
+
+    /**
+     * Return an array of the player's current case' solution in the form:
+     *
+     * array(
+     *     "crime": "<Name>",
+     *     "location": "<Name>",
+     *     "suspect": "<Name>"
+     * )
+     */
+    function getPlayerCaseSolution($player_id)
+    {
+        $card_mids = array_pluck($this->getPlayerCaseCards($player_id), 'type_arg');
+        $solution = array(
+            $this->cardBasis[$card_mids[0]]['casetype'] => $this->cardBasis[$card_mids[0]]['name'],
+            $this->cardBasis[$card_mids[1]]['casetype'] => $this->cardBasis[$card_mids[1]]['name'],
+            $this->cardBasis[$card_mids[2]]['casetype'] => $this->cardBasis[$card_mids[2]]['name']
+        );
+        return $solution;
+    }
+
     function getPrivateGameInfos($player_id)
     {
         return array(
@@ -298,45 +365,78 @@ class fabiantest extends Table
         self::checkAction("selectEvidence");
         $player_id = self::getActivePlayerId();
         $currentCard = $this->cards->getCard($card_id);
+        $card_name = $this->cardBasis[$currentCard['type_arg']]['name'];
 
         // Should not happen; also anti-cheat
         if ($currentCard['location'] != "evidence_display") {
             throw new BgaUserException(self::_("Card is not on display. Press F5 in case of problems."));
         }
 
-        // TODO: implement rules
-        $case_card_ids = array_pluck($this->getPlayerCaseCards($player_id), 'id');
-        $evidenceIsUseful = boolval(rand(0, 1));
+        $solution = $this->getPlayerCaseSolution($player_id);
 
-        if ($evidenceIsUseful) {
+        // Check for a match with the player's case.
+        if (in_array($card_name, $solution)) {
+            // Full match
+            self::notifyAllPlayers(
+                'evidenceCorrect',
+                clienttranslate('${player_name} found one aspect of their case: ${card_name}!'),
+                array(
+                    'i18n' => array('card_name'),
+                    'card_id' => $card_id,
+                    'card_name' => $card_name,
+                    'card_type' => $currentCard['type_arg'],
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName()
+                ));
             // Put card on discard
             $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
+            $this->gamestate->nextState('nextTurn');
+            return;
+        }
+
+        // Next, check if we have a match in adjacent locations.
+        $adjacent_tile_names = $this->getAdjacentTileNames($card_id);
+        $match_name = null;
+        foreach ($solution as $casetype => $name) {
+            if (in_array($name, $adjacent_tile_names)) {
+                $match_name = $name;
+                $match_casetype = $casetype;
+                break;
+            }
+        }
+        if ($match_name) {
+            // Adjacent match
             self::notifyAllPlayers(
-                'evidenceSelected',
-                clienttranslate('${player_name} found a useful evidence: ${card_name}'), array(
+                'evidenceClose',
+                // TODO: make $casetype translatable
+                clienttranslate('${player_name} found out that ${card_name} <b>is close</b> to the actual ${casetype}.'),
+                array(
                     'i18n' => array('card_name'),
                     'card_id' => $card_id,
-                    'card_name' => $this->cardBasis[$currentCard['type_arg']]['name'],
+                    'card_name' => $card_name,
                     'card_type' => $currentCard['type_arg'],
-                    'useful' => true,
+                    'casetype' => $this->constants['CASETYPES'][$match_casetype],
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName(),
                 ));
-            } else {
+            // Put card on discard
+            $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
+        } else {
+            // No match at all
+            self::notifyAllPlayers(
+                'evidenceWrong',
+                clienttranslate('${player_name} had no luck following evidence ${card_name}.'),
+                array(
+                    'i18n' => array('card_name'),
+                    'card_id' => $card_id,
+                    'card_name' => $card_name,
+                    'card_type' => $currentCard['type_arg'],
+                    'player_id' => $player_id,
+                    'player_name' => self::getActivePlayerName(),
+                ));
             // Put card in front of user to remember the "useless evidence".
             $this->cards->moveCard($card_id, "player_display", $player_id);
-            self::notifyAllPlayers(
-                'evidenceSelected',
-                clienttranslate('${player_name} had no luck following evidence ${card_name}'), array(
-                    'i18n' => array('card_name'),
-                    'useful' => false,
-                    'card_id' => $card_id,
-                    'card_name' => $this->cardBasis[$currentCard['type_arg']]['name'],
-                    'card_type' => $currentCard['type_arg'],
-                    'player_id' => $player_id,
-                    'player_name' => self::getActivePlayerName(),
-                ));
-            }
+        }
         $this->gamestate->nextState('nextTurn');
     }
 
@@ -353,11 +453,7 @@ class fabiantest extends Table
             $this->tiles[$tile_mids[1]]['tiletype'] => $this->tiles[$tile_mids[1]]['name'],
             $this->tiles[$tile_mids[2]]['tiletype'] => $this->tiles[$tile_mids[2]]['name']
         );
-        $solution = array(
-            $this->cardBasis[$card_mids[0]]['casetype'] => $this->cardBasis[$card_mids[0]]['name'],
-            $this->cardBasis[$card_mids[1]]['casetype'] => $this->cardBasis[$card_mids[1]]['name'],
-            $this->cardBasis[$card_mids[2]]['casetype'] => $this->cardBasis[$card_mids[2]]['name']
-        );
+        $solution = $this->getPlayerCaseSolution($player_id);
         $player_correct = $proposed_solution == $solution;
 
         if ($player_correct) {

@@ -402,8 +402,12 @@ function (dojo, declare) {
         */
         setupNotifications: function()
         {
-            dojo.subscribe('evidenceSelected', this, "notif_evidenceSelected");
-            this.notifqueue.setSynchronous('evidenceSelected', 500);
+            dojo.subscribe('evidenceClose', this, "notif_evidenceClose");
+            this.notifqueue.setSynchronous('evidenceClose', 800);
+            dojo.subscribe('evidenceCorrect', this, "notif_evidenceCorrect");
+            this.notifqueue.setSynchronous('evidenceCorrect', 800);
+            dojo.subscribe('evidenceWrong', this, "notif_evidenceWrong");
+            this.notifqueue.setSynchronous('evidenceWrong', 500);
 
             dojo.subscribe('evidenceExhausted', this, "notif_evidenceExhausted");
             dojo.subscribe('evidenceReplenished', this, "notif_evidenceReplenished");
@@ -423,11 +427,22 @@ function (dojo, declare) {
                 this.evidenceDiscard.removeAll();
             }
         },
-        
-        notif_evidenceSelected: function(notif) {
-            // Useless evidences goes to player display; valueable evidence to discard.
-            var targetStock = (notif.args.useful) ? this.evidenceDiscard : this.playerDisplays[notif.args.player_id];
-            targetStock.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
+
+        notif_evidenceClose: function(notif) {
+            // Move card to discard
+            this.evidenceDiscard.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
+            this.evidenceDisplay.removeFromStockById(notif.args.card_id);
+        },
+
+        notif_evidenceCorrect: function(notif) {
+            // Move card to discard
+            this.evidenceDiscard.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
+            this.evidenceDisplay.removeFromStockById(notif.args.card_id);
+        },
+
+        notif_evidenceWrong: function(notif) {
+            // Move card to player display
+            this.playerDisplays[notif.args.player_id].addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
             this.evidenceDisplay.removeFromStockById(notif.args.card_id);
         },
 

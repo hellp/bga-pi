@@ -16,3 +16,21 @@ function array_pluck($array, $key, $preserveKeys=false) {
     if ($preserveKeys) return $arr;
     return array_values($arr);
 }
+
+function array_filter_by_keys($array, $keys) {
+    $out = array();
+    foreach ($keys as $key) {
+        if (isset($array[$key]) || array_key_exists($key, $array)) {
+            $out[$key] = $array[$key];
+        }
+    }
+    return $out;
+}
+
+/**
+ * Simple 2-dimensional flatten for arrays.
+ */
+function array_flatten($arr) {
+    $result = call_user_func_array('array_merge', array_map('array_values', $arr));
+    return $result;
+}
