@@ -196,7 +196,7 @@ class fabiantest extends Table
         // 3=66%. For the in-minigame percentage we average over each user's
         // progress (how many clues have they figured out yet, again:
         // 0/33/66/100%).
-        $max = self::getGameStateValue("minigame") * 33;
+        $max = self::getGameStateValue("minigame") * (100 / $this->constants['MINIGAMES']);
 
         // Very naive, but we rarely should exhaust the deck in one minigame, so
         // let's treat the drawn cards as an indicator.
@@ -508,9 +508,18 @@ class fabiantest extends Table
     function st_gameTurn()
     {
         $active_player_id = self::getActivePlayerId(); // not really 'active', as this is a 'game' turn.
+        $minigame = self::getGameStateValue('minigame');
+        $in_last_minigame = $minigame == $this->constants['MINIGAMES'];
 
+        // Player who did not solve yet
         $unsolved_player_ids = self::getObjectListFromDB(
             "SELECT player_id FROM player WHERE player_solved_in_round IS NULL", true);
+
+        if (count($unsolved_player_ids) == 0) {
+            // Great, everybody finished successfully! Let's move on!
+            $this->gamestate->nextState($in_last_minigame ? 'endGame' : 'nextMinigame');
+            return;
+        }
 
         // First check if the round is over; then we start a new minigame, or
         // even end the game completely, if we are already in the last minigame.
@@ -521,12 +530,12 @@ class fabiantest extends Table
         // has `player_no` == current minigame number.
         $player_after_id = self::getPlayerAfter($active_player_id);
         $sql = "SELECT player_no FROM player WHERE player_id = $player_after_id";
-        $round_over = self::getUniqueValueFromDB($sql) == self::getGameStateValue('minigame');
+        $round_over = self::getUniqueValueFromDB($sql) == $minigame;
 
         if ($round_over) {
             // Is only one player with unsolved case left? -> start new minigame
             if (count($unsolved_player_ids) == 1) {
-                $this->gamestate->nextState('nextMinigame');
+                $this->gamestate->nextState($in_last_minigame ? 'endGame' : 'nextMinigame');
                 return;
             }
             // Did any player solve in that round? Then decrease points_winnable
