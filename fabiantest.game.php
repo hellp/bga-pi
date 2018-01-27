@@ -167,15 +167,8 @@ class fabiantest extends Table
         $result['cardinfos'] = $this->cardBasis;
         $result['tileinfos'] = $this->tiles;
 
-        // Cards in player hand (the other player's case cards)
-        $result['hand'] = $this->cards->getCardsInLocation('hand', $current_player_id);
-
-        // Evidence cards on display
-        $result['evidence_display'] = $this->cards->getCardsInLocation('evidence_display');
-        $result['evidence_discard'] = $this->cards->getCardsInLocation('discard');
-        $result['player_display_cards'] = $this->cards->getCardsInLocation('player_display');
-        $result['tiles'] = $this->cards->getCardsInLocation('locslot');
-
+        $result = array_merge($result, $this->getPrivateGameInfos($current_player_id));
+        $result = array_merge($result, $this->getPublicGameInfos());
         return $result;
     }
 
@@ -213,6 +206,25 @@ class fabiantest extends Table
     /*
         In this space, you can put any utility methods useful for your game logic
     */
+
+    function getPrivateGameInfos($player_id)
+    {
+        return array(
+            // Cards in player hand (the other player's case cards)
+            'hand' => $this->cards->getCardsInLocation('hand', $player_id)
+        );
+    }
+
+    function getPublicGameInfos()
+    {
+        return array(
+            // Evidence cards on display
+            'evidence_display' => $this->cards->getCardsInLocation('evidence_display'),
+            'evidence_discard' => $this->cards->getCardsInLocation('discard'),
+            'player_display_cards' => $this->cards->getCardsInLocation('player_display'),
+            'tiles' => $this->cards->getCardsInLocation('locslot')
+        );
+    }
 
     /**
      * Return the cards cards that represent the solution for the given player.
@@ -254,7 +266,7 @@ class fabiantest extends Table
         if ($this->cards->countCardInLocation('deck') > 0) {
             $newCard = $this->cards->pickCardForLocation("deck", "evidence_display");
             self::notifyAllPlayers(
-                'newEvidence', '',
+                'evidenceReplenished', '',
                 array(
                     'card_id' => $newCard['id'],
                     'card_type' => $newCard['type_arg'],
@@ -265,12 +277,9 @@ class fabiantest extends Table
             // something else. But this is implicit from the UI: no more cards,
             // no more clicks on them. Solving is always the last ressort.
             self::notifyAllPlayers(
-                'newEvidence',
+                'evidenceExhausted',
                 clienttranslate('Evidence cards are exhausted and cannot be played anymore.'),
-                array(
-                    'deck_is_empty' => $this->cards->countCardInLocation('discard') == 0,
-                    'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
-                ));
+                array());
         }
     }
 
@@ -431,10 +440,11 @@ class fabiantest extends Table
     function st_setupMinigame()
     {
         self::incGameStateValue('minigame', 1);
-        $minigame = self::getGameStateValue('minigame');
         self::setGameStateValue('minigame_round', 1);
         self::setGameStateValue('points_winnable', 7);
         self::DbQuery("UPDATE `player` SET `player_solved_in_round` = NULL");
+
+        $minigame = self::getGameStateValue('minigame');
 
         // Get all cards, sort into piles, shuffle piles.
         $this->cards->moveAllCardsInLocation(null, "offtable");
@@ -491,10 +501,21 @@ class fabiantest extends Table
             2 => clienttranslate('The second mini-game starts.'),
             3 => clienttranslate('The third and final mini-game starts.'),
         );
+
+        // Inform about new public status
         self::notifyAllPlayers(
             "newMinigame",
             $notifText[$minigame],
-            array("minigame" => $minigame));
+            $this->getPublicGameInfos());
+
+        // Inform about private information (hands)
+        foreach($players as $player_id => $player) {
+            self::notifyPlayer(
+                $player_id,
+                "newMinigamePrivate",
+                '',
+                $this->getPrivateGameInfos($player_id));
+        }
 
         // Select a new first player. In minigame 1 it's player_no 1, in
         // minigame 2 player_no 2 etc.; using module to cover the 'more rounds
@@ -549,9 +570,9 @@ class fabiantest extends Table
             self::incGameStateValue('minigame_round', 1);
         }
 
-        // TODO: Warn the active player when it's their last chance to solve,
-        // i.e. when they are the last one with an unsolved case in the current
-        // minigame.
+        // TODO: Warn the next active player when it's their last chance to
+        // solve, i.e. when they are the last one with an unsolved case in the
+        // current minigame.
 
         // Draw a new card for evidence display
         $this->replenishEvidenceDisplay();

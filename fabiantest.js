@@ -66,7 +66,6 @@ function (dojo, declare) {
             }
             this.addTooltipToClass('sp_marker', _("Start player"), '');
 
-
             // Set up player hand, i.e. the secret case cards of their left neighbor
             this.playerHand = new ebg.stock();
             this.playerHand.create(this, $('myhand'), this.CARD_WIDTH, this.CARD_HEIGHT);
@@ -114,29 +113,7 @@ function (dojo, declare) {
                 }
             }
 
-            // Cards in player's hand
-            for (i in this.gamedatas.hand) {
-                var card = this.gamedatas.hand[i];
-                this.playerHand.addToStockWithId(card.type_arg, card.id);
-            }
-
-            // Put evidence cards on the table
-            for (i in this.gamedatas.evidence_display) {
-                var card = this.gamedatas.evidence_display[i];
-                this.evidenceDisplay.addToStockWithId(card.type_arg, card.id);
-                this.addTooltip('evidence_item_' + card.id, _(this.gamedatas.cardinfos[card.type_arg].name), _('Follow this evidence…'));
-            }
-            for (i in this.gamedatas.evidence_discard) {
-                var card = this.gamedatas.evidence_discard[i];
-                this.evidenceDiscard.addToStockWithId(card.type_arg, card.id);
-            }
-            for (i in this.gamedatas.player_display_cards) {
-                // All cards have same location 'player_display' with `location_arg` being the player_id
-                var card = this.gamedatas.player_display_cards[i];
-                this.playerDisplays[card.location_arg].addToStockWithId(card.type_arg, card.id);
-            }
-
-            // Set up tiles
+            // Create tiles
             this.tiles = new ebg.stock();
             this.tiles.setSelectionMode(0); // Initially not selectable; later during solve action yes.
             this.tiles.setSelectionAppearance('class');
@@ -157,15 +134,18 @@ function (dojo, declare) {
                 this.tiles.addItemType(i, 0, g_gamethemeurl + 'img/tiles_64_2x.jpg', pos_in_img);
             }
 
-            for (i in this.gamedatas.tiles) {
-                var tile = this.gamedatas.tiles[i];
-                this.tiles.addToStockWithId(tile.type_arg, tile.id);
-                dojo.place($(this.tiles.getItemDivId(tile.id)), $('locslot_' + tile.location_arg));
-            }
+            // Place all the created stuff on the table.
+            this.placePlayerHand(this.gamedatas.hand);
+            this.placeEvidenceCards(
+                this.gamedatas.evidence_display,
+                this.gamedatas.evidence_discard,
+                this.gamedatas.player_display_cards,
+            );
+            this.placeTiles(this.gamedatas.tiles);
 
             // Connect user actions
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
-            
+
             // "Static" quick help tooltips
             this.addTooltip('myhand-wrap', _("TOP SECRET! Only you can see these."), '');
             this.addTooltip('myevidence-wrap', _("These cards remind you which evidence is unrelated to your case. They are visible to everybody."), '');
@@ -184,7 +164,7 @@ function (dojo, declare) {
         onEnteringState: function(stateName, args)
         {
             console.log('Entering state: ' + stateName);
-            switch( stateName )
+            switch (stateName)
             {
                 case 'client_playerPicksSolution':
                     // Enable tile selection and wire up validation callback
@@ -207,7 +187,7 @@ function (dojo, declare) {
             onLeavingState: function( stateName )
             {
                 console.log('Leaving state: ' + stateName);
-                switch( stateName )
+                switch (stateName)
                 {
                     case 'client_playerPicksSolution':
                         dojo.query('.locslot .stockitem').removeClass('highlighted');
@@ -262,7 +242,55 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Utility methods
 
-        validateCaseSelection: function (opts) {
+        /**
+         * Place evidence cards (all public cards). Used during setup and on newMinigame.
+         */
+        placeEvidenceCards: function(display, discard, player_display_cards) {
+            // Put evidence cards on the table
+            this.evidenceDisplay.removeAll();
+            for (i in display) {
+                var card = display[i];
+                this.evidenceDisplay.addToStockWithId(card.type_arg, card.id);
+                this.addTooltip('evidence_item_' + card.id, _(this.gamedatas.cardinfos[card.type_arg].name), _('Follow this evidence…'));
+            }
+            this.evidenceDiscard.removeAll();
+            for (i in discard) {
+                var card = discard[i];
+                this.evidenceDiscard.addToStockWithId(card.type_arg, card.id);
+            }
+            for (var player_id in this.gamedatas.players) {
+                this.playerDisplays[player_id].removeAll();
+            }
+            for (i in player_display_cards) {
+                // All cards have same location 'player_display' with `location_arg` being the player_id
+                var card = player_display_cards[i];
+                this.playerDisplays[card.location_arg].addToStockWithId(card.type_arg, card.id);
+            }
+        },
+
+        /**
+         * Place cards in player's (private) hand.
+         */
+        placePlayerHand: function (hand) {
+            this.playerHand.removeAll();
+            for (i in hand) {
+                var card = hand[i];
+                this.playerHand.addToStockWithId(card.type_arg, card.id);
+            }
+        },
+
+        /**
+         * Place tiles on the table.
+         */
+        placeTiles: function (tiles) {
+            for (i in tiles) {
+                var tile = tiles[i];
+                this.tiles.addToStockWithId(tile.type_arg, tile.id);
+                dojo.place($(this.tiles.getItemDivId(tile.id)), $('locslot_' + tile.location_arg));
+            }
+        },
+
+        validateCaseSelection: function(opts) {
             var opts = opts || {};
             var selectedTiles = this.tiles.getSelectedItems() || [];
             tileinfos = this.gamedatas.tileinfos;
@@ -377,25 +405,20 @@ function (dojo, declare) {
             dojo.subscribe('evidenceSelected', this, "notif_evidenceSelected");
             this.notifqueue.setSynchronous('evidenceSelected', 500);
 
-            dojo.subscribe('newEvidence', this, "notif_newEvidence");
+            dojo.subscribe('evidenceExhausted', this, "notif_evidenceExhausted");
+            dojo.subscribe('evidenceReplenished', this, "notif_evidenceReplenished");
+            dojo.subscribe('newMinigame', this, "notif_newMinigame");
+            dojo.subscribe('newMinigamePrivate', this, "notif_newMinigamePrivate");
             dojo.subscribe('newScores', this, "notif_newScores");
             dojo.subscribe('playerSolved', this, "notif_playerSolved");
-
-            // Example 1: standard notification handling
-            // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
-
-            // Example 2: standard notification handling + tell the user interface to wait
-            //            during 3 seconds after calling the method in order to let the players
-            //            see what is happening in the game.
-            // dojo.subscribe( 'cardPlayed', this, "notif_cardPlayed" );
-            // this.notifqueue.setSynchronous( 'cardPlayed', 3000 );
-            //
         },
 
-        notif_newEvidence: function(notif) {
-            if (notif.args.card_id) {
-                this.evidenceDisplay.addToStockWithId(notif.args.card_type, notif.args.card_id);
-            }
+        notif_evidenceExhausted: function(notif) {
+            this.evidenceDiscard.removeAll();
+        },
+
+        notif_evidenceReplenished: function(notif) {
+            this.evidenceDisplay.addToStockWithId(notif.args.card_type, notif.args.card_id);
             if (notif.args.discard_is_empty) {
                 this.evidenceDiscard.removeAll();
             }
@@ -406,6 +429,17 @@ function (dojo, declare) {
             var targetStock = (notif.args.useful) ? this.evidenceDiscard : this.playerDisplays[notif.args.player_id];
             targetStock.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
             this.evidenceDisplay.removeFromStockById(notif.args.card_id);
+        },
+
+        notif_newMinigame: function (notif) {
+            // TODO: set new startplayer in UI
+            this.enableAllPlayerPanels();
+            this.placeEvidenceCards(notif.args.evidence_display, [], []);
+            this.placeTiles(notif.args.tiles);
+        },
+
+        notif_newMinigamePrivate: function (notif) {
+            this.placePlayerHand(notif.args.hand);
         },
 
         notif_newScores: function(notif) {
