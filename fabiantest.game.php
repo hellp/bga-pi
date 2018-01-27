@@ -72,7 +72,7 @@ class fabiantest extends Table
         In this method, you must setup the game according to the game rules, so that
         the game is ready to be played.
     */
-    protected function setupNewGame( $players, $options = array() )
+    protected function setupNewGame($players, $options=array())
     {
         // Set the colors of the players with HTML color code
         // The default below is red/green/blue/orange/brown
@@ -90,7 +90,7 @@ class fabiantest extends Table
             $values[] = "('".$player_id."','$color','".$player['player_canal']."','".addslashes( $player['player_name'] )."','".addslashes( $player['player_avatar'] )."')";
         }
         $sql .= implode( $values, ',' );
-        self::DbQuery( $sql );
+        self::DbQuery($sql);
         self::reattributeColorsBasedOnPreferences( $players, $gameinfos['player_colors'] );
         self::reloadPlayersBasicInfos();
 
