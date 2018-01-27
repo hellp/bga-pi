@@ -461,13 +461,11 @@ class fabiantest extends Table
         // location slots. Decks are called "cri_tile_d" (crime tile deck) and
         // "sus_tile_d" (suspect tile deck). VARCHAR(16) ftw!
         $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('tile_crime'), 'id'), 'cri_tile_d');
-        // $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('tile_location'), 'id'), 'loc_tile_d'); // the fake one
         $this->cards->moveCards(array_pluck($this->cards->getCardsOfType('tile_suspect'), 'id'), 'sus_tile_d');
         $this->cards->shuffle('cri_tile_d');
         $this->cards->shuffle('sus_tile_d');
         foreach($this->locations as $loc_id => $loc) {
             $this->cards->pickCardForLocation('cri_tile_d', 'locslot', $loc['slots']['crime']['id']);
-            // $this->cards->pickCardForLocation('loc_tile_d', 'locslot', $loc['slots']['location']['id']);
             $this->cards->pickCardForLocation('sus_tile_d', 'locslot', $loc['slots']['suspect']['id']);
 
             // Get the specific location tile (also currently 'offboard') and
@@ -475,14 +473,10 @@ class fabiantest extends Table
             //
             // (28 + $loc_id) is the "material id" aka type_arg of the fake
             // location tile.
-            // var_dump("TILE LOCATIONS");
-            // var_dump($this->cards->getCardsOfType('tile_location', 28 + $loc_id));
             $temp = $this->cards->getCardsOfType('tile_location', 28 + $loc_id); // required, as array_shift does not want a direct reference
             $location_tile = array_shift($temp);
             $this->cards->moveCard($location_tile['id'], 'locslot', $loc['slots']['location']['id']);
         }
-        // foreach($this->cards->getCardsOfType('tile_location') as $tile_id => $tile) {
-        // }
 
         // Main display of evidence cards
         $this->cards->pickCardsForLocation($this->constants['EVIDENCE_DISPLAY_SIZE'], 'deck', 'evidence_display');
