@@ -331,28 +331,26 @@ class fabiantest extends Table
         $this->gamestate->nextState('nextTurn');
     }
 
-    function getMaterialNames($material, $ids, $sorted=false)
-    {
-        $filtered_material = array_filter(
-            $material,
-            function($id) use ($ids) { return in_array($id, $ids); },
-            ARRAY_FILTER_USE_KEY);
-        $names = array_pluck($filtered_material, 'name');
-        if ($sorted) sort($names);
-        return $names;
-    }
-
     function solveCase($tile_ids) {
         self::checkAction("solveCase");
         $player_id = self::getActivePlayerId();
-        $case_cards = $this->getPlayerCaseCards($player_id);
-        $card_mids = array_pluck($case_cards, 'type_arg');  // material ids
-        $card_names = $this->getMaterialNames($this->cardBasis, $card_mids, true);
-        $tile_mids = array_pluck($this->cards->getCards($tile_ids), 'type_arg');
-        $tile_names = $this->getMaterialNames($this->tiles, $tile_mids, true);
-        $player_correct = $card_names == $tile_names;
 
-        // Check if player was correct
+        // Get material ids for the solution (case cards) and the proposed
+        // solution (tiles). Then find the 3 aspects, and compare them.
+        $card_mids = array_pluck($this->getPlayerCaseCards($player_id), 'type_arg');
+        $tile_mids = array_pluck($this->cards->getCards($tile_ids), 'type_arg');
+        $proposed_solution = array(
+            $this->tiles[$tile_mids[0]]['tiletype'] => $this->tiles[$tile_mids[0]]['name'],
+            $this->tiles[$tile_mids[1]]['tiletype'] => $this->tiles[$tile_mids[1]]['name'],
+            $this->tiles[$tile_mids[2]]['tiletype'] => $this->tiles[$tile_mids[2]]['name']
+        );
+        $solution = array(
+            $this->cardBasis[$card_mids[0]]['casetype'] => $this->cardBasis[$card_mids[0]]['name'],
+            $this->cardBasis[$card_mids[1]]['casetype'] => $this->cardBasis[$card_mids[1]]['name'],
+            $this->cardBasis[$card_mids[2]]['casetype'] => $this->cardBasis[$card_mids[2]]['name']
+        );
+        $player_correct = $proposed_solution == $solution;
+
         if ($player_correct) {
             // Score + mark as inactive for the rest of the minigame.
             self::DbQuery("
@@ -380,11 +378,16 @@ class fabiantest extends Table
                 WHERE player_id = $player_id
             ");
             self::notifyAllPlayers(
-                self::getActivePlayerId(),
                 'playerFailed',
-                // TODO: improve wording
-                clienttranslate('You were not correct.'),
-                array()
+                // TODO: friendlier wording
+                clienttranslate('${player_name} tried to solve (${suspect}, ${crime}, ${location}), but failed.'),
+                array(
+                    'i18n' => array('crime', 'location', 'suspect'),
+                    'crime' => $proposed_solution['crime'],
+                    'location' => $proposed_solution['location'],
+                    'suspect' => $proposed_solution['suspect'],
+                    'player_name' => self::getActivePlayerName()
+                )
             );
         }
         $this->notifyNewScores();
