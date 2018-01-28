@@ -123,6 +123,21 @@
     height:114px;
     width:205px;
 }
+
+.loccont .agentarea {
+    position: absolute;
+    top:0; left:0;
+    height:46px;
+    width:100%;
+    z-index:50;
+}
+.loccont .agentarea.highlighted {
+    border-width:1px !important;
+    box-shadow: 0 0 4px 6px rgb(255, 255, 255) !important;
+    border:solid 1px red; /* because it's an instant action */
+    cursor: pointer !important;
+}
+
 /* Location slots */
 .locslot {
     position: absolute;

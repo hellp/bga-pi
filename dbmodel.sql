@@ -18,6 +18,10 @@
 --       you have to restart a game to see your changes in database.
 
 
+ALTER TABLE `player` ADD `player_penalty` tinyint(1) NOT NULL DEFAULT 0;
+ALTER TABLE `player` ADD `player_solved_in_round` tinyint(1) UNSIGNED;
+
+
 CREATE TABLE IF NOT EXISTS `card` (
   `card_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `card_type` varchar(16) NOT NULL,
@@ -28,8 +32,10 @@ CREATE TABLE IF NOT EXISTS `card` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 
--- Example 2: add a custom field to the standard "player" table
--- ALTER TABLE `player` ADD `player_my_custom_field` INT UNSIGNED NOT NULL DEFAULT '0';
 
-ALTER TABLE `player` ADD `player_penalty` tinyint(1) NOT NULL DEFAULT 0;
-ALTER TABLE `player` ADD `player_solved_in_round` tinyint(1) UNSIGNED;
+CREATE TABLE IF NOT EXISTS `token` (
+  `token_key` varchar(32) NOT NULL,
+  `token_location` varchar(32) NOT NULL,
+  `token_state` int(10),
+  PRIMARY KEY (`token_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

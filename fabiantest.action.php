@@ -49,6 +49,13 @@ class action_fabiantest extends APP_GameAction
         }
     }
 
+    public function placeInvestigator() {
+        self::setAjaxMode();
+        $location_id = self::getArg("location_id", AT_posint, true);
+        $this->game->placeInvestigator($location_id);
+        self::ajaxResponse();
+    }
+
     public function selectEvidence() {
         self::setAjaxMode();
         $card_id = self::getArg("id", AT_posint, true);

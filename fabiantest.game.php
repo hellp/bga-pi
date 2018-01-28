@@ -18,6 +18,7 @@
 
 
 require_once( APP_GAMEMODULE_PATH.'module/table/table.game.php' );
+require_once( 'modules/tokens.php' );
 require_once( 'modules/utils.php' );
 
 
@@ -57,6 +58,7 @@ class fabiantest extends Table
 
         $this->cards = self::getNew("module.common.deck");
         $this->cards->init("card");
+        $this->tokens = new Tokens();
     }
 
     protected function getGameName( )
@@ -121,6 +123,19 @@ class fabiantest extends Table
         // Create all, but don't put them into 'deck' yet, the piles have to be
         // sorted first.
         $this->cards->createCards($cards, 'offtable');
+
+        // Create tokens, and put into 'supply'
+        $this->tokens->createTokens($this->tokeninfos, 'supply');
+
+        // Give each player their 5 investigators. These will *not* be
+        // replenished on each minigame.
+        $players = self::loadPlayersBasicInfos();
+        foreach($players as $player_id => $player) {
+            $color = $this->constants['HEX2COLORNAME'][$player['player_color']];
+            $this->tokens->moveTokens(
+                array_pluck($this->tokens->getTokensOfTypeInLocation("pi_{$color}_%"), 'key'),
+                "pi_supply_{$player_id}");
+        }
 
         // TODO: Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
@@ -193,9 +208,11 @@ class fabiantest extends Table
 
         // Very naive, but we rarely should exhaust the deck in one minigame, so
         // let's treat the drawn cards as an indicator.
-        $progress = ($this->cards->countCardInLocation('discard')
-                     + $this->cards->countCardInLocation('player_display')) / $this->constants['EVIDENCE_DECK_SIZE'];
-        $progress *= $max;
+        $card_progress = ($this->cards->countCardInLocation('discard')
+                          + $this->cards->countCardInLocation('player_display')) / $this->constants['EVIDENCE_DECK_SIZE'];
+        // TODO: $player_progress = percent of player that solved already
+        // $progress = max($card_progress, $player_progress)
+        $progress = $card_progress * $max;
         return floor($progress);
     }
 
@@ -360,6 +377,30 @@ class fabiantest extends Table
         (note: each method below must match an input method in fabiantest.action.php)
     */
 
+    function placeInvestigator($location_id)
+    {
+        self::checkAction("placeInvestigator");
+        $player_id = self::getActivePlayerId();
+        $player = self::loadPlayersBasicInfos()[$player_id];
+        $color = $this->constants['HEX2COLORNAME'][$player['player_color']];
+
+        // No more investigator. Should be handled in the UI, but safety first.
+        if ($this->tokens->countTokensInLocation("pi_supply_{$player_id}") == 0) {
+            throw new BgaUserException(self::_("You have no investigators left."));
+        }
+
+        // Check if player already has an investigator at this location.
+        if (count($this->tokens->getTokensOfTypeInLocation("pi_{$color}_", "location_{$location_id}"))) {
+            throw new BgaUserException(self::_("You already have an investigator at this location."));
+        }
+
+        $solution = $this->getPlayerCaseSolution($player_id);
+
+        // TODO: Place investigator token here.
+        // TODO: get the 3 tiles at this location and do a check for each one of them
+
+    }
+
     function selectEvidence($card_id)
     {
         self::checkAction("selectEvidence");
@@ -377,6 +418,23 @@ class fabiantest extends Table
         // Check for a match with the player's case.
         if (in_array($card_name, $solution)) {
             // Full match
+            // // TODO: Put player-colored disc onto the locslot (if not there already)
+            // $discs = $this->tokens->getTokensOfTypeInLocation('disc_%', "supply_{$player_id}");
+            // if (!$discs) {
+            //     // The disc for this match is out there already; should be on the slot's parent location/agent slot.
+            //     // TODO: find it and put it on the locslot
+            // } else {
+            //     $disc = array_shift($discs);
+            // }
+            // $disc = $this->tokens->getTokenOnTop('');
+            // if (!$disc) {
+            //     throw new BgaUserException(self::_("No more discs in your supply. You should be able to solve the case!"));
+            // }
+
+            // $newtokens = ... 
+
+            // Put card on discard
+            $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
             self::notifyAllPlayers(
                 'evidenceCorrect',
                 clienttranslate('${player_name} found one aspect of their case: ${card_name}!'),
@@ -385,11 +443,10 @@ class fabiantest extends Table
                     'card_id' => $card_id,
                     'card_name' => $card_name,
                     'card_type' => $currentCard['type_arg'],
+                    // 'new_tokens' => ..., // or rather do this as a separate notification?
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName()
                 ));
-            // Put card on discard
-            $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
             $this->gamestate->nextState('nextTurn');
             return;
         }
@@ -577,6 +634,10 @@ class fabiantest extends Table
         // Main display of evidence cards
         $this->cards->pickCardsForLocation($this->constants['EVIDENCE_DISPLAY_SIZE'], 'deck', 'evidence_display');
 
+        // Tokens: first, all cubes and discs back into the supply
+        $this->tokens->moveTokens(array_pluck($this->tokens->getTokensOfTypeInLocation('cube_%'), 'key'), 'supply');
+        $this->tokens->moveTokens(array_pluck($this->tokens->getTokensOfTypeInLocation('disc_%'), 'key'), 'supply');
+
         // Set up a case for every player and distribute the case cards to their
         // right neighbor.
         $players = self::loadPlayersBasicInfos();
@@ -584,6 +645,15 @@ class fabiantest extends Table
             $this->cards->pickCard('crime_deck', $player_id);
             $this->cards->pickCard('location_deck', $player_id);
             $this->cards->pickCard('suspect_deck', $player_id);
+
+            // Give their tokens
+            $color = $this->constants['HEX2COLORNAME'][$player['player_color']];
+            $this->tokens->moveTokens(
+                array_pluck($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"), 'key'),
+                "supply_{$player_id}");
+            $this->tokens->moveTokens(
+                array_pluck($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"), 'key'),
+                "supply_{$player_id}");
         }
 
         $notifText = array(

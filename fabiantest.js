@@ -16,7 +16,8 @@
  */
 
 define([
-    "dojo","dojo/_base/declare",
+    "dojo",
+    "dojo/_base/declare",
     "ebg/core/gamegui",
     "ebg/counter",
     "ebg/stock"
@@ -175,8 +176,15 @@ function (dojo, declare) {
                     // TODO: NO CRIME and NO SUSPECT tiles should not be highlighted or selectable
                     dojo.query('.locslot .stockitem').addClass('highlighted');
 
-                    // Clean up UI a bit to let user focus
-                    dojo.fx.wipeOut({node: $('carddisplay')}).play(); // hide cards, so user doesn't accidentally click there
+                    // Clear UI
+                    this.hideCardDisplay();
+                    break;
+                case 'client_playerPlacesInvestigator':
+                    dojo.query('.agentarea').addClass('highlighted');
+                    this.addEventToClass("agentarea", 'onclick', 'onAgentAreaClicked');
+
+                    // Clear UI
+                    this.hideCardDisplay();
                     break;
             }
         },
@@ -192,11 +200,12 @@ function (dojo, declare) {
                 case 'client_playerPicksSolution':
                     dojo.query('.locslot .stockitem').removeClass('highlighted');
                     this.tiles.setSelectionMode(0);
-                    dojo.fx.wipeIn({node: $('carddisplay')}).play();
-                    // "bug": if window was resized during this cards are in wrong positions; reset.
-                    this.evidenceDisplay.resetItemsPosition();
-                    this.evidenceDiscard.resetItemsPosition();
                     dojo.disconnect(this.vcs_handle);
+                    this.showCardDisplay();
+                    break;
+                case 'client_playerPlacesInvestigator':
+                    dojo.query('.agentarea').removeClass('highlighted');
+                    this.showCardDisplay();
                     break;
             }
         },
@@ -235,12 +244,34 @@ function (dojo, declare) {
                                 null, null, 'gray');
                         }
                         break;
+                    case "client_playerPlacesInvestigator":
+                        if (this.on_client_state && !$('button_cancel')) {
+                            this.addActionButton(
+                                'button_cancel',
+                                _('Cancel'),
+                                dojo.hitch(this, function() {this.restoreServerGameState();}),
+                                null, null, 'gray');
+                        }
+                        break;
                 }
             }
         },
 
         ///////////////////////////////////////////////////
         //// Utility methods
+
+        hideCardDisplay: function () {
+            // hide cards, so user doesn't accidentally click there
+            dojo.fx.wipeOut({node: $('carddisplay')}).play();
+        },
+
+        showCardDisplay: function () {
+            dojo.fx.wipeIn({node: $('carddisplay')}).play();
+            // "bug fix": if window was resized during this cards are in wrong
+            // positions; reset.
+            this.evidenceDisplay.resetItemsPosition();
+            this.evidenceDiscard.resetItemsPosition();
+        },
 
         /**
          * Place evidence cards (all public cards). Used during setup and on newMinigame.
@@ -332,6 +363,20 @@ function (dojo, declare) {
             _ make a call to the game server
 
         */
+
+        onAgentAreaClicked: function(e) {
+            console.log(e, this);
+            var location_id = e.target.id.split('_')[1];
+            var action = 'placeInvestigator';
+            if (this.checkAction(action, true)) {
+                this.ajaxcall("/" + this.game_name + "/" + this.game_name + "/" + action + ".html", {
+                    location_id: location_id,
+                    lock : true
+                }, this, function(result) {
+                }, function(is_error) {
+                });
+            }
+        },
 
         onEvidenceDisplaySelectionChanged: function() {
             var items = this.evidenceDisplay.getSelectedItems();
@@ -433,6 +478,7 @@ function (dojo, declare) {
         },
 
         notif_evidenceCorrect: function(notif) {
+            // TODO: Put a disc on the 
             // Move card to discard
             this.evidenceDiscard.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
             this.evidenceDisplay.removeFromStockById(notif.args.card_id);

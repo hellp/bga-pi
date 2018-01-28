@@ -32,6 +32,14 @@ $this->constants = array(
     'location' => clienttranslate('location'),
     'suspect' => clienttranslate('suspect')
   ),
+  // Map standard player colors to token 'string colors'
+  "HEX2COLORNAME" => array(
+    "0000ff" => 'blue',
+    "008000" => 'green',
+    "ff0000" => 'red',
+    "ff00ff" => 'purple',
+    "ffa500" => 'yellow',
+  ),
 );
 
 // We use this as the basis to create all cards, evidence and base cards, but
@@ -358,3 +366,23 @@ foreach ($this->locations as $loc_id => $loc) {
     'suspect' => array('id' => $loc_id * 100 + 3, 'strid' => $loc['strid'] . '_suspect'),
   );
 }
+
+$this->tokeninfos = array(
+  array('key' => 'cube_blue_{INDEX}', 'nbr' => 10),
+  array('key' => 'cube_green_{INDEX}', 'nbr' => 10),
+  array('key' => 'cube_purple_{INDEX}', 'nbr' => 10),
+  array('key' => 'cube_red_{INDEX}', 'nbr' => 10),
+  array('key' => 'cube_yellow_{INDEX}', 'nbr' => 10),
+  array('key' => 'disc_blue_{INDEX}', 'nbr' => 3),
+  array('key' => 'disc_green_{INDEX}', 'nbr' => 3),
+  array('key' => 'disc_purple_{INDEX}', 'nbr' => 3),
+  array('key' => 'disc_red_{INDEX}', 'nbr' => 3),
+  array('key' => 'disc_yellow_{INDEX}', 'nbr' => 3),
+
+  // The 'private investigators'
+  array('key' => 'pi_blue_{INDEX}', 'nbr' => 5),
+  array('key' => 'pi_green_{INDEX}', 'nbr' => 5),
+  array('key' => 'pi_purple_{INDEX}', 'nbr' => 5),
+  array('key' => 'pi_red_{INDEX}', 'nbr' => 5),
+  array('key' => 'pi_yellow_{INDEX}', 'nbr' => 5),
+);

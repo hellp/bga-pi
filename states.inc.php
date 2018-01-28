@@ -83,7 +83,11 @@ $machinestates = array(
         "description" => clienttranslate('${actplayer} must select a card, place an investigator, or try to solve'),
         "descriptionmyturn" => clienttranslate('${you} must select a card or:'),
         "type" => "activeplayer",
-        "possibleactions" => array("selectEvidence", "solveCase"),  // TODO add "placeInvestigator"
+        "possibleactions" => array(
+            "placeInvestigator",
+            "selectEvidence",
+            "solveCase",
+        ),
         "transitions" => array(
             "nextTurn" => STATE_GAME_TURN,
         )

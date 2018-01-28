@@ -59,6 +59,7 @@
     <!-- BEGIN loccont -->
     <div id="loccont_{ID}" class="loccont"
          style="top:{TOP}px; left:{LEFT}px; transform:rotate({ROTATION}deg);">
+        <div id="agentarea_{ID}" class="agentarea"></div>
         <!-- BEGIN locslot -->
         <div id="locslot_{ID}" class="locslot {TYPE}_slot"></div>
         <!-- END locslot -->
