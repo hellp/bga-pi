@@ -465,7 +465,6 @@ class pi extends Table
             // Adjacent match
             self::notifyAllPlayers(
                 'evidenceClose',
-                // TODO: make $casetype translatable
                 clienttranslate('${player_name} found out that ${card_name} <b>is close</b> to the actual ${casetype}.'),
                 array(
                     'i18n' => array('card_name'),
