@@ -11,7 +11,7 @@
  *
  * stats.inc.php
  *
- * fabiantest game statistics description
+ * pi game statistics description
  *
  */
 

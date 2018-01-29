@@ -10,7 +10,7 @@
  *
  * states.inc.php
  *
- * fabiantest game states description
+ * pi game states description
  *
  */
 

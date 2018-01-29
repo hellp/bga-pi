@@ -7,9 +7,9 @@
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  *
- * fabiantest.js
+ * pi.js
  *
- * fabiantest user interface script
+ * pi user interface script
  *
  * In this file, you are describing the logic of your user interface, in Javascript language.
  *
@@ -23,7 +23,7 @@ define([
     "ebg/stock"
 ],
 function (dojo, declare) {
-    return declare("bgagame.fabiantest", ebg.core.gamegui, {
+    return declare("bgagame.pi", ebg.core.gamegui, {
         constructor: function(){
             // Here, you can init the global variables of your user interface
             this.CARD_WIDTH = 102;
@@ -441,7 +441,7 @@ function (dojo, declare) {
             your local method to handle it.
 
             Note: game notification names correspond to "notifyAllPlayers" and
-            "notifyPlayer" calls in your fabiantest.game.php file.
+            "notifyPlayer" calls in your pi.game.php file.
         */
         setupNotifications: function()
         {

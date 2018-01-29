@@ -7,9 +7,9 @@
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  *
- * fabiantest.css
+ * pi.css
  *
- * fabiantest stylesheet
+ * pi stylesheet
  *
  */
 
@@ -17,8 +17,8 @@
     This is the CSS stylesheet of your game User Interface.
 
     Styles defined on this file will be applied to the HTML elements you define in your
-    HTML template (fabiantest_fabiantest.tpl), and to HTML elements you create dynamically
-    (in fabiantest.js).
+    HTML template (pi_pi.tpl), and to HTML elements you create dynamically
+    (in pi.js).
 
     Usually, you are using CSS to:
 

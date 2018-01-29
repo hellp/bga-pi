@@ -10,7 +10,7 @@
  *
  * material.inc.php
  *
- * fabiantest game material description
+ * pi game material description
  *
  * Here, you can describe the material of your game with PHP variables.
  *

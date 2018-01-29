@@ -8,20 +8,20 @@
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  *
- * fabiantest.action.php
+ * pi.action.php
  *
- * fabiantest main action entry point
+ * pi main action entry point
  *
  *
  * In this file, you are describing all the methods that can be called from your
  * user interface logic (javascript).
  *
  * If you define a method "myAction" here, then you can call it from your javascript code with:
- * this.ajaxcall( "/fabiantest/fabiantest/myAction.html", ...)
+ * this.ajaxcall( "/pi/pi/myAction.html", ...)
  *
  */
 
-class action_fabiantest extends APP_GameAction
+class action_pi extends APP_GameAction
 {
     // Constructor: please do not modify
     public function __default()
@@ -33,7 +33,7 @@ class action_fabiantest extends APP_GameAction
         }
         else
         {
-            $this->view = "fabiantest_fabiantest";
+            $this->view = "pi_pi";
             self::trace( "Complete reinitialization of board game" );
         }
     }

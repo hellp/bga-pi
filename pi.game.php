@@ -8,7 +8,7 @@
   * See http://en.boardgamearena.com/#!doc/Studio for more information.
   * -----
   *
-  * fabiantest.game.php
+  * pi.game.php
   *
   * This is the main file for your game logic.
   *
@@ -22,7 +22,7 @@ require_once( 'modules/tokens.php' );
 require_once( 'modules/utils.php' );
 
 
-class fabiantest extends Table
+class pi extends Table
 {
     function __construct( )
     {
@@ -64,7 +64,7 @@ class fabiantest extends Table
     protected function getGameName( )
     {
         // Used for translations and stuff. Please do not modify.
-        return "fabiantest";
+        return "pi";
     }
 
     /*
@@ -374,7 +374,7 @@ class fabiantest extends Table
 
     /*
         Each time a player is doing some game action, one of the methods below is called.
-        (note: each method below must match an input method in fabiantest.action.php)
+        (note: each method below must match an input method in pi.action.php)
     */
 
     function placeInvestigator($location_id)
