@@ -241,11 +241,34 @@ class pi extends Table
     }
 
     /**
+     * For the given location_id, return all adjacent tiles' names (includes
+     * all case aspects).
+     */
+    function getAdjacentTileNames($location_id, $tile_type=null)
+    {
+        $neighbor_mids = $this->locations[$location_id]['neighbors'];
+        $adjacent_slot_ids = array_pluck(
+            array_flatten(array_pluck(
+                array_filter_by_keys($this->locations, $neighbor_mids),
+                'slots')),
+            'id');
+        $sql = array();
+        $sql[] = "SELECT card_type_arg FROM `card` WHERE 1";
+        $sql[] = "AND card_location_arg IN (" . implode(',', $adjacent_slot_ids) . ")";
+        if ($tile_type) {
+            $sql[] = "AND card_type = '{$tile_type}'";
+        }
+        $sql = implode(' ', $sql);
+        $tile_mids = self::getObjectListFromDB($sql, true);
+        return array_pluck(array_filter_by_keys($this->tiles, $tile_mids), 'name');
+    }
+
+    /**
      * For the given card_id, find the tile that it corresponds to and return
      * all adjacent tiles' names (only considering tiles with the same casetype,
      * e.g. only suspects).
      */
-    function getAdjacentTileNames($card_id)
+    function getAdjacentTileNamesFromCard($card_id)
     {
         // Get the tile that corresponds to the card.
         // $card = $this->cards->getCard($card_id);
@@ -258,17 +281,7 @@ class pi extends Table
 
         $tile_slot_id = $tile['location_arg'];
         $location_mid = floor((int)$tile_slot_id / 100); // the invers of ($loc_id * 100 + 1|2|3)
-        $neighbor_mids = $this->locations[$location_mid]['neighbors'];
-        $adjacent_slot_ids = array_pluck(
-            array_flatten(array_pluck(
-                array_filter_by_keys($this->locations, $neighbor_mids),
-                'slots')),
-            'id');
-        $sql = "SELECT card_type_arg FROM `card`
-                WHERE card_type = '{$tile['type']}'
-                  AND card_location_arg IN (" . implode(',', $adjacent_slot_ids) . ")";
-        $tile_mids = self::getObjectListFromDB($sql, true);
-        return array_pluck(array_filter_by_keys($this->tiles, $tile_mids), 'name');
+        return $this->getAdjacentTileNames($location_mid, $tile['type']);
     }
 
     /**
@@ -306,7 +319,10 @@ class pi extends Table
             'evidence_display' => $this->cards->getCardsInLocation('evidence_display'),
             'evidence_discard' => $this->cards->getCardsInLocation('discard'),
             'player_display_cards' => $this->cards->getCardsInLocation('player_display'),
-            'tiles' => $this->cards->getCardsInLocation('locslot')
+            'tiles' => $this->cards->getCardsInLocation('locslot'),
+            'tokens' => array_merge(
+                $this->tokens->getTokensInLocation('agentarea_%'),
+                $this->tokens->getTokensInLocation('locslot_%'))
         );
     }
 
@@ -390,15 +406,94 @@ class pi extends Table
         }
 
         // Check if player already has an investigator at this location.
-        if (count($this->tokens->getTokensOfTypeInLocation("pi_{$color}_", "location_{$location_id}"))) {
+        if (count($this->tokens->getTokensOfTypeInLocation("pi_{$color}_%", "location_{$location_id}"))) {
             throw new BgaUserException(self::_("You already have an investigator at this location."));
         }
 
+        // Place investigator token here.
+        $this->tokens->pickTokensForLocation(1, "pi_supply_{$player_id}", "location_{$location_id}");
+
         $solution = $this->getPlayerCaseSolution($player_id);
 
-        // TODO: Place investigator token here.
-        // TODO: get the 3 tiles at this location and do a check for each one of them
+        $locslots = $this->locations[$location_id]['slots'];
+        $slot_ids = array_pluck($locslots, 'id');
+        $target = "agentarea_{$location_id}";
 
+        // IMPORTANT! Even if we match, we must not notify/place right away, as
+        // we must not give away which of the aspects the new token(s) refer
+        // to. So we collect the new tokens first. Then shuffle this list and
+        // notify/place all at the same time. Also we go through the slots in a
+        // random order, so we don't acidentally pick up tokens (they are
+        // id'ed!) in a revealing order.
+        $new_tokens = array();
+        $locslots_copy = array_values($locslots);
+        shuffle($locslots_copy);
+        foreach ($locslots_copy as $slot) {
+            $slot_id = $slot['id'];
+
+            // First, check if there's a disc/cube of player color on it
+            // already. If so, we have as much information for this aspect as
+            // we can get: continue.
+            if (count($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%", $target)) ||
+                count($this->tokens->getTokensOfTypeInLocation("disc_{$color}_%", $target))) {
+                continue;
+            }
+
+            // Check for a match with the solution.
+            $_tiles = $this->cards->getCardsInLocation('locslot', $slot_id); // only 1, but php...
+            $tile = array_shift($_tiles);
+            $tile_mid = $tile['type_arg'];
+            $mtile = $this->tiles[$tile_mid]; // material tile
+            
+            // Full match: put disc into the agent area
+            $full_match = $mtile['name'] == $solution[$mtile['tiletype']];
+            if ($full_match) {
+                $disc = $this->tokens->getTokenOnTop("discs_{$player_id}");
+                self::dump('disc', $disc);
+                $this->tokens->moveToken($disc['key'], $target);
+                $new_tokens[] = $disc;
+                // Done with this location slot
+                continue;
+            }
+            
+            // Not a full match; check adjacent locations now.
+            $adjacent_tile_names = $this->getAdjacentTileNames($location_id);
+            $close_match = false;
+            foreach ($solution as $name) {
+                if (in_array($name, $adjacent_tile_names)) {
+                    $close_match = true;
+                    break;
+                }
+            }
+
+            // Close match: put cube on tile.
+            if ($close_match) {
+                $cube = $this->tokens->getTokenOnTop("cubes_{$player_id}");
+                if (!$cube) {
+                    // TODO: warning/error?? Player run out of cubes.
+                }
+                $this->tokens->moveToken($cube['key'], $target);
+                $new_tokens[] = $cube;
+            }
+        }
+
+        // TODO: in case of 3 full matches, we could place the tokens on the
+        // tiles directly. More of a convenience feature, however.
+
+        if (count($new_tokens)) {
+            shuffle($new_tokens);
+            self::notifyAllPlayers(
+                'placeTokens', '',
+                array(
+                    '_comment' => 'The tiles were checked in a random order; tokens are shuffled! No guessing!',
+                    'tokens' => $new_tokens,
+                    'target_id' => $target,
+                ));
+        } else {
+            // TODO: notify that the investigator found no new clues...
+        }
+
+        $this->gamestate->nextState('nextTurn');
     }
 
     function selectEvidence($card_id)
@@ -452,7 +547,7 @@ class pi extends Table
         }
 
         // Next, check if we have a match in adjacent locations.
-        $adjacent_tile_names = $this->getAdjacentTileNames($card_id);
+        $adjacent_tile_names = $this->getAdjacentTileNamesFromCard($card_id);
         $match_name = null;
         foreach ($solution as $casetype => $name) {
             if (in_array($name, $adjacent_tile_names)) {
@@ -463,6 +558,7 @@ class pi extends Table
         }
         if ($match_name) {
             // Adjacent match
+            // TODO: place token in DB and via Notif
             self::notifyAllPlayers(
                 'evidenceClose',
                 clienttranslate('${player_name} found out that ${card_name} <b>is close</b> to the actual ${casetype}.'),
@@ -649,10 +745,11 @@ class pi extends Table
             $color = $this->constants['HEX2COLORNAME'][$player['player_color']];
             $this->tokens->moveTokens(
                 array_pluck($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"), 'key'),
-                "supply_{$player_id}");
+                "cubes_{$player_id}");
             $this->tokens->moveTokens(
-                array_pluck($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"), 'key'),
-                "supply_{$player_id}");
+                array_pluck($this->tokens->getTokensOfTypeInLocation("disc_{$color}_%"), 'key'),
+                "discs_{$player_id}");
+            // TODO: give Agent/PI tokens
         }
 
         $notifText = array(

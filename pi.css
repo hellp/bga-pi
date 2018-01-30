@@ -129,12 +129,23 @@
     top:0; left:0;
     height:46px;
     width:100%;
+    border-radius: 5px;
     z-index:50;
+    text-align: center;
+
+    /* background:rgba(0, 0, 0, 0.3);
+    box-shadow:0 0 5px 5px rgba(0, 0, 0, 0.3);
+    padding:4px; */
+
+}
+.loccont .agentarea .cube20,
+.loccont .agentarea .disc30 {
+    display: inline-block;
 }
 .loccont .agentarea.highlighted {
-    border-width:1px !important;
-    box-shadow: 0 0 4px 6px rgb(255, 255, 255) !important;
-    border:solid 1px red; /* because it's an instant action */
+    box-shadow: 0 0 2px 2px rgb(255, 255, 255) !important;
+    border:solid 2px red; /* because it's an instant action */
+    border-width:2px !important;
     cursor: pointer !important;
 }
 
@@ -228,3 +239,61 @@
 
 #myhand-wrap { float:left; height:180px; width: 316px; margin-right:.5em; }
 #myevidence-wrap { float:left; height:180px; width: 700px; }
+
+.locslot .cube20,
+.locslot .cube25 {
+    z-index:100;
+    position: absolute;
+}
+.locslot .locslot_cubes {
+    position: absolute;
+    bottom:-4px;
+    left:-4px;
+    height:50px;
+    outline:solid 1px red;
+}
+.locslot .locslot_discs {
+    position: absolute;
+    bottom:-4px;
+    right:-4px;
+    height:50px;
+    outline:solid 1px green;
+}
+.locslot .cube20:nth-of-type(1) { bottom:0; z-index:200; }
+.locslot .cube20:nth-of-type(2) { bottom:0; left:17px; z-index:200; }
+.locslot .cube20:nth-of-type(3) { bottom:13px; z-index:201; }
+.locslot .cube20:nth-of-type(4) { bottom:13px; left:17px; z-index:201; }
+.locslot .cube20:nth-of-type(5) { bottom:26px; z-index:203; }
+
+
+.cube20 {
+    height: 20px;
+    width: 20px;
+    background-image: url("img/common/cubes20_hc.png");
+}
+.cube20_blue { background-position: -20px 0px }
+.cube20_red { background-position: -40px 0px }
+.cube20_yellow { background-position: -60px 0px }
+.cube20_green { background-position: -80px 0px }
+.cube20_white { background-position: -100px 0px }
+.cube20_black { background-position: -120px 0px }
+.cube20_brown { background-position: -140px 0px }
+.cube20_purple { background-position: -160px 0px }
+.cube20_pink { background-position: -180px 0px }
+.cube20_orange { background-position: -200px 0px }
+
+.disc30 {
+    height: 30px;
+    width: 30px;
+    background-image: url("img/common/discs30_hc.png");
+}
+.disc30_blue { background-position: 0px 0px }
+.disc30_green { background-position: -30px 0px }
+.disc30_beige { background-position: -60px 0px }
+.disc30_orange { background-position: -90px 0px }
+.disc30_white { background-position: -120px 0px }
+.disc30_black { background-position: -150px 0px }
+.disc30_red { background-position: -180px 0px }
+.disc30_yellow { background-position: -210px 0px }
+.disc30_gray { background-position: -240px 0px }
+.disc30_purple { background-position: -270px 0px }

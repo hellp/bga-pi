@@ -143,6 +143,7 @@ function (dojo, declare) {
                 this.gamedatas.player_display_cards,
             );
             this.placeTiles(this.gamedatas.tiles);
+            this.placeTokens(this.gamedatas.tokens);
 
             // Connect user actions
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
@@ -321,6 +322,37 @@ function (dojo, declare) {
             }
         },
 
+        /**
+         * Place token on the table.
+         */
+        placeToken: function (token, target_id) {
+            var key = token.key;
+            var keyparts = key.split('_');
+            var ttype = keyparts[0]; // cube, disc
+            var color = keyparts[1];
+            var html;
+            if (ttype == 'cube') {
+                var html = '<div id="' + key + '" class="cube20 cube20_' + color + '"></div>';
+            } else {
+                var html = '<div id="' + key + '" class="disc30 disc30_' + color + '"></div>';
+            }
+            if (!target_id) {
+                target_id = token.location;
+                // No target id given. Then derive it from the type by some easy rules.
+                if (token.location.startsWith('locslot')) {
+                    target_id += '_' + ttype + 's';  // "locslot_xxx_(cube|disc)s"
+                }
+            }
+            dojo.place(html, target_id);
+        },
+
+        /**
+         * Place tokens on the table.
+         */
+        placeTokens: function (tokens, target_id) {
+           for (i in tokens) { this.placeToken(tokens[i], target_id) }
+        },
+
         validateCaseSelection: function(opts) {
             var opts = opts || {};
             var selectedTiles = this.tiles.getSelectedItems() || [];
@@ -457,6 +489,10 @@ function (dojo, declare) {
             dojo.subscribe('newMinigame', this, "notif_newMinigame");
             dojo.subscribe('newMinigamePrivate', this, "notif_newMinigamePrivate");
             dojo.subscribe('newScores', this, "notif_newScores");
+
+            dojo.subscribe('placeToken', this, "notif_placeToken");
+            dojo.subscribe('placeTokens', this, "notif_placeTokens");
+
             dojo.subscribe('playerSolved', this, "notif_playerSolved");
         },
 
@@ -505,6 +541,14 @@ function (dojo, declare) {
             for (var player_id in notif.args.scores) {
                 this.scoreCtrl[player_id].toValue(notif.args.scores[player_id]);
             }
+        },
+
+        notif_placeToken: function(notif) {
+            this.placeToken(notif.args.token_key, notif.args.target_id);
+        },
+        
+        notif_placeTokens: function(notif) {
+            this.placeTokens(notif.args.tokens, notif.args.target_id);
         },
 
         notif_playerSolved: function(notif) {
