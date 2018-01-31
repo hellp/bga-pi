@@ -42,6 +42,123 @@ $this->constants = array(
   ),
 );
 
+
+/**
+ * THE LOCATIONS
+ *
+ * Backend and frontend data.
+ *
+ * `sid`: string id, for easier overview here
+ *
+ * `coords`: The (top, left, rotation) coords (in percent) of the location slot
+ * (middle); the crime and suspect slot locations can be calculated from this.
+ *
+ * `neighbors`: ids of adjacent locations
+ *
+ * slots: 1 => crime, 2 => suspect
+ */
+
+if (!defined('LOC_LAKESIDE')) { // guard since this included multiple times
+  define("LOC_LAKESIDE", 1);
+  define("LOC_FORESTPARK", 2);
+  define('LOC_LITTLEITALY', 3);
+  define('LOC_TROCADERO', 4);
+  define('LOC_OCEANDRIVE', 5);
+  define('LOC_CHINATOWN', 6);
+  define('LOC_CENTRALSTATION', 7);
+  define('LOC_MAINSTREET', 8);
+  define('LOC_ROADHOUSE', 9);
+  define('LOC_UNIONSQUARE', 10);
+  define('LOC_DOWNTOWN', 11);
+  define('LOC_RICKSCAFE', 12);
+  define('LOC_WATERFRONT', 13);
+  define('LOC_SKIDROW', 14);
+}
+
+$this->locations = array(
+  LOC_LAKESIDE => array(
+    'name' => clienttranslate('Lakeside'),
+    'neighbors' => array(LOC_FORESTPARK, LOC_TROCADERO, LOC_LITTLEITALY),
+    'coords' => array(4.2, 27.8, 0),
+  ),
+  LOC_FORESTPARK => array(
+    'name' => clienttranslate('Forest Park'),
+    'neighbors' => array(LOC_OCEANDRIVE, LOC_TROCADERO, LOC_LAKESIDE),
+    'coords' => array(3.8, 51.9, 2.5),
+  ),
+  LOC_LITTLEITALY => array(
+    'name' => clienttranslate('Little Italy'),
+    'neighbors' => array(LOC_LAKESIDE, LOC_TROCADERO, LOC_CENTRALSTATION, LOC_CHINATOWN),
+    'coords' => array(23.5, 15.0, 2.0),
+  ),
+  LOC_TROCADERO => array(
+    'name' => clienttranslate('Trocadero'),
+    'neighbors' => array(LOC_LAKESIDE, LOC_FORESTPARK, LOC_OCEANDRIVE, LOC_MAINSTREET, LOC_CENTRALSTATION, LOC_LITTLEITALY),
+    'coords' => array(23.2, 39.7, 0),
+  ),
+  LOC_OCEANDRIVE => array(
+    'name' => clienttranslate('Ocean Drive'),
+    'neighbors' => array(LOC_FORESTPARK, LOC_ROADHOUSE, LOC_MAINSTREET, LOC_TROCADERO),
+    'coords' => array(23.9, 64.2, 1.3),
+  ),
+  LOC_CHINATOWN => array(
+    'name' => clienttranslate('China Town'),
+    'neighbors' => array(LOC_LITTLEITALY, LOC_CENTRALSTATION, LOC_UNIONSQUARE),
+    'coords' => array(43.2, 2.8, 0),
+  ),
+  LOC_CENTRALSTATION => array(
+    'name' => clienttranslate('Central Station'),
+    'neighbors' => array(LOC_LITTLEITALY, LOC_TROCADERO, LOC_MAINSTREET, LOC_DOWNTOWN, LOC_UNIONSQUARE, LOC_CHINATOWN),
+    'coords' => array(43.2, 27.5, 1.15),
+  ),
+  LOC_MAINSTREET => array(
+    'name' => clienttranslate('Main Street'),
+    'neighbors' => array(LOC_TROCADERO, LOC_OCEANDRIVE, LOC_ROADHOUSE, LOC_RICKSCAFE, LOC_DOWNTOWN, LOC_CENTRALSTATION),
+    'coords' => array(42.5, 51.8, 0),
+  ),
+  LOC_ROADHOUSE => array(
+    'name' => clienttranslate('Road House'),
+    'neighbors' => array(LOC_OCEANDRIVE, LOC_RICKSCAFE, LOC_MAINSTREET),
+    'coords' => array(43.4, 76.2, 1.7),
+  ),
+  LOC_UNIONSQUARE => array(
+    'name' => clienttranslate('Union Square'),
+    'neighbors' => array(LOC_CHINATOWN, LOC_CENTRALSTATION, LOC_DOWNTOWN, LOC_WATERFRONT),
+    'coords' => array(63.0, 15.3, -1.5),
+  ),
+  LOC_DOWNTOWN => array(
+    'name' => clienttranslate('Downtown'),
+    'neighbors' => array(LOC_CENTRALSTATION, LOC_MAINSTREET, LOC_RICKSCAFE, LOC_SKIDROW, LOC_WATERFRONT, LOC_UNIONSQUARE),
+    'coords' => array(63.1, 39.4, 0),
+  ),
+  LOC_RICKSCAFE => array(
+    'name' => clienttranslate('Rick’s Café'),
+    'neighbors' => array(LOC_MAINSTREET, LOC_ROADHOUSE, LOC_SKIDROW, LOC_DOWNTOWN),
+    'coords' => array(63.1, 64.1, 0),
+  ),
+  LOC_WATERFRONT => array(
+    'name' => clienttranslate('Waterfront'),
+    'neighbors' => array(LOC_UNIONSQUARE, LOC_DOWNTOWN, LOC_SKIDROW),
+    'coords' => array(82.3, 27.4, 1.5),
+  ),
+  LOC_SKIDROW => array(
+    'name' => clienttranslate('Skid Row'),
+    'neighbors' => array(LOC_DOWNTOWN, LOC_RICKSCAFE, LOC_WATERFRONT),
+    'coords' => array(82.5, 51.7, 0),
+  ),
+);
+
+// For each location create 3 slots; in the UI these will be anchors to orient
+// our tiles on.
+foreach ($this->locations as $loc_id => $loc) {
+  $this->locations[$loc_id]['slots'] = array(
+    'crime' => array('id' => $loc_id * 100 + 1),
+    'location' => array('id' => $loc_id * 100 + 2),
+    'suspect' => array('id' => $loc_id * 100 + 3),
+  );
+}
+
+
 // We use this as the basis to create all cards, evidence and base cards, but
 // not all of the info is used in each deck. But as there is a 1:1 relation
 // between cases and evidences, let's don't repeat ourselves.
@@ -236,136 +353,22 @@ $this->tiles = array(
   // the same way as normal tiles makes it easier for us. In the UI these will
   // be invisible DIVs for the most part, except when highlighted for the Case
   // solving action.
-  29 => array('name' => clienttranslate('Lakeside'), 'nametr' => self::_('Lakeside'), 'tiletype' => 'location'),
-  30 => array('name' => clienttranslate('Forest Park'), 'nametr' => self::_('Forest Park'), 'tiletype' => 'location'),
-  31 => array('name' => clienttranslate('Little Italy'), 'nametr' => self::_('Little Italy'), 'tiletype' => 'location'),
-  32 => array('name' => clienttranslate('Trocadero'), 'nametr' => self::_('Trocadero'), 'tiletype' => 'location'),
-  33 => array('name' => clienttranslate('Ocean Drive'), 'nametr' => self::_('Ocean Drive'), 'tiletype' => 'location'),
-  34 => array('name' => clienttranslate('China Town'), 'nametr' => self::_('China Town'), 'tiletype' => 'location'),
-  35 => array('name' => clienttranslate('Central Station'), 'nametr' => self::_('Central Station'), 'tiletype' => 'location'),
-  36 => array('name' => clienttranslate('Main Street'), 'nametr' => self::_('Main Street'), 'tiletype' => 'location'),
-  37 => array('name' => clienttranslate('Road House'), 'nametr' => self::_('Road House'), 'tiletype' => 'location'),
-  38 => array('name' => clienttranslate('Union Square'), 'nametr' => self::_('Union Square'), 'tiletype' => 'location'),
-  39 => array('name' => clienttranslate('Downtown'), 'nametr' => self::_('Downtown'), 'tiletype' => 'location'),
-  40 => array('name' => clienttranslate('Rick’s Café'), 'nametr' => self::_('Rick’s Café'), 'tiletype' => 'location'),
-  41 => array('name' => clienttranslate('Waterfront'), 'nametr' => self::_('Waterfront'), 'tiletype' => 'location'),
-  42 => array('name' => clienttranslate('Skid Row'), 'nametr' => self::_('Skid Row'), 'tiletype' => 'location'),
+  29 => array('name' => $this->locations[LOC_LAKESIDE]['name'], 'nametr' => self::_('Lakeside'), 'tiletype' => 'location'),
+  30 => array('name' => $this->locations[LOC_FORESTPARK]['name'], 'nametr' => self::_('Forest Park'), 'tiletype' => 'location'),
+  31 => array('name' => $this->locations[LOC_LITTLEITALY]['name'], 'nametr' => self::_('Little Italy'), 'tiletype' => 'location'),
+  32 => array('name' => $this->locations[LOC_TROCADERO]['name'], 'nametr' => self::_('Trocadero'), 'tiletype' => 'location'),
+  33 => array('name' => $this->locations[LOC_OCEANDRIVE]['name'], 'nametr' => self::_('Ocean Drive'), 'tiletype' => 'location'),
+  34 => array('name' => $this->locations[LOC_CHINATOWN]['name'], 'nametr' => self::_('China Town'), 'tiletype' => 'location'),
+  35 => array('name' => $this->locations[LOC_CENTRALSTATION]['name'], 'nametr' => self::_('Central Station'), 'tiletype' => 'location'),
+  36 => array('name' => $this->locations[LOC_MAINSTREET]['name'], 'nametr' => self::_('Main Street'), 'tiletype' => 'location'),
+  37 => array('name' => $this->locations[LOC_ROADHOUSE]['name'], 'nametr' => self::_('Road House'), 'tiletype' => 'location'),
+  38 => array('name' => $this->locations[LOC_UNIONSQUARE]['name'], 'nametr' => self::_('Union Square'), 'tiletype' => 'location'),
+  39 => array('name' => $this->locations[LOC_DOWNTOWN]['name'], 'nametr' => self::_('Downtown'), 'tiletype' => 'location'),
+  40 => array('name' => $this->locations[LOC_RICKSCAFE]['name'], 'nametr' => self::_('Rick’s Café'), 'tiletype' => 'location'),
+  41 => array('name' => $this->locations[LOC_WATERFRONT]['name'], 'nametr' => self::_('Waterfront'), 'tiletype' => 'location'),
+  42 => array('name' => $this->locations[LOC_SKIDROW]['name'], 'nametr' => self::_('Skid Row'), 'tiletype' => 'location'),
 );
 
-/**
- * THE LOCATIONS
- *
- * Backend and frontend data.
- *
- * `sid`: string id, for easier overview here
- *
- * `coords`: The (top, left, rotation) coords (in percent) of the location slot
- * (middle); the crime and suspect slot locations can be calculated from this.
- *
- * `neighbors`: ids of adjacent locations
- *
- * slots: 1 => crime, 2 => suspect
- */
-
-if (!defined('LOC_LAKESIDE')) { // guard since this included multiple times
-  define("LOC_LAKESIDE", 1);
-  define("LOC_FORESTPARK", 2);
-  define('LOC_LITTLEITALY', 3);
-  define('LOC_TROCADERO', 4);
-  define('LOC_OCEANDRIVE', 5);
-  define('LOC_CHINATOWN', 6);
-  define('LOC_CENTRALSTATION', 7);
-  define('LOC_MAINSTREET', 8);
-  define('LOC_ROADHOUSE', 9);
-  define('LOC_UNIONSQUARE', 10);
-  define('LOC_DOWNTOWN', 11);
-  define('LOC_RICKSCAFE', 12);
-  define('LOC_WATERFRONT', 13);
-  define('LOC_SKIDROW', 14);
-}
-
-$this->locations = array(
-  LOC_LAKESIDE => array(
-    'strid' => 'lakeside',
-    'neighbors' => array(LOC_FORESTPARK, LOC_TROCADERO, LOC_LITTLEITALY),
-    'coords' => array(4.2, 27.8, 0),
-  ),
-  LOC_FORESTPARK => array(
-    'strid' => 'forestpark',
-    'neighbors' => array(LOC_OCEANDRIVE, LOC_TROCADERO, LOC_LAKESIDE),
-    'coords' => array(3.8, 51.9, 2.5),
-  ),
-  LOC_LITTLEITALY => array(
-    'strid' => 'littleitaly',
-    'neighbors' => array(LOC_LAKESIDE, LOC_TROCADERO, LOC_CENTRALSTATION, LOC_CHINATOWN),
-    'coords' => array(23.5, 15.0, 2.0),
-  ),
-  LOC_TROCADERO => array(
-    'strid' => 'trocadero',
-    'neighbors' => array(LOC_LAKESIDE, LOC_FORESTPARK, LOC_OCEANDRIVE, LOC_MAINSTREET, LOC_CENTRALSTATION, LOC_LITTLEITALY),
-    'coords' => array(23.2, 39.7, 0),
-  ),
-  LOC_OCEANDRIVE => array(
-    'strid' => 'oceandrive',
-    'neighbors' => array(LOC_FORESTPARK, LOC_ROADHOUSE, LOC_MAINSTREET, LOC_TROCADERO),
-    'coords' => array(23.9, 64.2, 1.3),
-  ),
-  LOC_CHINATOWN => array(
-    'strid' => 'chinatown',
-    'neighbors' => array(LOC_LITTLEITALY, LOC_CENTRALSTATION, LOC_UNIONSQUARE),
-    'coords' => array(43.2, 2.8, 0),
-  ),
-  LOC_CENTRALSTATION => array(
-    'strid' => 'centralstation',
-    'neighbors' => array(LOC_LITTLEITALY, LOC_TROCADERO, LOC_MAINSTREET, LOC_DOWNTOWN, LOC_UNIONSQUARE, LOC_CHINATOWN),
-    'coords' => array(43.2, 27.5, 1.15),
-  ),
-  LOC_MAINSTREET => array(
-    'strid' => 'mainstreet',
-    'neighbors' => array(LOC_TROCADERO, LOC_OCEANDRIVE, LOC_ROADHOUSE, LOC_RICKSCAFE, LOC_DOWNTOWN, LOC_CENTRALSTATION),
-    'coords' => array(42.5, 51.8, 0),
-  ),
-  LOC_ROADHOUSE => array(
-    'strid' => 'roadhouse',
-    'neighbors' => array(LOC_OCEANDRIVE, LOC_RICKSCAFE, LOC_MAINSTREET),
-    'coords' => array(43.4, 76.2, 1.7),
-  ),
-  LOC_UNIONSQUARE => array(
-    'strid' => 'unionsquare',
-    'neighbors' => array(LOC_CHINATOWN, LOC_CENTRALSTATION, LOC_DOWNTOWN, LOC_WATERFRONT),
-    'coords' => array(63.0, 15.3, -1.5),
-  ),
-  LOC_DOWNTOWN => array(
-    'strid' => 'downtown',
-    'neighbors' => array(LOC_CENTRALSTATION, LOC_MAINSTREET, LOC_RICKSCAFE, LOC_SKIDROW, LOC_WATERFRONT, LOC_UNIONSQUARE),
-    'coords' => array(63.1, 39.4, 0),
-  ),
-  LOC_RICKSCAFE => array(
-    'strid' => 'rickscafe',
-    'neighbors' => array(LOC_MAINSTREET, LOC_ROADHOUSE, LOC_SKIDROW, LOC_DOWNTOWN),
-    'coords' => array(63.1, 64.1, 0),
-  ),
-  LOC_WATERFRONT => array(
-    'strid' => 'waterfront',
-    'neighbors' => array(LOC_UNIONSQUARE, LOC_DOWNTOWN, LOC_SKIDROW),
-    'coords' => array(82.3, 27.4, 1.5),
-  ),
-  LOC_SKIDROW => array(
-    'strid' => 'skidrow',
-    'neighbors' => array(LOC_DOWNTOWN, LOC_RICKSCAFE, LOC_WATERFRONT),
-    'coords' => array(82.5, 51.7, 0),
-  ),
-);
-
-// For each location create 3 slots; in the UI these will be anchors to orient
-// our tiles on.
-foreach ($this->locations as $loc_id => $loc) {
-  $this->locations[$loc_id]['slots'] = array(
-    'crime' => array('id' => $loc_id * 100 + 1, 'strid' => $loc['strid'] . '_crime'),
-    'location' => array('id' => $loc_id * 100 + 2, 'strid' => $loc['strid'] . '_location'),
-    'suspect' => array('id' => $loc_id * 100 + 3, 'strid' => $loc['strid'] . '_suspect'),
-  );
-}
 
 $this->tokeninfos = array(
   array('key' => 'cube_blue_{INDEX}', 'nbr' => 10),
