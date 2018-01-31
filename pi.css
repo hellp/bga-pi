@@ -105,18 +105,6 @@
 .disc.red { background-color:#f30; }
 .disc.yellow { background-color:#fe0; }
 
-.investigator {
-    z-index:100;
-    position: absolute;
-    height:50px;
-    width:50px;
-    background-color: darkred;
-    border: solid 0 rgba(0, 0, 0, 0.33);
-    border-width: 0 1px 1px 0;
-    border-radius: 4px;
-    box-shadow: 1px 1px 1px 0px rgba(0, 0, 0, 0.5);
-}
-
 /* Location containers */
 .loccont {
     position: absolute;
@@ -138,8 +126,7 @@
     padding:4px; */
 
 }
-.loccont .agentarea .cube20,
-.loccont .agentarea .disc30 {
+.loccont .agentarea .investigator {
     display: inline-block;
 }
 .loccont .agentarea.highlighted {
@@ -180,37 +167,6 @@
     box-shadow: 0 0 4px 6px rgb(0, 0, 255) !important
 }
 
-.loc_tokens {
-    position: absolute;
-    height:50px;
-    width:272px;
-    text-align: center;
-    background-color: #ffffff33;
-}
-.loc_tokens.loc_chinatown {
-    top: 394px;
-    left: 30px;
-}
-.loc_tokens.loc_forestpark {
-    top: 52px;
-    left: 596px;
-    transform: rotate(2.5deg);
-}
-.loc_tokens.loc_trocadero {
-    top:220px;
-    left:452px;
-    transform: rotate(1deg);
-}
-
-.loc_tokens .investigator {
-    position:relative;
-    display:inline-block;
-}
-.loc_tokens .investigator:last-of-type {
-    margin-right:0;
-}
-
-
 .cube {
     z-index:300;
     position: absolute;
@@ -241,7 +197,7 @@
 #myevidence-wrap { float:left; height:180px; width: 700px; }
 
 .locslot .cube20,
-.locslot .cube25 {
+.locslot .disc30 {
     z-index:100;
     position: absolute;
 }
@@ -250,21 +206,55 @@
     bottom:-4px;
     left:-4px;
     height:50px;
-    outline:solid 1px red;
 }
-.locslot .locslot_discs {
-    position: absolute;
-    bottom:-4px;
-    right:-4px;
-    height:50px;
-    outline:solid 1px green;
-}
+/* Bottom left */
 .locslot .cube20:nth-of-type(1) { bottom:0; z-index:200; }
 .locslot .cube20:nth-of-type(2) { bottom:0; left:17px; z-index:200; }
 .locslot .cube20:nth-of-type(3) { bottom:13px; z-index:201; }
 .locslot .cube20:nth-of-type(4) { bottom:13px; left:17px; z-index:201; }
 .locslot .cube20:nth-of-type(5) { bottom:26px; z-index:203; }
 
+/* Top right, so we can still see the image and the cubes */
+.locslot .disc30 {
+    top:18px;
+    left:33px;
+}
+/* Regarding multiple discs on one locslot: Yes, there can only ever be one disc
+   on a tile. If a user manually moves one there it stays there, unless we find
+   a full match later. Then we move it back to the agentarea. A full match is a
+   full match, there is no sense in keeping a wrongly manually placed disc there
+   then. This might count as a very very minor 'helping the player'; but it's
+   really too obvious not to tell them. TODO: implement this in the backend. */
+
+
+.investigator {
+    z-index:100;
+    position: relative;
+    height:36px;
+    width:36px;
+    margin:3px;
+    background-image: url("img/investigators.png");
+    background-size:182px;
+    border-radius: 4px;
+    box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.75);
+}
+.investigator_red { background-position: 0px 0px }
+.investigator_blue { background-position: -36px 0px }
+.investigator_yellow { background-position: -72px 0px }
+.investigator_green { background-position: -108px 0px }
+.investigator_purple { background-position: -144px 0px }
+
+.investigator .cube20,
+.investigator .disc30 {
+    position: absolute;
+}
+.investigator .disc30 {
+    bottom:-1px;
+    right:-2px;
+ }
+ .investigator > div:nth-of-type(1) { left: -5px; bottom:-2px; z-index:200; }
+ .investigator > div:nth-of-type(2) { right: -5px; bottom:-2px; left:17px; z-index:200; }
+ .investigator > div:nth-of-type(3) { left: -5px; bottom:13px; z-index:201; }
 
 .cube20 {
     height: 20px;
@@ -283,17 +273,18 @@
 .cube20_orange { background-position: -200px 0px }
 
 .disc30 {
-    height: 30px;
-    width: 30px;
+    height: 25px;
+    width: 25px;
     background-image: url("img/common/discs30_hc.png");
+    background-size: cover;
 }
 .disc30_blue { background-position: 0px 0px }
-.disc30_green { background-position: -30px 0px }
-.disc30_beige { background-position: -60px 0px }
-.disc30_orange { background-position: -90px 0px }
-.disc30_white { background-position: -120px 0px }
-.disc30_black { background-position: -150px 0px }
-.disc30_red { background-position: -180px 0px }
-.disc30_yellow { background-position: -210px 0px }
-.disc30_gray { background-position: -240px 0px }
-.disc30_purple { background-position: -270px 0px }
+.disc30_green { background-position: -25px 0px }
+.disc30_beige { background-position: -50px 0px }
+.disc30_orange { background-position: -75px 0px }
+.disc30_white { background-position: -100px 0px }
+.disc30_black { background-position: -125px 0px }
+.disc30_red { background-position: -150px 0px }
+.disc30_yellow { background-position: -175px 0px }
+.disc30_gray { background-position: -200px 0px }
+.disc30_purple { background-position: -225px 0px }

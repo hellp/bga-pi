@@ -143,7 +143,11 @@ function (dojo, declare) {
                 this.gamedatas.player_display_cards,
             );
             this.placeTiles(this.gamedatas.tiles);
-            this.placeTokens(this.gamedatas.tokens);
+
+            // Sort tokens: investigators need to be placed before cubes/discs.
+            var tokens = this.gamedatas.tokens;
+            tokens.sort(function (a, b) { return b.key.startsWith('pi_') - a.key.startsWith('pi_') });
+            this.placeTokens(tokens);
 
             // Connect user actions
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
@@ -330,20 +334,33 @@ function (dojo, declare) {
             var keyparts = key.split('_');
             var ttype = keyparts[0]; // cube, disc
             var color = keyparts[1];
-            var html;
-            if (ttype == 'cube') {
-                var html = '<div id="' + key + '" class="cube20 cube20_' + color + '"></div>';
-            } else {
-                var html = '<div id="' + key + '" class="disc30 disc30_' + color + '"></div>';
-            }
             if (!target_id) {
-                target_id = token.location;
                 // No target id given. Then derive it from the type by some easy rules.
-                if (token.location.startsWith('locslot')) {
+                // TODO: explain rules
+                target_id = token.location;
+                if (ttype == 'cube' && target_id.startsWith('locslot_')) {
                     target_id += '_' + ttype + 's';  // "locslot_xxx_(cube|disc)s"
                 }
             }
-            dojo.place(html, target_id);
+            // Cubes/discs for 'agentarea_X' actually go onto the corresponding investigator there.
+            if ((ttype == 'cube' || ttype == 'disc') && target_id.startsWith('agentarea')) {
+                console.log(token, target_id);
+                target_id = dojo.query('#' + target_id + ' .investigator_' + color)[0].id;
+            }
+
+            if (!$(key)) {
+                var html;
+                if (ttype == 'cube') {
+                    var html = '<div id="' + key + '" class="cube20 cube20_' + color + '"></div>';
+                } else if (ttype == 'disc') {
+                    var html = '<div id="' + key + '" class="disc30 disc30_' + color + '"></div>';
+                } else {
+                    var html = '<div id="' + key + '" class="investigator investigator_' + color + '"></div>';
+                }
+                dojo.place(html, target_id);
+            } else {
+                this.slideToObject(key, target_id).play();
+            }
         },
 
         /**
@@ -544,7 +561,7 @@ function (dojo, declare) {
         },
 
         notif_placeToken: function(notif) {
-            this.placeToken(notif.args.token_key, notif.args.target_id);
+            this.placeToken(notif.args.token, notif.args.target_id);
         },
         
         notif_placeTokens: function(notif) {

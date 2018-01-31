@@ -240,6 +240,16 @@ class pi extends Table
         return array_shift($tiles);
     }
 
+    function getLocationIdOfTile($tile)
+    {
+        // Assert that the tile is actually on the board.
+        if ($tile['location'] != 'locslot') {
+            throw new BgaVisibleSystemException("Tile is not on the board. Please report this.");
+        }
+        $tile_slot_id = $tile['location_arg'];
+        return floor((int)$tile_slot_id / 100); // the invers of ($loc_id * 100 + 1|2|3)
+    }
+
     /**
      * For the given location_id, return all adjacent tiles' names (includes
      * all case aspects).
@@ -273,14 +283,7 @@ class pi extends Table
         // Get the tile that corresponds to the card.
         // $card = $this->cards->getCard($card_id);
         $tile = $this->getCorrespondingTile($card_id);
-
-        // Assert that the tile is actually on the board.
-        if ($tile['location'] != 'locslot') {
-            throw new BgaVisibleSystemException("Tile is not on the board. Please report this.");
-        }
-
-        $tile_slot_id = $tile['location_arg'];
-        $location_mid = floor((int)$tile_slot_id / 100); // the invers of ($loc_id * 100 + 1|2|3)
+        $location_mid = $this->getLocationIdOfTile($tile);
         return $this->getAdjacentTileNames($location_mid, $tile['type']);
     }
 
@@ -321,8 +324,8 @@ class pi extends Table
             'player_display_cards' => $this->cards->getCardsInLocation('player_display'),
             'tiles' => $this->cards->getCardsInLocation('locslot'),
             'tokens' => array_merge(
-                $this->tokens->getTokensInLocation('agentarea_%'),
-                $this->tokens->getTokensInLocation('locslot_%'))
+                array_values($this->tokens->getTokensInLocation('agentarea_%')),
+                array_values($this->tokens->getTokensInLocation('locslot_%')))
         );
     }
 
@@ -399,6 +402,7 @@ class pi extends Table
         $player_id = self::getActivePlayerId();
         $player = self::loadPlayersBasicInfos()[$player_id];
         $color = $this->constants['HEX2COLORNAME'][$player['player_color']];
+        $token_location = "agentarea_{$location_id}";
 
         // No more investigator. Should be handled in the UI, but safety first.
         if ($this->tokens->countTokensInLocation("pi_supply_{$player_id}") == 0) {
@@ -406,12 +410,23 @@ class pi extends Table
         }
 
         // Check if player already has an investigator at this location.
-        if (count($this->tokens->getTokensOfTypeInLocation("pi_{$color}_%", "location_{$location_id}"))) {
+        if (count($this->tokens->getTokensOfTypeInLocation("pi_{$color}_%", $token_location))) {
             throw new BgaUserException(self::_("You already have an investigator at this location."));
         }
 
         // Place investigator token here.
-        $this->tokens->pickTokensForLocation(1, "pi_supply_{$player_id}", "location_{$location_id}");
+        $_temp = $this->tokens->pickTokensForLocation(1, "pi_supply_{$player_id}", $token_location);
+        $pi_token = array_shift($_temp);
+        self::notifyAllPlayers(
+            'placeToken',
+            clienttranslate('${player_name} sends an investigator to ${location_name}.'),
+            array(
+                'i18n' => array('location_name'),
+                'token' => $pi_token,
+                'target_id' => $token_location,
+                'player_name' => $player['player_name'],
+                'location_name' => $this->locations[$location_id]['name']
+            ));
 
         $solution = $this->getPlayerCaseSolution($player_id);
 
@@ -498,35 +513,44 @@ class pi extends Table
 
     function selectEvidence($card_id)
     {
+        // Some checks first
         self::checkAction("selectEvidence");
-        $player_id = self::getActivePlayerId();
         $currentCard = $this->cards->getCard($card_id);
-        $card_name = $this->cardBasis[$currentCard['type_arg']]['name'];
-
         // Should not happen; also anti-cheat
         if ($currentCard['location'] != "evidence_display") {
             throw new BgaUserException(self::_("Card is not on display. Press F5 in case of problems."));
         }
 
+        // Various infos we need
+        $card_name = $this->cardBasis[$currentCard['type_arg']]['name'];
+        $player_id = self::getActivePlayerId();
+        $player = self::loadPlayersBasicInfos()[$player_id];
+        $color = $this->constants['HEX2COLORNAME'][$player['player_color']];
+        $tile = $this->getCorrespondingTile($currentCard['id']);
+        $location_id = $this->getLocationIdOfTile($tile);
+        $agent_area = "agentarea_{$location_id}";
+        // The locslot to place a token on, in case of success
+        $target_id = "locslot_{$tile['location_arg']}";
+
+        // The solution
         $solution = $this->getPlayerCaseSolution($player_id);
 
-        // Check for a match with the player's case.
+        // Check for a full match with the player's case.
         if (in_array($card_name, $solution)) {
-            // Full match
-            // // TODO: Put player-colored disc onto the locslot (if not there already)
-            // $discs = $this->tokens->getTokensOfTypeInLocation('disc_%', "supply_{$player_id}");
-            // if (!$discs) {
-            //     // The disc for this match is out there already; should be on the slot's parent location/agent slot.
-            //     // TODO: find it and put it on the locslot
-            // } else {
-            //     $disc = array_shift($discs);
-            // }
-            // $disc = $this->tokens->getTokenOnTop('');
-            // if (!$disc) {
-            //     throw new BgaUserException(self::_("No more discs in your supply. You should be able to solve the case!"));
-            // }
+            // Get a disc to put on the tile.
 
-            // $newtokens = ... 
+            // First we check if there is already a dics at that *location*,
+            // i.e. on an investigator tile. If so, we take it from there. Else
+            // from our supply.
+            $discs = $this->tokens->getTokensOfTypeInLocation("disc_{$color}_%", $agent_area);
+            if (count($discs)) {
+                $disc = array_shift($discs);
+            } else {
+                $disc = $this->tokens->getTokenOnTop("discs_{$player_id}");
+            }
+            if (!$disc) {
+                throw new BgaUserException(self::_("No more discs in your supply. You should be able to solve the case!"));
+            }
 
             // Put card on discard
             $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
@@ -538,10 +562,19 @@ class pi extends Table
                     'card_id' => $card_id,
                     'card_name' => $card_name,
                     'card_type' => $currentCard['type_arg'],
-                    // 'new_tokens' => ..., // or rather do this as a separate notification?
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName()
                 ));
+
+            // Move token
+            $this->tokens->moveToken($disc['key'], $target_id);
+            self::notifyAllPlayers(
+                'placeToken', '',
+                array(
+                    'token' => $disc,
+                    'target_id' => $target_id,
+                ));
+
             $this->gamestate->nextState('nextTurn');
             return;
         }
@@ -558,7 +591,23 @@ class pi extends Table
         }
         if ($match_name) {
             // Adjacent match
-            // TODO: place token in DB and via Notif
+
+            // First check if there is already a cube at that *location*, i.e.
+            // on an investigator tile. If so, we take it from there. Else from
+            // our supply.
+            $cubes = $this->tokens->getTokensOfTypeInLocation("cube_{$color}_%", $agent_area);
+            if (count($cubes)) {
+                $cube = array_shift($cubes);
+            } else {
+                $cube = $this->tokens->getTokenOnTop("cubes_{$player_id}");
+            }
+            if (!$cube) {
+                throw new BgaUserException(self::_("No more cubes in your supply!"));
+            }
+
+            // Put card on discard
+            $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
+
             self::notifyAllPlayers(
                 'evidenceClose',
                 clienttranslate('${player_name} found out that ${card_name} <b>is close</b> to the actual ${casetype}.'),
@@ -570,9 +619,19 @@ class pi extends Table
                     'casetype' => $this->constants['CASETYPES'][$match_casetype],
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName(),
-                ));
-            // Put card on discard
-            $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
+                )
+            );
+
+            // Move token
+            $this->tokens->moveToken($cube['key'], $target_id);
+            self::notifyAllPlayers(
+                'placeToken', '',
+                array(
+                    'token' => $cube,
+                    'target_id' => $target_id,
+                )
+            );
+
         } else {
             // No match at all
             self::notifyAllPlayers(
