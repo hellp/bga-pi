@@ -125,6 +125,7 @@ class pi extends Table
         $this->cards->createCards($cards, 'offtable');
 
         // Create tokens, and put into 'supply'
+        // TODO: create only tokens required for the chosen player colors
         $this->tokens->createTokens($this->tokeninfos, 'supply');
 
         // Give each player their 5 investigators. These will *not* be
@@ -402,7 +403,7 @@ class pi extends Table
         $player_id = self::getActivePlayerId();
         $player = self::loadPlayersBasicInfos()[$player_id];
         $color = $this->constants['HEX2COLORNAME'][$player['player_color']];
-        $token_location = "agentarea_{$location_id}";
+        $agent_area = "agentarea_{$location_id}";
 
         // No more investigator. Should be handled in the UI, but safety first.
         if ($this->tokens->countTokensInLocation("pi_supply_{$player_id}") == 0) {
@@ -410,12 +411,12 @@ class pi extends Table
         }
 
         // Check if player already has an investigator at this location.
-        if (count($this->tokens->getTokensOfTypeInLocation("pi_{$color}_%", $token_location))) {
+        if (count($this->tokens->getTokensOfTypeInLocation("pi_{$color}_%", $agent_area))) {
             throw new BgaUserException(self::_("You already have an investigator at this location."));
         }
 
         // Place investigator token here.
-        $_temp = $this->tokens->pickTokensForLocation(1, "pi_supply_{$player_id}", $token_location);
+        $_temp = $this->tokens->pickTokensForLocation(1, "pi_supply_{$player_id}", $agent_area);
         $pi_token = array_shift($_temp);
         self::notifyAllPlayers(
             'placeToken',
@@ -423,7 +424,7 @@ class pi extends Table
             array(
                 'i18n' => array('location_name'),
                 'token' => $pi_token,
-                'target_id' => $token_location,
+                'target_id' => $agent_area,
                 'player_name' => $player['player_name'],
                 'location_name' => $this->locations[$location_id]['name']
             ));
@@ -432,7 +433,6 @@ class pi extends Table
 
         $locslots = $this->locations[$location_id]['slots'];
         $slot_ids = array_pluck($locslots, 'id');
-        $target = "agentarea_{$location_id}";
 
         // IMPORTANT! Even if we match, we must not notify/place right away, as
         // we must not give away which of the aspects the new token(s) refer
@@ -445,12 +445,13 @@ class pi extends Table
         shuffle($locslots_copy);
         foreach ($locslots_copy as $slot) {
             $slot_id = $slot['id'];
+            $locslot_location = "locslot_{$location_id}";
 
             // First, check if there's a disc/cube of player color on it
             // already. If so, we have as much information for this aspect as
             // we can get: continue.
-            if (count($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%", $target)) ||
-                count($this->tokens->getTokensOfTypeInLocation("disc_{$color}_%", $target))) {
+            if (count($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%", $locslot_location)) ||
+                count($this->tokens->getTokensOfTypeInLocation("disc_{$color}_%", $locslot_location))) {
                 continue;
             }
 
@@ -464,8 +465,7 @@ class pi extends Table
             $full_match = $mtile['name'] == $solution[$mtile['tiletype']];
             if ($full_match) {
                 $disc = $this->tokens->getTokenOnTop("discs_{$player_id}");
-                self::dump('disc', $disc);
-                $this->tokens->moveToken($disc['key'], $target);
+                $this->tokens->moveToken($disc['key'], $agent_area);
                 $new_tokens[] = $disc;
                 // Done with this location slot
                 continue;
@@ -481,13 +481,13 @@ class pi extends Table
                 }
             }
 
-            // Close match: put cube on tile.
+            // Close match: put cube into the agent area
             if ($close_match) {
                 $cube = $this->tokens->getTokenOnTop("cubes_{$player_id}");
                 if (!$cube) {
                     // TODO: warning/error?? Player run out of cubes.
                 }
-                $this->tokens->moveToken($cube['key'], $target);
+                $this->tokens->moveToken($cube['key'], $agent_area);
                 $new_tokens[] = $cube;
             }
         }
@@ -502,7 +502,7 @@ class pi extends Table
                 array(
                     '_comment' => 'The tiles were checked in a random order; tokens are shuffled! No guessing!',
                     'tokens' => $new_tokens,
-                    'target_id' => $target,
+                    'target_id' => $agent_area,
                 ));
         } else {
             // TODO: notify that the investigator found no new clues...

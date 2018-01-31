@@ -148,6 +148,9 @@ function (dojo, declare) {
             var tokens = this.gamedatas.tokens;
             tokens.sort(function (a, b) { return b.key.startsWith('pi_') - a.key.startsWith('pi_') });
             this.placeTokens(tokens);
+            // TODO: place cubes and disc initially into the player areas, so we
+            // can move them from there to other locations; also good indicator
+            // of how much cubes are left.
 
             // Connect user actions
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
@@ -548,6 +551,7 @@ function (dojo, declare) {
             this.enableAllPlayerPanels();
             this.placeEvidenceCards(notif.args.evidence_display, [], []);
             this.placeTiles(notif.args.tiles);
+            // TODO: reset tokens
         },
 
         notif_newMinigamePrivate: function (notif) {
