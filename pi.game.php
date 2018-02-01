@@ -452,7 +452,7 @@ class pi extends Table
         shuffle($locslots_copy);
         foreach ($locslots_copy as $slot) {
             $slot_id = $slot['id'];
-            $locslot_location = "locslot_{$location_id}";
+            $locslot_location = "locslot_{$slot_id}";
 
             // First, check if there's a disc/cube of player color on it
             // already. If so, we have as much information for this aspect as
@@ -479,7 +479,7 @@ class pi extends Table
             }
             
             // Not a full match; check adjacent locations now.
-            $adjacent_tile_names = $this->getAdjacentTileNames($location_id, $mtile['tiletype']);
+            $adjacent_tile_names = $this->getAdjacentTileNames($location_id, "tile_{$mtile['tiletype']}");
             $close_match = false;
             foreach ($solution as $name) {
                 if (in_array($name, $adjacent_tile_names)) {
