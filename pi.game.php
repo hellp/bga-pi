@@ -124,15 +124,22 @@ class pi extends Table
         // sorted first.
         $this->cards->createCards($cards, 'offtable');
 
-        // Create tokens, and put into 'supply'
-        // TODO: create only tokens required for the chosen player colors
-        $this->tokens->createTokens($this->tokeninfos, 'supply');
-
-        // Give each player their 5 investigators. These will *not* be
-        // replenished on each minigame.
         $players = self::loadPlayersBasicInfos();
         foreach($players as $player_id => $player) {
             $color = $this->constants['HEX2COLORNAME'][$player['player_color']];
+
+            // Create player tokens, and put into 'supply'. Not yet into their
+            // personal supply. This will be done in st_setupMinigame. Note: we
+            // do not do a createTokens($this->tokeninfos) as this would create
+            // many tokens in the DB that we don't need for games with less
+            // than the full player count.
+            $player_tokens = array_filter($this->tokeninfos, function ($v) use ($color) {
+                return strpos($v['key'], "_{$color}_") > 0;
+            });
+            $this->tokens->createTokens($player_tokens, 'supply');
+
+            // Give each player their 5 investigators. These will *not* be
+            // replenished on each minigame.
             $this->tokens->moveTokens(
                 array_pluck($this->tokens->getTokensOfTypeInLocation("pi_{$color}_%"), 'key'),
                 "pi_supply_{$player_id}");
