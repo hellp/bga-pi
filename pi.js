@@ -347,7 +347,6 @@ function (dojo, declare) {
             }
             // Cubes/discs for 'agentarea_X' actually go onto the corresponding investigator there.
             if ((ttype == 'cube' || ttype == 'disc') && target_id.startsWith('agentarea')) {
-                console.log(token, target_id);
                 target_id = dojo.query('#' + target_id + ' .investigator_' + color)[0].id;
             }
 
@@ -534,7 +533,6 @@ function (dojo, declare) {
         },
 
         notif_evidenceCorrect: function(notif) {
-            // TODO: Put a disc on the 
             // Move card to discard
             this.evidenceDiscard.addToStockWithId(notif.args.card_type, notif.args.card_id, 'evidence');
             this.evidenceDisplay.removeFromStockById(notif.args.card_id);

@@ -815,7 +815,6 @@ class pi extends Table
             $this->tokens->moveTokens(
                 array_pluck($this->tokens->getTokensOfTypeInLocation("disc_{$color}_%"), 'key'),
                 "discs_{$player_id}");
-            // TODO: give Agent/PI tokens
         }
 
         $notifText = array(
