@@ -472,7 +472,7 @@ class pi extends Table
             }
             
             // Not a full match; check adjacent locations now.
-            $adjacent_tile_names = $this->getAdjacentTileNames($location_id);
+            $adjacent_tile_names = $this->getAdjacentTileNames($location_id, $mtile['tiletype']);
             $close_match = false;
             foreach ($solution as $name) {
                 if (in_array($name, $adjacent_tile_names)) {
