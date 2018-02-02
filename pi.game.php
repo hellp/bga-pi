@@ -537,8 +537,6 @@ class pi extends Table
                     'tokens' => $new_tokens,
                     'target_id' => $agent_area,
                 ));
-        } else {
-            // TODO: notify that the investigator found no new clues...
         }
 
         $this->gamestate->nextState('nextTurn');
@@ -711,8 +709,8 @@ class pi extends Table
                     player_solved_in_round = " . self::getGameStateValue('minigame_round') . "
                 WHERE player_id = $player_id
             ");
-            // TODO: use this notification to grey out the player area
             // TODO: move cubes back to player supply
+            // TODO: put discs on the solution
             self::notifyAllPlayers(
                 'playerSolved',
                 // TODO: improve wording
