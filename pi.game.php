@@ -446,11 +446,16 @@ class pi extends Table
         // Place investigator token here.
         $_temp = $this->tokens->pickTokensForLocation(1, "pi_supply_{$player_id}", $agent_area);
         $pi_token = array_shift($_temp);
+        $counters = array();
+        $this->setCounter(
+            $counters, "remaining_investigators_$player_id",
+            $this->tokens->countTokensInLocation("pi_supply_$player_id"));
         self::notifyAllPlayers(
             'placeToken',
             clienttranslate('${player_name} sends an investigator to ${location_name}.'),
             array(
                 'i18n' => array('location_name'),
+                'counters' => $counters,
                 'token' => $pi_token,
                 'target_id' => $agent_area,
                 'player_name' => $player['player_name'],

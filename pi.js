@@ -592,10 +592,12 @@ function (dojo, declare) {
 
         notif_placeToken: function(notif) {
             this.placeToken(notif.args.token, notif.args.target_id);
+            if (notif.args.counters) this.updateCounters(notif.args.counters);
         },
         
         notif_placeTokens: function(notif) {
             this.placeTokens(notif.args.tokens, notif.args.target_id);
+            if (notif.args.counters) this.updateCounters(notif.args.counters);
         },
 
         notif_playerSolved: function(notif) {
