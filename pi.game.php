@@ -343,6 +343,8 @@ class pi extends Table
             'player_display_cards' => $this->cards->getCardsInLocation('player_display'),
             'tiles' => $this->cards->getCardsInLocation('locslot'),
             'tokens' => array_merge(
+                array_values($this->tokens->getTokensInLocation('box')),
+                array_values($this->tokens->getTokensInLocation('offtable')),
                 array_values($this->tokens->getTokensInLocation('agentarea_%')),
                 array_values($this->tokens->getTokensInLocation('cubes_%')), // player supplies
                 array_values($this->tokens->getTokensInLocation('discs_%')), // player supplies

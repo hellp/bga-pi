@@ -337,9 +337,16 @@ function (dojo, declare) {
             var keyparts = key.split('_');
             var ttype = keyparts[0]; // cube, disc
             var color = keyparts[1];
+            var duration = 500;
 
             // If no explicit target given; use the location from the DB.
             target_id = target_id || token.location;
+
+            // Two standard locations that mean: "remove from UI": offtable, box
+            if (target_id == 'box' || target_id == 'offtable') {
+                if ($(key)) this.fadeOutAndDestroy(key, duration, delay);
+                return;
+            }
 
             // Cubes/discs for 'agentarea_X' actually go onto the corresponding investigator there.
             if ((ttype == 'cube' || ttype == 'disc') && target_id.startsWith('agentarea')) {
@@ -364,7 +371,6 @@ function (dojo, declare) {
             } else {
                 // HACK
                 var html = $(key).outerHTML;
-                var duration = 500;
                 delay = delay || 500;
                 this.slideToObjectAndDestroy(key, target_id, duration, delay);
                 window.setTimeout(dojo.hitch(this, function () {
@@ -593,6 +599,7 @@ function (dojo, declare) {
         },
 
         notif_playerSolved: function(notif) {
+            // TODO: remove cubes + investigators; but put discs in proper places
             this.disablePlayerPanel(notif.args.player_id);
         },
     });
