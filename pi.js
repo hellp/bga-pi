@@ -376,8 +376,9 @@ function (dojo, declare) {
         /**
          * Place tokens on the table.
          */
-        placeTokens: function (tokens, target_id) {
-           for (i in tokens) { this.placeToken(tokens[i], target_id, i * 500) }
+        placeTokens: function (tokens, target_id, delay) {
+            delay = delay || 500;
+            for (i in tokens) { this.placeToken(tokens[i], target_id, i * delay) }
         },
 
         validateCaseSelection: function(opts) {
@@ -424,7 +425,6 @@ function (dojo, declare) {
         */
 
         onAgentAreaClicked: function(e) {
-            console.log(e, this);
             var location_id = e.target.id.split('_')[1];
             var action = 'placeInvestigator';
             if (this.checkAction(action, true)) {
@@ -571,7 +571,7 @@ function (dojo, declare) {
             this.placeTiles(notif.args.tiles);
 
             // Tokens
-            this.placeTokens(notif.args.tokens);
+            this.placeTokens(notif.args.tokens, null, 100);
         },
 
         notif_newMinigamePrivate: function (notif) {
