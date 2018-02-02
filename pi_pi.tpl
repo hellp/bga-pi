@@ -29,7 +29,9 @@
         <!-- END locslot -->
     </div>
     <!-- END loccont -->
-
+    <div id="minigamecounter" class="whiteblock">
+        <h5>Mini-game<br><span id="current_minigame"></span> of 3</h5>
+    </div>
 </div>
 
 <div id="myhand-wrap" class="whiteblock">
@@ -57,7 +59,7 @@
 
 var jstpl_player_board = '<div class="cp_board">' +
     '<div class="sp_marker" id="sp_marker_${id}"></div>' +
-    '<div class="investigator investigator_${colorname}"></div>x99' +
+    '<div class="investigator investigator_${colorname}"></div>x<span id="remaining_investigators_${id}">xx</span>' +
     '<div class="cube_supply" id="cubes_${id}"></div>' +
     '<div class="disc_supply" id="discs_${id}"></div>' +
     '</div>';

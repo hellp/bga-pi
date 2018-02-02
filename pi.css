@@ -57,7 +57,8 @@
 }
 
 .whiteblock h3,
-.whiteblock h4 {
+.whiteblock h4,
+.whiteblock h5 {
     font-family:Copse, Roboto, Arial, sans-serif;
     color:#222;
     margin-top:0;
@@ -66,6 +67,10 @@
 }
 .whiteblock h4 {
     font-size: .8rem;
+}
+.whiteblock h5 {
+    font-size: .75rem;
+    margin:0;
 }
 
 .player-board .sp_marker {
@@ -105,6 +110,15 @@
     box-shadow: 2px 2px 1px 0 rgba(0, 0, 0, 0.66);
     border: solid 2px #333;
     border-radius: 3px;
+}
+
+#minigamecounter {
+    position: absolute;
+    top: 190px;
+    background: rgba;
+    left: 8px;
+    width: 90px;
+    text-align: center;
 }
 
 .disc {

@@ -152,6 +152,8 @@ function (dojo, declare) {
             // can move them from there to other locations; also good indicator
             // of how much cubes are left.
 
+            this.updateCounters(this.gamedatas.counters);
+
             // Connect user actions
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
 
@@ -226,12 +228,10 @@ function (dojo, declare) {
             if (this.isCurrentPlayerActive()) {
                 switch (stateName) {
                     case "playerTurn":
-                        // TODO: if player.hasInvestigatorsLeft ... else show
-                        // inactive button that simply spits a warning if
-                        // clicked
+                        // TODO: hide button if player has no investigator left
                         this.addActionButton(
                             'btn_place_investigator',
-                            dojo.string.substitute(_('Place an investigator (${n} left)'), {n: 99}),
+                            _('Place an investigator'),
                             'onPlaceInvestigatorClicked');
                         this.addActionButton(
                             'btn_solve_case',
@@ -270,15 +270,15 @@ function (dojo, declare) {
 
         hideCardDisplay: function () {
             // hide cards, so user doesn't accidentally click there
-            // dojo.fx.wipeOut({node: $('carddisplay')}).play();
+            dojo.fx.wipeOut({node: $('carddisplay')}).play();
         },
 
         showCardDisplay: function () {
-            // dojo.fx.wipeIn({node: $('carddisplay')}).play();
-            // // "bug fix": if window was resized during this cards are in wrong
-            // // positions; reset.
-            // this.evidenceDisplay.resetItemsPosition();
-            // this.evidenceDiscard.resetItemsPosition();
+            dojo.fx.wipeIn({node: $('carddisplay')}).play();
+            // "bug fix": if window was resized during this cards are in wrong
+            // positions; reset.
+            this.evidenceDisplay.resetItemsPosition();
+            this.evidenceDiscard.resetItemsPosition();
         },
 
         /**
@@ -562,6 +562,9 @@ function (dojo, declare) {
                 var player = notif.args.players[player_id];
                 dojo.toggleClass('sp_marker_' + player_id, 'visible', player.is_startplayer == 1);
             }
+
+            // Counters
+            this.updateCounters(notif.args.counters);
 
             // Cards + tiles
             this.placeEvidenceCards(notif.args.evidence_display, [], []);

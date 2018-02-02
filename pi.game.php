@@ -311,6 +311,10 @@ class pi extends Table
     function getPublicGameInfos()
     {
         $minigame = self::getGameStateValue("minigame");
+
+        $counters = array();
+        $this->setCounter($counters, "current_minigame", $minigame);
+
         // Get information about players
         $sql = "
             SELECT
@@ -324,9 +328,13 @@ class pi extends Table
         $players = self::getCollectionFromDb($sql);
         foreach ($players as $idx => $player) {
             $players[$idx]['colorname'] = $this->constants['HEX2COLORNAME'][$player['color']];
+            $this->setCounter(
+                $counters, "remaining_investigators_" . $player['id'],
+                $this->tokens->countTokensInLocation("pi_supply_" . $player['id']));
         }
 
         return array(
+            'counters' => $counters,
             'players' => $players,
 
             // Evidence cards on display
@@ -402,6 +410,9 @@ class pi extends Table
         }
     }
 
+    protected function setCounter(&$array, $key, $value) {
+        $array[$key] = array('counter_name' => $key, 'counter_value' => $value);
+    }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
