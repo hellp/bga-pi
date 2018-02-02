@@ -65,7 +65,7 @@ function (dojo, declare) {
                     dojo.addClass('sp_marker_' + player_id, 'visible');
                 }
             }
-            this.addTooltipToClass('sp_marker', _("Start player"), '');
+            this.addTooltipToClass('sp_marker', _("Start player of the current mini-game"), '');
 
             // Set up player hand, i.e. the secret case cards of their left neighbor
             this.playerHand = new ebg.stock();
