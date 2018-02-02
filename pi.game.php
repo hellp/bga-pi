@@ -170,27 +170,12 @@ class pi extends Table
     protected function getAllDatas()
     {
         $result = array();
-        $current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
-        $minigame = self::getGameStateValue("minigame");
-
-        // Get information about players
-        $sql = "
-            SELECT
-                player_id as id,
-                player_score as score,
-                player_solved_in_round as solved_in_round,
-                player_no = $minigame as is_startplayer
-            FROM player
-        ";
-        $result['players'] = self::getCollectionFromDb($sql);
-
-        // Gather all information about current game situation (visible by player $current_player_id).
 
         // Global / static information
         $result['cardinfos'] = $this->cardBasis;
         $result['tileinfos'] = $this->tiles;
 
-        $result = array_merge($result, $this->getPrivateGameInfos($current_player_id));
+        $result = array_merge($result, $this->getPrivateGameInfos(self::getCurrentPlayerId()));
         $result = array_merge($result, $this->getPublicGameInfos());
         return $result;
     }
@@ -325,7 +310,25 @@ class pi extends Table
 
     function getPublicGameInfos()
     {
+        $minigame = self::getGameStateValue("minigame");
+        // Get information about players
+        $sql = "
+            SELECT
+                player_id as id,
+                player_color as color,
+                player_score as score,
+                player_solved_in_round as solved_in_round,
+                player_no = $minigame as is_startplayer
+            FROM player
+        ";
+        $players = self::getCollectionFromDb($sql);
+        foreach ($players as $idx => $player) {
+            $players[$idx]['colorname'] = $this->constants['HEX2COLORNAME'][$player['color']];
+        }
+
         return array(
+            'players' => $players,
+
             // Evidence cards on display
             'evidence_display' => $this->cards->getCardsInLocation('evidence_display'),
             'evidence_discard' => $this->cards->getCardsInLocation('discard'),
@@ -333,6 +336,8 @@ class pi extends Table
             'tiles' => $this->cards->getCardsInLocation('locslot'),
             'tokens' => array_merge(
                 array_values($this->tokens->getTokensInLocation('agentarea_%')),
+                array_values($this->tokens->getTokensInLocation('cubes_%')), // player supplies
+                array_values($this->tokens->getTokensInLocation('discs_%')), // player supplies
                 array_values($this->tokens->getTokensInLocation('locslot_%')))
         );
     }
@@ -384,12 +389,15 @@ class pi extends Table
                     'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
                 ));
         } else {
+            // TODO: show this only once; the first time, the deck runs out.
+            // after that it's obvious to the players.
+
             // Rare case, but it could happen. Players are now forced to do
             // something else. But this is implicit from the UI: no more cards,
             // no more clicks on them. Solving is always the last ressort.
             self::notifyAllPlayers(
                 'evidenceExhausted',
-                clienttranslate('Evidence cards are exhausted and cannot be played anymore.'),
+                clienttranslate('The evidence deck and discard pile are empty.'),
                 array());
         }
     }
@@ -527,6 +535,9 @@ class pi extends Table
         if ($currentCard['location'] != "evidence_display") {
             throw new BgaUserException(self::_("Card is not on display. Press F5 in case of problems."));
         }
+
+        // TODO: don't allow asking for the same location twice. It's too
+        // obvious a mistake.
 
         // Various infos we need
         $card_name = $this->cardBasis[$currentCard['type_arg']]['name'];
@@ -683,6 +694,7 @@ class pi extends Table
                 WHERE player_id = $player_id
             ");
             // TODO: use this notification to grey out the player area
+            // TODO: move cubes back to player supply
             self::notifyAllPlayers(
                 'playerSolved',
                 // TODO: improve wording
@@ -798,6 +810,11 @@ class pi extends Table
         // Tokens: first, all cubes and discs back into the supply
         $this->tokens->moveTokens(array_pluck($this->tokens->getTokensOfTypeInLocation('cube_%'), 'key'), 'supply');
         $this->tokens->moveTokens(array_pluck($this->tokens->getTokensOfTypeInLocation('disc_%'), 'key'), 'supply');
+
+        // Investigators that have been used go back to the box.
+        $this->tokens->moveTokens(
+            array_pluck($this->tokens->getTokensOfTypeInLocation('pi_%', 'agentarea_%'), 'key'),
+            'box');
 
         // Set up a case for every player and distribute the case cards to their
         // right neighbor.

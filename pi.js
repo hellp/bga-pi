@@ -270,15 +270,15 @@ function (dojo, declare) {
 
         hideCardDisplay: function () {
             // hide cards, so user doesn't accidentally click there
-            dojo.fx.wipeOut({node: $('carddisplay')}).play();
+            // dojo.fx.wipeOut({node: $('carddisplay')}).play();
         },
 
         showCardDisplay: function () {
-            dojo.fx.wipeIn({node: $('carddisplay')}).play();
-            // "bug fix": if window was resized during this cards are in wrong
-            // positions; reset.
-            this.evidenceDisplay.resetItemsPosition();
-            this.evidenceDiscard.resetItemsPosition();
+            // dojo.fx.wipeIn({node: $('carddisplay')}).play();
+            // // "bug fix": if window was resized during this cards are in wrong
+            // // positions; reset.
+            // this.evidenceDisplay.resetItemsPosition();
+            // this.evidenceDiscard.resetItemsPosition();
         },
 
         /**
@@ -332,36 +332,44 @@ function (dojo, declare) {
         /**
          * Place token on the table.
          */
-        placeToken: function (token, target_id) {
+        placeToken: function (token, target_id, delay) {
             var key = token.key;
             var keyparts = key.split('_');
             var ttype = keyparts[0]; // cube, disc
             var color = keyparts[1];
-            if (!target_id) {
-                // No target id given. Then derive it from the type by some easy rules.
-                // TODO: explain rules
-                target_id = token.location;
-                if (ttype == 'cube' && target_id.startsWith('locslot_')) {
-                    target_id += '_' + ttype + 's';  // "locslot_xxx_(cube|disc)s"
-                }
-            }
+
+            // If no explicit target given; use the location from the DB.
+            target_id = target_id || token.location;
+
             // Cubes/discs for 'agentarea_X' actually go onto the corresponding investigator there.
             if ((ttype == 'cube' || ttype == 'disc') && target_id.startsWith('agentarea')) {
                 target_id = dojo.query('#' + target_id + ' .investigator_' + color)[0].id;
             }
 
+            // Cubes for 'locslot_X' go actually to 'locslot_X_cubes'
+            if (ttype == 'cube' && target_id.startsWith('locslot_')) {
+                target_id += '_cubes';
+            }
+
             if (!$(key)) {
                 var html;
                 if (ttype == 'cube') {
-                    var html = '<div id="' + key + '" class="cube20 cube20_' + color + '"></div>';
+                    var html = '<div id="' + key + '" class="token cube20 cube20_' + color + '"></div>';
                 } else if (ttype == 'disc') {
-                    var html = '<div id="' + key + '" class="disc30 disc30_' + color + '"></div>';
+                    var html = '<div id="' + key + '" class="token disc30 disc30_' + color + '"></div>';
                 } else {
-                    var html = '<div id="' + key + '" class="investigator investigator_' + color + '"></div>';
+                    var html = '<div id="' + key + '" class="token investigator investigator_' + color + '"></div>';
                 }
                 dojo.place(html, target_id);
             } else {
-                this.slideToObject(key, target_id).play();
+                // HACK
+                var html = $(key).outerHTML;
+                var duration = 500;
+                delay = delay || 500;
+                this.slideToObjectAndDestroy(key, target_id, duration, delay);
+                window.setTimeout(dojo.hitch(this, function () {
+                    dojo.place(html, target_id);
+                }), delay + duration);
             }
         },
 
@@ -369,7 +377,7 @@ function (dojo, declare) {
          * Place tokens on the table.
          */
         placeTokens: function (tokens, target_id) {
-           for (i in tokens) { this.placeToken(tokens[i], target_id) }
+           for (i in tokens) { this.placeToken(tokens[i], target_id, i * 500) }
         },
 
         validateCaseSelection: function(opts) {
@@ -545,11 +553,22 @@ function (dojo, declare) {
         },
 
         notif_newMinigame: function (notif) {
-            // TODO: set new startplayer in UI
+            // Re-enable player panels that may have been disabled in previous mini-game.
             this.enableAllPlayerPanels();
+
+            // Reset active player marker
+            dojo.query(".sp_marker").removeClass('visible');
+            for (var player_id in notif.args.players) {
+                var player = notif.args.players[player_id];
+                dojo.toggleClass('sp_marker_' + player_id, 'visible', player.is_startplayer == 1);
+            }
+
+            // Cards + tiles
             this.placeEvidenceCards(notif.args.evidence_display, [], []);
             this.placeTiles(notif.args.tiles);
-            // TODO: reset tokens
+
+            // Tokens
+            this.placeTokens(notif.args.tokens);
         },
 
         notif_newMinigamePrivate: function (notif) {

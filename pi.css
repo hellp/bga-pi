@@ -69,10 +69,29 @@
 }
 
 .player-board .sp_marker {
+    background-image: url("img/startplayer.png");
+    background-size: cover;
+    height:32px;
+    width:12px;
     visibility:hidden;
+    float:right;
 }
 .player-board .sp_marker.visible {
     visibility: visible;
+}
+.player-board .cube_supply,
+.player-board .disc_supply {
+    clear:both;
+    position: relative;
+    padding:2px 5px;
+}
+.player-board .cube_supply > .cube20 {
+    position: relative;
+    float:left;
+}
+.player-board .disc_supply > .disc30 {
+    position: relative;
+    float:left;
 }
 
 #board {
@@ -120,14 +139,9 @@
     border-radius: 5px;
     z-index:50;
     text-align: center;
-
     /* background:rgba(0, 0, 0, 0.3);
     box-shadow:0 0 5px 5px rgba(0, 0, 0, 0.3);
     padding:4px; */
-
-}
-.loccont .agentarea .investigator {
-    display: inline-block;
 }
 .loccont .agentarea.highlighted {
     box-shadow: 0 0 2px 2px rgb(255, 255, 255) !important;
@@ -203,16 +217,28 @@
 }
 .locslot .locslot_cubes {
     position: absolute;
-    bottom:-4px;
-    left:-4px;
+    bottom:-2px;
+    left:-2px;
     height:50px;
+    width:50px;
 }
 /* Bottom left */
-.locslot .cube20:nth-of-type(1) { bottom:0; z-index:200; }
-.locslot .cube20:nth-of-type(2) { bottom:0; left:17px; z-index:200; }
-.locslot .cube20:nth-of-type(3) { bottom:13px; z-index:201; }
-.locslot .cube20:nth-of-type(4) { bottom:13px; left:17px; z-index:201; }
-.locslot .cube20:nth-of-type(5) { bottom:26px; z-index:203; }
+/*
+ Cubes and disc on a tile:
+ Closest to the middle looks best, so we start there.
+    ------------
+    |       d  |
+    | 4 3  ddd |
+    | 2 1   d  |
+    | 6 5      |
+    ------------
+*/
+.locslot .cube20:nth-of-type(1) { bottom:13px; left:17px; z-index:201; }
+.locslot .cube20:nth-of-type(2) { bottom:13px; left: 0px; z-index:201; }
+.locslot .cube20:nth-of-type(3) { bottom:26px; left:17px; z-index:203; }
+.locslot .cube20:nth-of-type(4) { bottom:26px; left:0px; z-index:203; }
+.locslot .cube20:nth-of-type(5) { bottom:0; left:17px; z-index:200; }
+.locslot .cube20:nth-of-type(6) { bottom:0; left: 0px; z-index:200; }
 
 /* Top right, so we can still see the image and the cubes */
 .locslot .disc30 {
@@ -244,17 +270,27 @@
 .investigator_green { background-position: -108px 0px }
 .investigator_purple { background-position: -144px 0px }
 
+.agentarea .investigator {
+    display: inline-block;
+    margin-right:3px;
+}
+.agentarea .investigator:last-of-type {
+    margin-right:0;
+}
+
 .investigator .cube20,
 .investigator .disc30 {
     position: absolute;
 }
+.investigator .cube20 {
+    top:-2px;
+}
 .investigator .disc30 {
-    bottom:-1px;
-    right:-2px;
- }
- .investigator > div:nth-of-type(1) { left: -5px; bottom:-2px; z-index:200; }
- .investigator > div:nth-of-type(2) { right: -5px; bottom:-2px; left:17px; z-index:200; }
- .investigator > div:nth-of-type(3) { left: -5px; bottom:13px; z-index:201; }
+    bottom:-4px;
+}
+.investigator > div:nth-of-type(1) { left:-3px; z-index:200; }
+.investigator > div:nth-of-type(2) { left:8px;z-index:201; }
+.investigator > div:nth-of-type(3) { left:19px; z-index:202; }
 
 .cube20 {
     height: 20px;
@@ -288,3 +324,49 @@
 .disc30_yellow { background-position: -175px 0px }
 .disc30_gray { background-position: -200px 0px }
 .disc30_purple { background-position: -225px 0px }
+
+/* Correct the rotation of the location containers for the tokens.
+   The tokens look better when they are not rotated.
+*/
+#loccont_1 div:not(.token) > .token {
+    transform:rotate(-0deg);
+}
+#loccont_2 div:not(.token) > .token {
+    transform:rotate(-2.5deg);
+}
+#loccont_3 div:not(.token) > .token {
+    transform:rotate(-2.0deg);
+}
+#loccont_4 div:not(.token) > .token {
+    transform:rotate(-0deg);
+}
+#loccont_5 div:not(.token) > .token {
+    transform:rotate(-1.3deg);
+}
+#loccont_6 div:not(.token) > .token {
+    transform:rotate(-0deg);
+}
+#loccont_7 div:not(.token) > .token {
+    transform:rotate(-1.15deg);
+}
+#loccont_8 div:not(.token) > .token {
+    transform:rotate(-0deg);
+}
+#loccont_9 div:not(.token) > .token {
+    transform:rotate(-1.7deg);
+}
+#loccont_10 div:not(.token) > .token {
+    transform:rotate(1.5deg);
+}
+#loccont_11 div:not(.token) > .token {
+    transform:rotate(-0deg);
+}
+#loccont_12 div:not(.token) > .token {
+    transform:rotate(-0deg);
+}
+#loccont_13 div:not(.token) > .token {
+    transform:rotate(-1.5deg);
+}
+#loccont_14 div:not(.token) > .token {
+    transform:rotate(-0deg);
+}

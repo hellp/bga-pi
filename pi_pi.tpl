@@ -55,7 +55,12 @@
 <script type="text/javascript">
 // Javascript HTML templates
 
-var jstpl_player_board = '<div class="cp_board"><span class="sp_marker" id="sp_marker_${id}">➊</span></div>';
+var jstpl_player_board = '<div class="cp_board">' +
+    '<div class="sp_marker" id="sp_marker_${id}"></div>' +
+    '<div class="investigator investigator_${colorname}"></div>x99' +
+    '<div class="cube_supply" id="cubes_${id}"></div>' +
+    '<div class="disc_supply" id="discs_${id}"></div>' +
+    '</div>';
 
 </script>
 
