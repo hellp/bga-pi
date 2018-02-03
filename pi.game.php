@@ -98,6 +98,10 @@ class pi extends Table
 
         /************ Start the game initialization *****/
 
+        // Set initial scores. `player_score_aux` is (investigators_remaining *
+        // 100 - penalty_points).
+        self::DbQuery("UPDATE player SET player_score = 0, player_score_aux = 500");
+
         // First create all the cards we have.
         // - 36 Evidence cards
         // - 12 Suspects
@@ -450,6 +454,8 @@ class pi extends Table
         $this->setCounter(
             $counters, "remaining_investigators_$player_id",
             $this->tokens->countTokensInLocation("pi_supply_$player_id"));
+        // Adjust the tiebreaker score.
+        self::DbQuery("UPDATE player SET player_score_aux = player_score_aux - 100 WHERE player_id = $player_id");
         self::notifyAllPlayers(
             'placeToken',
             clienttranslate('${player_name} sends an investigator to ${location_name}.'),
@@ -725,7 +731,8 @@ class pi extends Table
             self::DbQuery("
                 UPDATE player
                 SET player_score = player_score - 2,
-                    player_penalty = player_penalty - 2
+                    player_score_aux = player_score_aux - 2,
+                    player_penalty = player_penalty - 2,
                 WHERE player_id = $player_id
             ");
             self::notifyAllPlayers(

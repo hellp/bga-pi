@@ -17,8 +17,11 @@
 -- Note: The database schema is created from this file when the game starts. If you modify this file,
 --       you have to restart a game to see your changes in database.
 
-
+-- TODO: do we need `player_penalty`?? For the tie-breaker we keep track of it
+-- in `player_score_aux`. For the UI we have the position of the token.
 ALTER TABLE `player` ADD `player_penalty` tinyint(1) NOT NULL DEFAULT 0;
+
+-- To calculate the winnable points for players solving later then others.
 ALTER TABLE `player` ADD `player_solved_in_round` tinyint(1) UNSIGNED;
 
 
