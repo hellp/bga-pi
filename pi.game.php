@@ -763,6 +763,21 @@ class pi extends Table
         game state.
     */
 
+    function argStartMinigame()
+    {
+        $args = array('_private' => array());
+        $args = array_merge(
+            $args,
+            $this->getPublicGameInfos()
+        );
+        // Inform about private information (hands)
+        $players = self::loadPlayersBasicInfos();
+        foreach($players as $player_id => $player) {
+            $args['_private'][$player_id] = $this->getPrivateGameInfos($player_id);
+        }
+        return $args;
+    }
+
     /*
     Example for game state "MyGameState":
 
@@ -859,37 +874,24 @@ class pi extends Table
         }
         $this->gamestate->nextState();  // start minigame
     }
-    
+
     function st_startMinigame()
     {
         $minigame = self::getGameStateValue('minigame');
-
-        $notifText = array(
-            1 => clienttranslate('The first of three mini-games starts.'),
-            2 => clienttranslate('The second mini-game starts.'),
-            3 => clienttranslate('The third and final mini-game starts.'),
-        );
-
-        // Inform about new public status
         self::notifyAllPlayers(
-            "newMinigame",
-            $notifText[$minigame],
-            $this->getPublicGameInfos());
-
-        // Inform about private information (hands)
-        $players = self::loadPlayersBasicInfos();
-        foreach($players as $player_id => $player) {
-            self::notifyPlayer(
-                $player_id,
-                "newMinigamePrivate",
-                '',
-                $this->getPrivateGameInfos($player_id));
-        }
+            "message",
+            array(
+                1 => clienttranslate('The first of three mini-games starts.'),
+                2 => clienttranslate('The second mini-game starts.'),
+                3 => clienttranslate('The third and final mini-game starts.'),
+            )[$minigame],
+            array()
+        );
 
         // Select a new first player. In minigame 1 it's player_no 1, in
         // minigame 2 player_no 2 etc.; using module to cover the 'more rounds
         // than players' case.
-        $next_player_no = (($minigame - 1) % count($players)) + 1;
+        $next_player_no = (($minigame - 1) % self::getPlayersNumber()) + 1;
         $next_player_id = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = $next_player_no");
         $this->gamestate->changeActivePlayer($next_player_id);
         $this->gamestate->nextState(); // always a player turn

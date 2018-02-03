@@ -82,6 +82,7 @@ $machinestates = array(
         "name" => "startMinigame",
         "description" => clienttranslate('Starting the next minigame.'),
         "type" => "game",
+        "args" => "argStartMinigame",
         "action" => "st_startMinigame",
         "updateGameProgression" => true,
         "transitions" => array("" => STATE_PLAYER_TURN)

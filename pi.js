@@ -73,7 +73,7 @@ function (dojo, declare) {
             this.playerHand.setSelectionMode(0); // no selection possible
             this.playerHand.image_items_per_row = CARD_ITEMS_PER_ROW;
             this.playerHand.item_margin = CARD_ITEM_MARGIN;
-            
+
             // The stocks where evidence cards can live: display, discard, player displays
             this.evidenceDisplay = new ebg.stock();
             this.evidenceDisplay.setSelectionMode(1); // max 1 card can be selected
@@ -177,6 +177,31 @@ function (dojo, declare) {
             console.log('Entering state: ' + stateName);
             switch (stateName)
             {
+                case 'startMinigame':
+                    args = args.args;
+                    // Re-enable player panels that may have been disabled in previous mini-game.
+                    this.enableAllPlayerPanels();
+
+                    // Reset active player marker
+                    dojo.query(".sp_marker").removeClass('visible');
+                    for (var player_id in args.players) {
+                        var player = args.players[player_id];
+                        dojo.toggleClass('sp_marker_' + player_id, 'visible', player.is_startplayer == 1);
+                    }
+
+                    // Counters
+                    this.updateCounters(args.counters);
+
+                    // Cards + tiles
+                    this.placeEvidenceCards(args.evidence_display, [], []);
+                    this.placeTiles(args.tiles);
+
+                    // Tokens
+                    this.placeTokens(args.tokens, null, 100);
+
+                    // Player hand
+                    this.placePlayerHand(args._private.hand);
+                    break;
                 case 'client_playerPicksSolution':
                     // Enable tile selection and wire up validation callback
                     this.tiles.setSelectionMode(2);
@@ -488,7 +513,7 @@ function (dojo, declare) {
                     descriptionmyturn: _("Place investigator: ${you} must select a location…"),
                 });
         },
-        
+
         onSolveCaseClicked: function () {
             this.setClientState(
                 "client_playerPicksSolution", {
@@ -519,8 +544,6 @@ function (dojo, declare) {
 
             dojo.subscribe('evidenceExhausted', this, "notif_evidenceExhausted");
             dojo.subscribe('evidenceReplenished', this, "notif_evidenceReplenished");
-            dojo.subscribe('newMinigame', this, "notif_newMinigame");
-            dojo.subscribe('newMinigamePrivate', this, "notif_newMinigamePrivate");
             dojo.subscribe('newScores', this, "notif_newScores");
 
             dojo.subscribe('placeToken', this, "notif_placeToken");
@@ -558,32 +581,6 @@ function (dojo, declare) {
             this.evidenceDisplay.removeFromStockById(notif.args.card_id);
         },
 
-        notif_newMinigame: function (notif) {
-            // Re-enable player panels that may have been disabled in previous mini-game.
-            this.enableAllPlayerPanels();
-
-            // Reset active player marker
-            dojo.query(".sp_marker").removeClass('visible');
-            for (var player_id in notif.args.players) {
-                var player = notif.args.players[player_id];
-                dojo.toggleClass('sp_marker_' + player_id, 'visible', player.is_startplayer == 1);
-            }
-
-            // Counters
-            this.updateCounters(notif.args.counters);
-
-            // Cards + tiles
-            this.placeEvidenceCards(notif.args.evidence_display, [], []);
-            this.placeTiles(notif.args.tiles);
-
-            // Tokens
-            this.placeTokens(notif.args.tokens, null, 100);
-        },
-
-        notif_newMinigamePrivate: function (notif) {
-            this.placePlayerHand(notif.args.hand);
-        },
-
         notif_newScores: function(notif) {
             for (var player_id in notif.args.scores) {
                 this.scoreCtrl[player_id].toValue(notif.args.scores[player_id]);
@@ -594,7 +591,7 @@ function (dojo, declare) {
             this.placeToken(notif.args.token, notif.args.target_id);
             if (notif.args.counters) this.updateCounters(notif.args.counters);
         },
-        
+
         notif_placeTokens: function(notif) {
             this.placeTokens(notif.args.tokens, notif.args.target_id);
             if (notif.args.counters) this.updateCounters(notif.args.counters);
