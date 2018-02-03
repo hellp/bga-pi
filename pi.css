@@ -76,8 +76,8 @@
 .player-board .sp_marker {
     background-image: url("img/startplayer.png");
     background-size: cover;
-    height:32px;
-    width:12px;
+    height:36px;
+    width:13px;
     visibility:hidden;
     float:right;
 }
