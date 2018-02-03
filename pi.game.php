@@ -196,20 +196,21 @@ class pi extends Table
     */
     function getGameProgression()
     {
-        // TODO: improve
-        // The base percentage is based on the minigame we are in: 1=0%; 2=33%;
-        // 3=66%. For the in-minigame percentage we average over each user's
-        // progress (how many clues have they figured out yet, again:
-        // 0/33/66/100%).
-        $max = self::getGameStateValue("minigame") * (100 / $this->constants['MINIGAMES']);
-
-        // Very naive, but we rarely should exhaust the deck in one minigame, so
-        // let's treat the drawn cards as an indicator.
-        $card_progress = ($this->cards->countCardInLocation('discard')
-                          + $this->cards->countCardInLocation('player_display')) / $this->constants['EVIDENCE_DECK_SIZE'];
-        // TODO: $player_progress = percent of player that solved already
-        // $progress = max($card_progress, $player_progress)
-        $progress = $card_progress * $max;
+        // With the mini game number we divide the game in 3 thirds (0-33,
+        // 33-66, 66-100%), and looking at the player discs we can further
+        // divide each third: each disc on an agentarea counts as a 1/9th
+        // solved case; each disc on a locslot as a 1/3rd solve case. We
+        // average that over the player count, and thus get the in-minigame
+        // progress.
+        $base = (self::getGameStateValue("minigame") - 1) * (100 / $this->constants['MINIGAMES']);
+        $base = max(0, $base);
+        $discs_on_agentarea = count($this->tokens->getTokensOfTypeInLocation('disc_%', 'agentarea_%'));
+        $discs_on_locslot = count($this->tokens->getTokensOfTypeInLocation('disc_%', 'locslot_%'));
+        $perc_cases_solved = 0;
+        $perc_cases_solved += $discs_on_agentarea * (1/9);
+        $perc_cases_solved += $discs_on_locslot * (1/3);
+        $minigame_progress = $perc_cases_solved / self::getPlayersNumber();
+        $progress = $base + ($minigame_progress * 33);
         return floor($progress);
     }
 
@@ -856,6 +857,12 @@ class pi extends Table
                 array_pluck($this->tokens->getTokensOfTypeInLocation("disc_{$color}_%"), 'key'),
                 "discs_{$player_id}");
         }
+        $this->gamestate->nextState();  // start minigame
+    }
+    
+    function st_startMinigame()
+    {
+        $minigame = self::getGameStateValue('minigame');
 
         $notifText = array(
             1 => clienttranslate('The first of three mini-games starts.'),
@@ -870,6 +877,7 @@ class pi extends Table
             $this->getPublicGameInfos());
 
         // Inform about private information (hands)
+        $players = self::loadPlayersBasicInfos();
         foreach($players as $player_id => $player) {
             self::notifyPlayer(
                 $player_id,
@@ -881,10 +889,10 @@ class pi extends Table
         // Select a new first player. In minigame 1 it's player_no 1, in
         // minigame 2 player_no 2 etc.; using module to cover the 'more rounds
         // than players' case.
-        $next_player_no = ((self::getGameStateValue("minigame") - 1) % count($players)) + 1;
+        $next_player_no = (($minigame - 1) % count($players)) + 1;
         $next_player_id = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = $next_player_no");
         $this->gamestate->changeActivePlayer($next_player_id);
-        $this->gamestate->nextState();  // always a player turn
+        $this->gamestate->nextState(); // always a player turn
     }
 
     function st_gameTurn()

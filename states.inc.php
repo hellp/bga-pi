@@ -53,6 +53,7 @@
 // define contants for state ids
 if (!defined('STATE_END_GAME')) { // guard since this included multiple times
     define("STATE_SETUP_MINIGAME", 2);
+    define("STATE_START_MINIGAME", 5);
     define("STATE_PLAYER_TURN", 10);
     define("STATE_GAME_TURN", 32);
     define("STATE_END_GAME", 99);
@@ -74,6 +75,14 @@ $machinestates = array(
         "description" => clienttranslate('Setting up the next minigame.'),
         "type" => "game",
         "action" => "st_setupMinigame",
+        "transitions" => array("" => STATE_START_MINIGAME)
+    ),
+
+    STATE_START_MINIGAME => array(
+        "name" => "startMinigame",
+        "description" => clienttranslate('Starting the next minigame.'),
+        "type" => "game",
+        "action" => "st_startMinigame",
         "updateGameProgression" => true,
         "transitions" => array("" => STATE_PLAYER_TURN)
     ),
