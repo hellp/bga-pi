@@ -249,11 +249,14 @@ function (dojo, declare) {
             if (this.isCurrentPlayerActive()) {
                 switch (stateName) {
                     case "playerTurn":
-                        // TODO: hide button if player has no investigator left
-                        this.addActionButton(
-                            'btn_place_investigator',
-                            _('Place an investigator'),
-                            'onPlaceInvestigatorClicked');
+                        if (args.remainingInvestigators != 0) {
+                            this.addActionButton(
+                                'btn_place_investigator',
+                                dojo.string.substitute(
+                                    _('Place an investigator (${nbr} left)'),
+                                    {nbr: args.remainingInvestigators}),
+                                'onPlaceInvestigatorClicked');
+                        }
                         this.addActionButton(
                             'btn_solve_case',
                             _('Solve case'),

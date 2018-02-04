@@ -774,6 +774,14 @@ class pi extends Table
         game state.
     */
 
+    function argPlayerTurn()
+    {
+        $args = array(
+            'remainingInvestigators' => $this->tokens->countTokensInLocation("pi_supply_" . self::getActivePlayerId())
+        );
+        return $args;
+    }
+
     function argStartMinigame()
     {
         $args = array('_private' => array());
