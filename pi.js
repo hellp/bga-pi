@@ -87,7 +87,6 @@ function (dojo, declare) {
             this.evidenceDiscard.setOverlap(.01, 0); // basically on top of eachother
             this.evidenceDiscard.item_margin = 0;
             this.addTooltip('evidence_discard', _("Discard pile"), _('View discarded cards.'));
-            // TODO: onclick expand the discard pile, so it can be inspected
 
             this.playerDisplays = {};
             for (var player_id in gamedatas.players) {
@@ -148,9 +147,6 @@ function (dojo, declare) {
             var tokens = this.gamedatas.tokens;
             tokens.sort(function (a, b) { return b.key.startsWith('pi_') - a.key.startsWith('pi_') });
             this.placeTokens(tokens);
-            // TODO: place cubes and disc initially into the player areas, so we
-            // can move them from there to other locations; also good indicator
-            // of how much cubes are left.
 
             this.updateCounters(this.gamedatas.counters);
 
