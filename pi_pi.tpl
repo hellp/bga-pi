@@ -57,11 +57,17 @@
 <script type="text/javascript">
 // Javascript HTML templates
 
-var jstpl_player_board = '<div>' +
+var jstpl_player_board = '' +
+    '<div>' +
+    '<div class="boarditem" style="width:33%">' +
+    '  <div class="investigator investigator_${colorname}"></div>&times;&nbsp;<span id="remaining_investigators_${id}"></span>' +
+    '</div><div class="boarditem" style="width:25%">' +
+    '  <div class="cube_supply" id="cubes_${id}"></div>' +
+    '</div><div class="boarditem" style="width:20%">' +
+    '  <div class="disc_supply" id="discs_${id}"></div>' +
+    '</div><div class="boarditem" style="width:5%">' +
     '<div class="sp_marker" id="sp_marker_${id}"></div>' +
-    '<div class="investigator investigator_${colorname}"></div>&times;&nbsp;<span id="remaining_investigators_${id}"></span>' +
-    '<div class="cube_supply" id="cubes_${id}"></div>' +
-    '<div class="disc_supply" id="discs_${id}"></div>' +
+    '</div>' +
     '</div>';
 
 </script>

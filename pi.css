@@ -73,13 +73,24 @@
     margin:0;
 }
 
+.player-board .boarditem {
+    display: inline-block;
+    height:40px;
+    margin:0 5px 5px 0;
+    vertical-align: middle;
+}
+.player-board .boarditem:last-child {
+    margin-right:0;
+}
+.player-board .boarditem > div {
+    vertical-align: middle;
+}
 .player-board .sp_marker {
     background-image: url("img/startplayer.png");
     background-size: cover;
     height:36px;
     width:13px;
     visibility:hidden;
-    float:right;
     margin:3px;
 }
 .player-board .sp_marker.visible {
@@ -90,19 +101,25 @@
     vertical-align: middle;
     margin-right: .5em;
 }
-.player-board .cube_supply,
-.player-board .disc_supply {
-    clear:both;
+.player-board .cube_supply {
     position: relative;
-    padding:2px 5px;
+    margin-top:5px;
+    margin-right:8px;
 }
 .player-board .cube_supply > .cube20 {
     position: relative;
     float:left;
+    margin:0 -8px -14px 0;
+}
+.player-board .disc_supply {
+    position: relative;
+    margin-top:5px;
+    margin-right:15px;
 }
 .player-board .disc_supply > .disc30 {
     position: relative;
     float:left;
+    margin:0 -15px 0 0;
 }
 
 #board {
