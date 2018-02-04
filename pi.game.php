@@ -862,9 +862,10 @@ class pi extends Table
         $this->tokens->moveTokens(array_pluck($this->tokens->getTokensOfTypeInLocation('disc_%'), 'key'), 'supply');
 
         // Investigators that have been used go back to the box.
-        $this->tokens->moveTokens(
-            array_pluck($this->tokens->getTokensOfTypeInLocation('pi_%', 'agentarea_%'), 'key'),
-            'box');
+        $used_investigators = $this->tokens->getTokensOfTypeInLocation('pi_%', 'agentarea_%');
+        if ($used_investigators) {
+            $this->tokens->moveTokens(array_pluck($used_investigators, 'key'), 'box');
+        }
 
         // Set up a case for every player and distribute the case cards to their
         // right neighbor.
