@@ -733,7 +733,7 @@ class pi extends Table
                 UPDATE player
                 SET player_score = player_score - 2,
                     player_score_aux = player_score_aux - 2,
-                    player_penalty = player_penalty - 2,
+                    player_penalty = player_penalty - 2
                 WHERE player_id = $player_id
             ");
             self::notifyAllPlayers(
