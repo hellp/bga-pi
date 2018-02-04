@@ -439,16 +439,20 @@ function (dojo, declare) {
             var hasSelected = {'crime': false, 'suspect': false, 'location': false};
             selectedTiles.forEach(dojo.hitch(this, function (tile) {
                 var tile_type_arg = parseInt(tile.type, 10);
-                if (hasSelected[tileinfos[tile_type_arg].tiletype]) {
-                    this.showMessage(_("You must not select more than one of each type (crime/location/suspect)."), "error");
-                    return false;
-                }
-                hasSelected[tileinfos[tile_type_arg].tiletype] = true;
+
                 // Tiles 1-6 are "NO CRIME/SUSPECT" tiles.
                 if (parseInt(tile_type_arg, 10) <= 6) {
                     this.showMessage(_("You cannot select NO CRIME or NO SUSPECT tiles."), "error");
+                    this.tiles.unselectItem(tile.id);
                     return false;
                 }
+
+                if (hasSelected[tileinfos[tile_type_arg].tiletype]) {
+                    this.showMessage(_("You must not select more than one of each type (crime/location/suspect)."), "error");
+                    this.tiles.unselectItem(tile.id);
+                    return false;
+                }
+                hasSelected[tileinfos[tile_type_arg].tiletype] = true;
             }));
             return true;
         },
