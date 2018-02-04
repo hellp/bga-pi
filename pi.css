@@ -80,6 +80,7 @@
     width:13px;
     visibility:hidden;
     float:right;
+    margin:3px;
 }
 .player-board .sp_marker.visible {
     visibility: visible;
