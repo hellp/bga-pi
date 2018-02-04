@@ -86,7 +86,7 @@ function (dojo, declare) {
             this.evidenceDiscard.image_items_per_row = CARD_ITEMS_PER_ROW;
             this.evidenceDiscard.setOverlap(.01, 0); // basically on top of eachother
             this.evidenceDiscard.item_margin = 0;
-            this.addTooltip('evidence_discard', _("Discard pile"), _('View discarded cards.'));
+            this.addTooltip('evidence_discard', _("Discard pile"), '');
 
             this.playerDisplays = {};
             for (var player_id in gamedatas.players) {
