@@ -366,8 +366,17 @@ function (dojo, declare) {
             // If no explicit target given; use the location from the DB.
             target_id = target_id || token.location;
 
+            var placeOfftable = false;
             // Two standard locations that mean: "remove from UI": offtable, box
             if (target_id == 'box' || target_id == 'offtable') {
+                placeOfftable = true;
+            } else if (!$(target_id)) {
+                // Also if target_id cannot be found: warn, but treat as 'offtable'.
+                console.warn('Node \'' + target_id + '\' not found.' )
+                placeOfftable = true;
+            }
+
+            if (placeOfftable) {
                 if ($(key)) this.fadeOutAndDestroy(key, duration, delay);
                 return;
             }

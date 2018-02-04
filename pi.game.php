@@ -543,7 +543,8 @@ class pi extends Table
                     '_comment' => 'The tiles were checked in a random order; tokens are shuffled! No guessing!',
                     'tokens' => $new_tokens,
                     'target_id' => $agent_area,
-                ));
+                )
+            );
         }
 
         $this->gamestate->nextState('nextTurn');
@@ -699,7 +700,8 @@ class pi extends Table
         // Get material ids for the solution (case cards) and the proposed
         // solution (tiles). Then find the 3 aspects, and compare them.
         $card_mids = array_pluck($this->getPlayerCaseCards($player_id), 'type_arg');
-        $tile_mids = array_pluck($this->cards->getCards($tile_ids), 'type_arg');
+        $tiles = $this->cards->getCards($tile_ids);
+        $tile_mids = array_pluck($tiles, 'type_arg');
         $proposed_solution = array(
             $this->tiles[$tile_mids[0]]['tiletype'] => $this->tiles[$tile_mids[0]]['name'],
             $this->tiles[$tile_mids[1]]['tiletype'] => $this->tiles[$tile_mids[1]]['name'],
@@ -716,11 +718,32 @@ class pi extends Table
                     player_solved_in_round = " . self::getGameStateValue('minigame_round') . "
                 WHERE player_id = $player_id
             ");
-            // TODO: move cubes back to player supply
-            // TODO: put discs on the solution
+
+            // Move cubes back to player supply; puts discs on solution.
+            $color = $this->constants['HEX2COLORNAME'][self::getCurrentPlayerColor()];
+            $this->tokens->moveTokens(
+                array_pluck($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"), 'key'),
+                "cubes_{$player_id}");
+            $locslot_ids = array_pluck($tiles, 'location_arg');
+            foreach ($locslot_ids as $i => $locslot_id) {
+                $this->tokens->moveToken("disc_{$color}_{$i}", "locslot_{$locslot_id}");
+            }
+            // Also investigators that have been used go back to the box.
+            $used_investigators = $this->tokens->getTokensOfTypeInLocation("pi_{$color}_%", 'agentarea_%');
+            if ($used_investigators) {
+                $this->tokens->moveTokens(array_pluck($used_investigators, 'key'), 'box');
+            }
+            self::notifyAllPlayers(
+                'placeTokens', '',
+                array('tokens' => array_merge(
+                    array(),
+                    $this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"),
+                    $this->tokens->getTokensOfTypeInLocation("disc_{$color}_%"),
+                    $this->tokens->getTokensOfTypeInLocation("pi_{$color}_%")
+                ))
+            );
             self::notifyAllPlayers(
                 'playerSolved',
-                // TODO: improve wording
                 clienttranslate('${player_name} solved their case successfully!'),
                 array(
                     'player_id' => $player_id,
