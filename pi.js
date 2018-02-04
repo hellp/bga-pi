@@ -122,8 +122,12 @@ function (dojo, declare) {
             this.tiles.image_items_per_row = TILE_ITEMS_PER_ROW;
             this.tiles.item_margin = 0;
             this.tiles.onItemCreate = dojo.hitch(this, function (card_div, card_type_id, card_id) {
+                // The first 6 tiles are "NO XXX" tiles. Mark them as such.
+                if (card_type_id <= 6) {
+                    dojo.addClass(card_id, "no_x_tile");
+                }
                 // Delete the background from our "fake tiles" for the locations.
-                if (card_type_id > 28) {
+                if (card_type_id >= 29) {
                     dojo.addClass(card_id, "fake_tile");
                     dojo.setStyle(card_id, "background", "none");
                 }

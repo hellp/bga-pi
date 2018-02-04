@@ -190,14 +190,14 @@
     box-shadow:none;
     background:none;
 }
-.locslot .highlighted {
+.locslot .highlighted:not(.no_x_tile) {
     border-width:1px !important;
     box-shadow: 0 0 4px 6px rgb(255, 255, 255) !important;
     cursor: pointer !important;
 }
-.locslot .stockitem_selected {
+.locslot .highlighted.stockitem_selected {
     border-width:1px !important;
-    box-shadow: 0 0 4px 6px rgb(0, 0, 255) !important
+    box-shadow: 0 0 4px 6px rgb(0, 0, 255) !important;
 }
 
 .cube {
