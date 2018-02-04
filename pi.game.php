@@ -753,6 +753,17 @@ class pi extends Table
         $this->gamestate->nextState('nextTurn');
     }
 
+    /**
+     * Depending on the minigame we are in, set the gamestate to nextMinigame or
+     * endGame.
+     */
+    function gotoNextMinigameOrEndGame()
+    {
+        $in_last_minigame = self::getGameStateValue('minigame') == $this->constants['MINIGAMES'];
+        return $this->gamestate->nextState($in_last_minigame ? 'endGame' : 'nextMinigame');
+    }
+
+
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments
 ////////////
@@ -901,7 +912,6 @@ class pi extends Table
     {
         $active_player_id = self::getActivePlayerId(); // not really 'active', as this is a 'game' turn.
         $minigame = self::getGameStateValue('minigame');
-        $in_last_minigame = $minigame == $this->constants['MINIGAMES'];
 
         // Player who did not solve yet
         $unsolved_player_ids = self::getObjectListFromDB(
@@ -909,8 +919,7 @@ class pi extends Table
 
         if (count($unsolved_player_ids) == 0) {
             // Great, everybody finished successfully! Let's move on!
-            $this->gamestate->nextState($in_last_minigame ? 'endGame' : 'nextMinigame');
-            return;
+            return $this->gotoNextMinigameOrEndGame();
         }
 
         // First check if the round is over; then we start a new minigame, or
@@ -927,8 +936,7 @@ class pi extends Table
         if ($round_over) {
             // Is only one player with unsolved case left? -> start new minigame
             if (count($unsolved_player_ids) == 1) {
-                $this->gamestate->nextState($in_last_minigame ? 'endGame' : 'nextMinigame');
-                return;
+                return $this->gotoNextMinigameOrEndGame();
             }
             // Did any player solve in that round? Then decrease points_winnable
             $round = self::getGameStateValue('minigame_round');
