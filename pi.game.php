@@ -321,13 +321,14 @@ class pi extends Table
         $this->setCounter($counters, "current_minigame", $minigame);
 
         // Get information about players
+        $start_player_no = (($minigame - 1) % self::getPlayersNumber()) + 1;
         $sql = "
             SELECT
                 player_id as id,
                 player_color as color,
                 player_score as score,
                 player_solved_in_round as solved_in_round,
-                player_no = $minigame as is_startplayer
+                player_no = {$start_player_no} as is_startplayer
             FROM player
         ";
         $players = self::getCollectionFromDb($sql);
