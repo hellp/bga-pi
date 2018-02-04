@@ -614,7 +614,6 @@ function (dojo, declare) {
         },
 
         notif_playerSolved: function(notif) {
-            // TODO: remove cubes + investigators; but put discs in proper places
             this.disablePlayerPanel(notif.args.player_id);
         },
     });
