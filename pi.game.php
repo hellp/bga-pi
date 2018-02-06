@@ -321,7 +321,7 @@ class pi extends Table
         $this->setCounter($counters, "current_minigame", $minigame);
 
         // Get information about players
-        $start_player_no = (($minigame - 1) % self::getPlayersNumber()) + 1;
+        $start_player_no = $this->getStartPlayerNo($minigame);
         $sql = "
             SELECT
                 player_id as id,
@@ -365,6 +365,22 @@ class pi extends Table
     function getPlayerCaseCards($player_id)
     {
         return $this->cards->getPlayerHand(self::getPlayerBefore($player_id));
+    }
+
+    /** Return the `player_id` of the player that is start player in the given
+     * mini-game. */
+    function getStartPlayerId($minigame)
+    {
+        $start_player_no = $this->getStartPlayerNo($minigame);
+        $sql = "SELECT player_id FROM player WHERE player_no = $start_player_no";
+        return self::getUniqueValueFromDB($sql);
+    }
+
+    /** Return the `player_no` of the player that is start player in the given
+     * mini-game. */
+    function getStartPlayerNo($minigame)
+    {
+        return (($minigame - 1) % self::getPlayersNumber()) + 1;
     }
 
     /**
@@ -935,7 +951,7 @@ class pi extends Table
         // Select a new first player. In minigame 1 it's player_no 1, in
         // minigame 2 player_no 2 etc.; using module to cover the 'more rounds
         // than players' case.
-        $next_player_no = (($minigame - 1) % self::getPlayersNumber()) + 1;
+        $next_player_no = $this->getStartPlayerNo($minigame);
         $next_player_id = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = $next_player_no");
         $this->gamestate->changeActivePlayer($next_player_id);
         $this->gamestate->nextState(); // always a player turn
@@ -960,11 +976,16 @@ class pi extends Table
         // Round is over once all players solved; or even if a new round starts
         // and only 1 player remains with an unsolved case.
 
-        // A round (within this minigame) is over if the (potential) next player
-        // has `player_no` == current minigame number.
-        $player_after_id = self::getPlayerAfter($active_player_id);
-        $sql = "SELECT player_no FROM player WHERE player_id = $player_after_id";
-        $round_over = self::getUniqueValueFromDB($sql) == $minigame;
+        // Look for the next 'unsolved' player to activate. If we get to (or
+        // skip over) the current mini-game's start player, then the current
+        // round is over.
+        $round_over = false;
+        $start_player_id = $this->getStartPlayerId($minigame);
+        $next_player_id = $active_player_id;
+        do {
+            $next_player_id = self::getPlayerAfter($next_player_id);
+            if ($round_over || $next_player_id == $start_player_id) $round_over = true;
+        } while (!in_array($next_player_id, $unsolved_player_ids));
 
         if ($round_over) {
             // Is only one player with unsolved case left? -> start new minigame
@@ -989,12 +1010,8 @@ class pi extends Table
         // Draw a new card for evidence display
         $this->replenishEvidenceDisplay();
 
-        // Look for the next 'unsolved' player to activate.
-        do {
-            $next_active_player_id = self::activeNextPlayer();
-        } while (!in_array($next_active_player_id, $unsolved_player_ids));
-
-        self::giveExtraTime($next_active_player_id);
+        $this->gamestate->changeActivePlayer($next_player_id);
+        self::giveExtraTime($next_player_id);
         $this->gamestate->nextState('nextPlayer');
     }
 
