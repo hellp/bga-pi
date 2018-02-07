@@ -426,8 +426,8 @@ class pi extends Table
                     'discard_is_empty' => $this->cards->countCardInLocation('discard') == 0,
                 ));
         } else {
-            // TODO: show this only once; the first time, the deck runs out.
-            // after that it's obvious to the players.
+            // TODO FIXME: show this only once; the first time, the deck runs
+            // out. after that it's obvious to the players.
 
             // Rare case, but it could happen. Players are now forced to do
             // something else. But this is implicit from the UI: no more cards,
@@ -555,7 +555,10 @@ class pi extends Table
         }
 
         // TODO: in case of 3 full matches, we could place the tokens on the
-        // tiles directly. More of a convenience feature, however.
+        // tiles directly. More of a convenience feature, however. Same in the
+        // case of N cubes OR discs when N is the number of
+        // non-NO-CRIME/NO-SUSPECT tiles on the location. If it's mixed (cubes
+        // + disc), then it's not possible to tell!
 
         if (count($new_tokens)) {
             shuffle($new_tokens);
