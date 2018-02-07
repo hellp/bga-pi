@@ -395,12 +395,16 @@ function (dojo, declare) {
                 target_id += '_cubes';
             }
 
-            if (!$(key)) {
+            var $el = $(key);
+            if (!$el) {
                 var html = this.format_block('jstpl_token_' + ttype, {key: key, color: color});
                 dojo.place(html, target_id);
             } else {
-                // HACK
-                var html = $(key).outerHTML;
+                // If it already exists *at* the target_id, then do nothing
+                if ($el.parentNode.id == target_id) return;
+
+                // Else: move it, destroy it, put it into the target
+                var html = $el.outerHTML;
                 delay = delay || 500;
                 this.slideToObjectAndDestroy(key, target_id, duration, delay);
                 window.setTimeout(dojo.hitch(this, function () {
