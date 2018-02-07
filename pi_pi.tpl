@@ -29,6 +29,14 @@
         <!-- END locslot -->
     </div>
     <!-- END loccont -->
+
+    <div id="penalty_0" class="penaltybox"></div>
+    <div id="penalty_2" class="penaltybox"></div>
+    <div id="penalty_4" class="penaltybox"></div>
+    <div id="penalty_6" class="penaltybox"></div>
+    <div id="penalty_8" class="penaltybox"></div>
+    <div id="penalty_10" class="penaltybox"></div>
+
     <div id="minigamecounter" class="whiteblock">
         <h5>Mini-game<br><span id="current_minigame"></span> of 3</h5>
     </div>
@@ -69,6 +77,11 @@ var jstpl_player_board = '' +
     '<div class="sp_marker" id="sp_marker_${id}"></div>' +
     '</div>' +
     '</div>';
+
+var jstpl_token_cube = '<div id="${key}" class="token cube20 cube20_${color}"></div>';
+var jstpl_token_disc = '<div id="${key}" class="token disc30 disc30_${color}"></div>';
+var jstpl_token_penalty = '<div id="${key}" class="token penalty penalty_${color}"></div>';
+var jstpl_token_pi = '<div id="${key}" class="token investigator investigator_${color}"></div>';
 
 </script>
 

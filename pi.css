@@ -409,3 +409,43 @@
 #loccont_14 div:not(.token) > .token {
     transform:rotate(-0deg);
 }
+
+.penaltybox {
+    position: absolute;
+    bottom:25px;
+    height:80px;
+    width:64px;
+}
+#penalty_0 { left: 24px; }
+#penalty_2 { left: 92px; }
+#penalty_4 { left: 164px; bottom:20px; }
+#penalty_6 { left: 758px; bottom:20px; }
+#penalty_8 { left: 830px; }
+#penalty_10 { left: 898px; }
+
+.token.penalty {
+    z-index:100;
+    position: relative;
+    height:32px;
+    width:32px;
+    background-image: url("img/vptoken.jpg");
+    background-size:352px;
+    border-radius: 3px;
+    box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.75);
+}
+.token.penalty_red { background-position: -192px 32px }
+.token.penalty_blue { background-position: -224px 32px }
+.token.penalty_yellow { background-position: -256px 32px }
+.token.penalty_green { background-position: -288px 32px }
+.token.penalty_purple { background-position: -320px 32px }
+
+.penaltybox .token.penalty {
+    position: absolute;
+    top:0;
+    left:0;
+}
+.penaltybox .token:nth-of-type(1) { left: 5px; top: 0px }
+.penaltybox .token:nth-of-type(2) { left: 30px; top: 4px }
+.penaltybox .token:nth-of-type(3) { left: 0px; top: 26px }
+.penaltybox .token:nth-of-type(4) { left: 24px; top: 30px }
+.penaltybox .token:nth-of-type(5) { left: 10px; top: 54px }

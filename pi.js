@@ -396,14 +396,7 @@ function (dojo, declare) {
             }
 
             if (!$(key)) {
-                var html;
-                if (ttype == 'cube') {
-                    var html = '<div id="' + key + '" class="token cube20 cube20_' + color + '"></div>';
-                } else if (ttype == 'disc') {
-                    var html = '<div id="' + key + '" class="token disc30 disc30_' + color + '"></div>';
-                } else {
-                    var html = '<div id="' + key + '" class="token investigator investigator_' + color + '"></div>';
-                }
+                var html = this.format_block('jstpl_token_' + ttype, {key: key, color: color});
                 dojo.place(html, target_id);
             } else {
                 // HACK

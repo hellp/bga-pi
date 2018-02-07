@@ -388,4 +388,18 @@ $this->tokeninfos = array(
   array('key' => 'pi_purple_{INDEX}', 'nbr' => 5),
   array('key' => 'pi_red_{INDEX}', 'nbr' => 5),
   array('key' => 'pi_yellow_{INDEX}', 'nbr' => 5),
+
+  // The VP markers (1st case, 2nd case, 3rd case)
+  array('key' => 'vp_blue_{INDEX}', 'nbr' => 3),
+  array('key' => 'vp_green_{INDEX}', 'nbr' => 3),
+  array('key' => 'vp_purple_{INDEX}', 'nbr' => 3),
+  array('key' => 'vp_red_{INDEX}', 'nbr' => 3),
+  array('key' => 'vp_yellow_{INDEX}', 'nbr' => 3),
+
+  // The penalty tokens
+  array('key' => 'penalty_red'),
+  array('key' => 'penalty_blue'),
+  array('key' => 'penalty_yellow'),
+  array('key' => 'penalty_green'),
+  array('key' => 'penalty_purple'),
 );

@@ -138,7 +138,7 @@ class pi extends Table
             // many tokens in the DB that we don't need for games with less
             // than the full player count.
             $player_tokens = array_filter($this->tokeninfos, function ($v) use ($color) {
-                return strpos($v['key'], "_{$color}_") > 0;
+                return strpos($v['key'], "_{$color}") > 0;
             });
             $this->tokens->createTokens($player_tokens, 'supply');
 
@@ -147,6 +147,8 @@ class pi extends Table
             $this->tokens->moveTokens(
                 array_pluck($this->tokens->getTokensOfTypeInLocation("pi_{$color}_%"), 'key'),
                 "pi_supply_{$player_id}");
+            // Put penalty token on the "0"
+            $this->tokens->moveToken("penalty_{$color}", "penalty_0");
         }
 
         // TODO: Init game statistics
@@ -354,7 +356,9 @@ class pi extends Table
                 array_values($this->tokens->getTokensInLocation('agentarea_%')),
                 array_values($this->tokens->getTokensInLocation('cubes_%')), // player supplies
                 array_values($this->tokens->getTokensInLocation('discs_%')), // player supplies
-                array_values($this->tokens->getTokensInLocation('locslot_%')))
+                array_values($this->tokens->getTokensInLocation('locslot_%')),
+                array_values($this->tokens->getTokensInLocation('penalty_%'))
+            )
         );
     }
 
@@ -713,6 +717,7 @@ class pi extends Table
     function solveCase($tile_ids) {
         self::checkAction("solveCase");
         $player_id = self::getActivePlayerId();
+        $color = $this->constants['HEX2COLORNAME'][self::getCurrentPlayerColor()];
 
         // Get material ids for the solution (case cards) and the proposed
         // solution (tiles). Then find the 3 aspects, and compare them.
@@ -737,7 +742,6 @@ class pi extends Table
             ");
 
             // Move cubes back to player supply; puts discs on solution.
-            $color = $this->constants['HEX2COLORNAME'][self::getCurrentPlayerColor()];
             $this->tokens->moveTokens(
                 array_pluck($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"), 'key'),
                 "cubes_{$player_id}");
@@ -776,6 +780,18 @@ class pi extends Table
                     player_penalty = player_penalty - 2
                 WHERE player_id = $player_id
             ");
+            // Move token to appropriate penalty slot. Note: the max here is
+            // -10. To be discussed: is -10 the max penalty we can give; or is
+            // it just a UI thing. The rules say nothing about it.
+            $total_pen = self::getUniqueValueFromDB("SELECT player_penalty FROM player WHERE player_id = $player_id");
+            $this->tokens->moveToken("penalty_{$color}", "penalty_" . min(abs($total_pen), 10));
+            self::notifyAllPlayers(
+                'placeTokens', '',
+                array('tokens' => array_merge(
+                    array(),
+                    $this->tokens->getTokensOfTypeInLocation("penalty_{$color}")
+                ))
+            );
             self::notifyAllPlayers(
                 'playerFailed',
                 // TODO: friendlier wording
