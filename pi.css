@@ -410,11 +410,17 @@
     transform:rotate(-0deg);
 }
 
+.vpbox,
 .penaltybox {
     position: absolute;
-    bottom:25px;
     height:80px;
     width:64px;
+}
+.penaltybox {
+    bottom:25px;
+}
+.vpbox {
+    top:58px;
 }
 #penalty_0 { left: 24px; }
 #penalty_2 { left: 92px; }
@@ -422,8 +428,14 @@
 #penalty_6 { left: 758px; bottom:20px; }
 #penalty_8 { left: 830px; }
 #penalty_10 { left: 898px; }
+#vp_7 { top: 58px; left: 24px; }
+#vp_5 { top: 50px; left: 95px; }
+#vp_3 { top: 45px; left: 165px; }
+#vp_1 { top: 50px; left: 796px; }
+#vp_0 { top: 46px; left: 868px; }
 
-.token.penalty {
+.token.penalty,
+.token.vpmarker {
     z-index:100;
     position: relative;
     height:32px;
@@ -449,3 +461,35 @@
 .penaltybox .token:nth-of-type(3) { left: 0px; top: 26px }
 .penaltybox .token:nth-of-type(4) { left: 24px; top: 30px }
 .penaltybox .token:nth-of-type(5) { left: 10px; top: 54px }
+
+#vp_red_0 { background-position: 0 0 }
+#vp_red_1 { background-position: -32px 0 }
+#vp_red_2 { background-position: -64px 0 }
+#vp_blue_0 { background-position: -96px 0 }
+#vp_blue_1 { background-position: -128px 0 }
+#vp_blue_2 { background-position: -160px 0 }
+#vp_green_0 { background-position: 0 32px }
+#vp_green_1 { background-position: -32px 32px }
+#vp_green_2 { background-position: -64px 32px }
+#vp_purple_0 { background-position: -96px 32px }
+#vp_purple_1 { background-position: -128px 32px }
+#vp_purple_2 { background-position: -160px 32px }
+#vp_yellow_0 { background-position: -192px 0 }
+#vp_yellow_1 { background-position: -224px 0 }
+#vp_yellow_2 { background-position: -256px 0 }
+
+/* Just make it look a little random. In 5P games they might be many tokens on one spot. */
+.vpbox .vpmarker {
+    display: inline-block;
+    margin-right:-12px;
+    margin-bottom:-12px;
+}
+.vpbox .vpmarker:nth-of-type(2n) {
+    margin-bottom:-6px;
+    margin-top:0;
+}
+.vpbox .vpmarker:nth-of-type(2n+1),
+.vpbox .vpmarker:nth-of-type(4n) {
+    margin-left:-6px;
+    margin-top:-6px;
+}

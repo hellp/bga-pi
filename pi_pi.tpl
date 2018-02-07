@@ -30,6 +30,12 @@
     </div>
     <!-- END loccont -->
 
+    <div id="vp_7" class="vpbox"></div>
+    <div id="vp_5" class="vpbox"></div>
+    <div id="vp_3" class="vpbox"></div>
+    <div id="vp_1" class="vpbox"></div>
+    <div id="vp_0" class="vpbox"></div>
+
     <div id="penalty_0" class="penaltybox"></div>
     <div id="penalty_2" class="penaltybox"></div>
     <div id="penalty_4" class="penaltybox"></div>
@@ -82,6 +88,7 @@ var jstpl_token_cube = '<div id="${key}" class="token cube20 cube20_${color}"></
 var jstpl_token_disc = '<div id="${key}" class="token disc30 disc30_${color}"></div>';
 var jstpl_token_penalty = '<div id="${key}" class="token penalty penalty_${color}"></div>';
 var jstpl_token_pi = '<div id="${key}" class="token investigator investigator_${color}"></div>';
+var jstpl_token_vp = '<div id="${key}" class="token vpmarker"></div>';
 
 </script>
 

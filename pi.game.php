@@ -357,7 +357,8 @@ class pi extends Table
                 array_values($this->tokens->getTokensInLocation('cubes_%')), // player supplies
                 array_values($this->tokens->getTokensInLocation('discs_%')), // player supplies
                 array_values($this->tokens->getTokensInLocation('locslot_%')),
-                array_values($this->tokens->getTokensInLocation('penalty_%'))
+                array_values($this->tokens->getTokensInLocation('penalty_%')),
+                array_values($this->tokens->getTokensInLocation('vp_%'))
             )
         );
     }
@@ -716,6 +717,7 @@ class pi extends Table
 
     function solveCase($tile_ids) {
         self::checkAction("solveCase");
+        $minigame = self::getGameStateValue('minigame');
         $player_id = self::getActivePlayerId();
         $color = $this->constants['HEX2COLORNAME'][self::getCurrentPlayerColor()];
 
@@ -734,12 +736,14 @@ class pi extends Table
 
         if ($player_correct) {
             // Score + mark as inactive for the rest of the minigame.
+            $points_winnable = self::getGameStateValue('points_winnable');
             self::DbQuery("
                 UPDATE player
-                SET player_score = player_score + " . self::getGameStateValue('points_winnable') . ",
+                SET player_score = player_score + " . $points_winnable . ",
                     player_solved_in_round = " . self::getGameStateValue('minigame_round') . "
                 WHERE player_id = $player_id
             ");
+            $this->tokens->moveToken("vp_{$color}_" . ($minigame - 1), "vp_{$points_winnable}");
 
             // Move cubes back to player supply; puts discs on solution.
             $this->tokens->moveTokens(
@@ -760,7 +764,8 @@ class pi extends Table
                     array(),
                     $this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"),
                     $this->tokens->getTokensOfTypeInLocation("disc_{$color}_%"),
-                    $this->tokens->getTokensOfTypeInLocation("pi_{$color}_%")
+                    $this->tokens->getTokensOfTypeInLocation("pi_{$color}_%"),
+                    $this->tokens->getTokensOfTypeInLocation("vp_{$color}_%")
                 ))
             );
             self::notifyAllPlayers(
@@ -1006,6 +1011,22 @@ class pi extends Table
         if ($round_over) {
             // Is only one player with unsolved case left? -> start new minigame
             if (count($unsolved_player_ids) == 1) {
+                // Put VP token of unsolved player to "0"
+                $unsolved_player_id = array_shift($unsolved_player_ids);
+                $unsolved_player = self::loadPlayersBasicInfos()[$unsolved_player_id];
+                $unsolved_color = $this->constants['HEX2COLORNAME'][$unsolved_player['player_color']];
+                $token_key = "vp_{$unsolved_color}_" . ($minigame - 1);
+                $token_target = "vp_0";
+                $this->tokens->moveToken($token_key, $token_target);
+                self::notifyAllPlayers(
+                    'placeToken',
+                    clienttranslate('${player_name} did not solve in this mini-game and gets 0 points.'),
+                    array(
+                        'token' => array("key" => $token_key, "location" => $token_target),
+                        'player_name' => $unsolved_player['player_name'],
+                    )
+                );
+                // Mini-game is over
                 return $this->gotoNextMinigameOrEndGame();
             }
             // Did any player solve in that round? Then decrease points_winnable
