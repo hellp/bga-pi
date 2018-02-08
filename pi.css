@@ -182,7 +182,7 @@
     box-shadow:0 0 5px 5px rgba(0, 0, 0, 0.3);
     padding:4px; */
 }
-.loccont .agentarea.highlighted {
+.loccont .agentarea.active_slot {
     box-shadow: 0 0 2px 2px rgb(255, 255, 255) !important;
     border:solid 2px red; /* because it's an instant action */
     border-width:2px !important;
@@ -210,12 +210,12 @@
     box-shadow:none;
     background:none;
 }
-.locslot .highlighted:not(.no_x_tile) {
+.locslot .active_slot:not(.no_x_tile) {
     border-width:1px !important;
     box-shadow: 0 0 4px 6px rgb(255, 255, 255) !important;
     cursor: pointer !important;
 }
-.locslot .highlighted.stockitem_selected {
+.locslot .active_slot.stockitem_selected {
     border-width:1px !important;
     box-shadow: 0 0 4px 6px rgb(0, 0, 255) !important;
 }

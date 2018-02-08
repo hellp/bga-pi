@@ -175,6 +175,10 @@ function (dojo, declare) {
         onEnteringState: function(stateName, args)
         {
             console.log('Entering state: ' + stateName);
+
+            this.stateEventHandles = this.stateEventHandles || {};
+            var ehdls = this.stateEventHandles[stateName] = [];
+
             switch (stateName)
             {
                 case 'startMinigame':
@@ -205,16 +209,16 @@ function (dojo, declare) {
                 case 'client_playerPicksSolution':
                     // Enable tile selection and wire up validation callback
                     this.tiles.setSelectionMode(2);
-                    this.vcs_handle = dojo.connect(this.tiles, 'onChangeSelection', this, 'validateCaseSelection');
+                    ehdls.push(dojo.connect(this.tiles, 'onChangeSelection', this, 'validateCaseSelection'));
 
                     // Highlight clickable tiles
-                    dojo.query('.locslot .stockitem').addClass('highlighted');
+                    dojo.query('.locslot .stockitem').addClass('active_slot');
 
                     // Clear UI
                     this.hideCardDisplay();
                     break;
                 case 'client_playerPlacesInvestigator':
-                    dojo.query('.agentarea').addClass('highlighted');
+                    dojo.query('.agentarea').addClass('active_slot');
                     this.addEventToClass("agentarea", 'onclick', 'onAgentAreaClicked');
 
                     // Clear UI
@@ -232,16 +236,21 @@ function (dojo, declare) {
             switch (stateName)
             {
                 case 'client_playerPicksSolution':
-                    dojo.query('.locslot .stockitem').removeClass('highlighted');
                     this.tiles.setSelectionMode(0);
-                    dojo.disconnect(this.vcs_handle);
                     this.showCardDisplay();
                     break;
                 case 'client_playerPlacesInvestigator':
-                    dojo.query('.agentarea').removeClass('highlighted');
                     this.showCardDisplay();
                     break;
             }
+
+            // Remove clickable indicator
+            dojo.query('.active_slot').removeClass('active_slot');
+
+            // Disconnect from events
+            (this.stateEventHandles[stateName] || []).forEach(function (handle, idx) {
+                dojo.disconnect(handle);
+            });;
         },
 
         // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
@@ -294,6 +303,33 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Utility methods
+
+        checkActivePlayer: function() {
+            if (!this.isCurrentPlayerActive()) {
+                this.showMessage(__("lang_mainsite", "This is not your turn"), "error");
+                return false;
+            }
+            return true;
+        },
+
+        isActiveSlot: function(id) {
+            if (!dojo.hasClass(id, 'active_slot')) { return false; }
+            return true;
+        },
+
+        checkActiveSlot: function(id) {
+            if (!this.isActiveSlot(id)) {
+                this.showMoveUnauthorized();
+                return false;
+            }
+            return true;
+        },
+
+        checkActivePlayerAndSlot: function(id) {
+            if (!this.checkActivePlayer()) { return false; }
+            if (!this.checkActiveSlot(id)) { return false; }
+            return true;
+        },
 
         hideCardDisplay: function () {
             // hide cards, so user doesn't accidentally click there
@@ -468,7 +504,10 @@ function (dojo, declare) {
         */
 
         onAgentAreaClicked: function(e) {
-            var location_id = e.target.id.split('_')[1];
+            var id = e.currentTarget.id;
+            if (!this.checkActivePlayerAndSlot(id)) return;
+
+            var location_id = e.currentTarget.id.split('_')[1];
             var action = 'placeInvestigator';
             if (this.checkAction(action, true)) {
                 this.ajaxcall("/" + this.game_name + "/" + this.game_name + "/" + action + ".html", {
