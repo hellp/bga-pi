@@ -231,7 +231,7 @@
     box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.5);
 }
 .cube.blue { background-color:hsl(230, 100%, 55%); }
-.cube.green { background-color:##0c0; }
+.cube.green { background-color:#0c0; }
 .cube.purple { background-color:#e0e; }
 .cube.red { background-color:#ff3300; }
 .cube.yellow { background-color:#fe0; }
