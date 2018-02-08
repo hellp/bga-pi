@@ -209,7 +209,7 @@ function (dojo, declare) {
                 case 'client_playerPicksSolution':
                     // Enable tile selection and wire up validation callback
                     this.tiles.setSelectionMode(2);
-                    ehdls.push(dojo.connect(this.tiles, 'onChangeSelection', this, 'validateCaseSelection'));
+                    ehdls.push(dojo.connect(this.tiles, 'onChangeSelection', this, 'onCaseSelectionChanged'));
 
                     // Highlight clickable tiles
                     dojo.query('.locslot .stockitem').addClass('active_slot');
@@ -456,36 +456,43 @@ function (dojo, declare) {
             for (i in tokens) { this.placeToken(tokens[i], target_id, i * delay) }
         },
 
+        /**
+         * Validate the case selection.
+         *
+         * Opts has (optional) keys:
+         *
+         * - `strict`: validate, i.e. check that *exactly* 3 tiles are chosen
+         * - `clicked_id`: the id of the stock item that was just checked, and
+         *   wants to be validated (and potentially unselected)
+         */
         validateCaseSelection: function(opts) {
             var opts = opts || {};
             var selectedTiles = this.tiles.getSelectedItems() || [];
             tileinfos = this.gamedatas.tileinfos;
             // Validation
-            if (opts.strict && selectedTiles.length != 3) {
-                this.showMessage(_("You must select exactly 3 tiles."), "error");
-                return false;
-            } else if (selectedTiles.length > 3) {
-                this.showMessage(_("You must not select more than 3 tiles."), "error");
-                return false;
-            }
             var hasSelected = {'crime': false, 'suspect': false, 'location': false};
-            selectedTiles.forEach(dojo.hitch(this, function (tile) {
+            for (var i in selectedTiles) {
+                var tile = selectedTiles[i];
                 var tile_type_arg = parseInt(tile.type, 10);
 
                 // Tiles 1-6 are "NO CRIME/SUSPECT" tiles.
                 if (parseInt(tile_type_arg, 10) <= 6) {
                     this.showMessage(_("You cannot select NO CRIME or NO SUSPECT tiles."), "error");
-                    this.tiles.unselectItem(tile.id);
+                    if (opts.clicked_id) this.tiles.unselectItem(opts.clicked_id);
                     return false;
                 }
 
                 if (hasSelected[tileinfos[tile_type_arg].tiletype]) {
                     this.showMessage(_("You must not select more than one of each type (crime/location/suspect)."), "error");
-                    this.tiles.unselectItem(tile.id);
+                    if (opts.clicked_id) this.tiles.unselectItem(opts.clicked_id);
                     return false;
                 }
                 hasSelected[tileinfos[tile_type_arg].tiletype] = true;
-            }));
+            }
+            if (opts.strict && selectedTiles.length != 3) {
+                this.showMessage(_("You must select exactly 3 tiles."), "error");
+                return false;
+            }
             return true;
         },
 
@@ -539,8 +546,8 @@ function (dojo, declare) {
             }
         },
 
-        onCaseSelectionChanged: function (control_name) {
-            this.validateCaseSelection({strict: false});
+        onCaseSelectionChanged: function (control_name, id) {
+            this.validateCaseSelection({clicked_id: id, strict: false});
         },
 
         onConfirmCaseSelection: function () {
