@@ -208,7 +208,6 @@ function (dojo, declare) {
                     this.vcs_handle = dojo.connect(this.tiles, 'onChangeSelection', this, 'validateCaseSelection');
 
                     // Highlight clickable tiles
-                    // TODO: NO CRIME and NO SUSPECT tiles should not be highlighted or selectable
                     dojo.query('.locslot .stockitem').addClass('highlighted');
 
                     // Clear UI
