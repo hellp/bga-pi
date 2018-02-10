@@ -42,6 +42,7 @@
         // Get players & players number
         $players = $this->game->loadPlayersBasicInfos();
         $players_nbr = count($players);
+        $spectatorMode = !isset($players[$current_player_id]);
 
         /*********** Place your code below:  ************/
 
@@ -51,9 +52,11 @@
         $this->tpl['CASE_CARDS_OF_PLAYER'] = self::_("Case cards of player");
 
         // Display player name to which my hand cards belong
-        $left_neighbor = $this->game->getPlayerAfter($current_player_id);
-        $this->tpl['LEFT_NEIGHBOR_NAME'] = $players[$left_neighbor]['player_name'];
-        $this->tpl['LEFT_NEIGHBOR_COLOR'] = $players[$left_neighbor]['player_color'];
+        if (!$spectatorMode) {
+            $left_neighbor = $this->game->getPlayerAfter($current_player_id);
+            $this->tpl['LEFT_NEIGHBOR_NAME'] = $players[$left_neighbor]['player_name'];
+            $this->tpl['LEFT_NEIGHBOR_COLOR'] = $players[$left_neighbor]['player_color'];
+        }
 
         // The location containers and the location slots, where the tiles we be
         // player later (by JS).

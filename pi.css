@@ -249,6 +249,11 @@
 #myhand-wrap { float:left; height:180px; width: 316px; margin-right:.5em; }
 #myevidence-wrap { float:left; height:180px; width: 700px; }
 
+.spectatorMode #myhand-wrap,
+.spectatorMode #myevidence-wrap {
+    display: none;
+}
+
 .locslot .cube20,
 .locslot .disc30 {
     z-index:100;
