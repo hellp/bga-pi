@@ -95,7 +95,7 @@ function (dojo, declare) {
                 var node_id = (player_id == this.player_id) ? 'myevidence' : 'playerdisplay_' + player_id;
                 pdstock.setSelectionMode(0); // no selection possible
                 pdstock.create(this, $(node_id), this.CARD_WIDTH, this.CARD_HEIGHT);
-                pdstock.setOverlap(66, 0); // basically on top of eachother
+                pdstock.setOverlap(50, 0);
                 pdstock.image_items_per_row = CARD_ITEMS_PER_ROW;
                 pdstock.item_margin = CARD_ITEM_MARGIN;
             }
