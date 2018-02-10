@@ -174,8 +174,6 @@ function (dojo, declare) {
         //
         onEnteringState: function(stateName, args)
         {
-            console.log('Entering state: ' + stateName);
-
             this.stateEventHandles = this.stateEventHandles || {};
             var ehdls = this.stateEventHandles[stateName] = [];
 
@@ -232,7 +230,6 @@ function (dojo, declare) {
         //
         onLeavingState: function(stateName)
         {
-            console.log('Leaving state: ' + stateName);
             switch (stateName)
             {
                 case 'client_playerPicksSolution':
