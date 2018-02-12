@@ -179,6 +179,7 @@ class pi extends Table
 
         // Global / static information
         $result['cardinfos'] = $this->cardBasis;
+        $result['locationinfos'] = $this->locations;
         $result['tileinfos'] = $this->tiles;
 
         $result = array_merge($result, $this->getPrivateGameInfos(self::getCurrentPlayerId()));

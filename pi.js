@@ -73,6 +73,7 @@ function (dojo, declare) {
             this.playerHand.setSelectionMode(0); // no selection possible
             this.playerHand.image_items_per_row = CARD_ITEMS_PER_ROW;
             this.playerHand.item_margin = CARD_ITEM_MARGIN;
+            this.playerHand.onItemCreate = dojo.hitch(this, 'setupCaseCard');
 
             // The stocks where evidence cards can live: display, discard, player displays
             this.evidenceDisplay = new ebg.stock();
@@ -80,6 +81,7 @@ function (dojo, declare) {
             this.evidenceDisplay.create(this, $('evidence'), this.CARD_WIDTH, this.CARD_HEIGHT);
             this.evidenceDisplay.image_items_per_row = CARD_ITEMS_PER_ROW;
             this.evidenceDisplay.item_margin = CARD_ITEM_MARGIN;
+            this.evidenceDisplay.onItemCreate = dojo.hitch(this, 'setupEvidenceDisplayCard');
             this.evidenceDiscard = new ebg.stock();
             this.evidenceDiscard.setSelectionMode(0); // no selection possible
             this.evidenceDiscard.create(this, $('evidence_discard'), this.CARD_WIDTH, this.CARD_HEIGHT);
@@ -98,6 +100,7 @@ function (dojo, declare) {
                 pdstock.setOverlap(50, 0);
                 pdstock.image_items_per_row = CARD_ITEMS_PER_ROW;
                 pdstock.item_margin = CARD_ITEM_MARGIN;
+                pdstock.onItemCreate = dojo.hitch(this, 'setupEvidenceCard');
             }
             this.playerDisplay = this.playerDisplays[this.player_id];  // shortcut for current player
 
@@ -121,17 +124,7 @@ function (dojo, declare) {
             this.tiles.setOverlap(0.01, 0); // basically on top of eachother
             this.tiles.image_items_per_row = TILE_ITEMS_PER_ROW;
             this.tiles.item_margin = 0;
-            this.tiles.onItemCreate = dojo.hitch(this, function (card_div, card_type_id, card_id) {
-                // The first 6 tiles are "NO XXX" tiles. Mark them as such.
-                if (card_type_id <= 6) {
-                    dojo.addClass(card_id, "no_x_tile");
-                }
-                // Delete the background from our "fake tiles" for the locations.
-                if (card_type_id >= 29) {
-                    dojo.addClass(card_id, "fake_tile");
-                    dojo.setStyle(card_id, "background", "none");
-                }
-            });
+            this.tiles.onItemCreate = dojo.hitch(this, 'setupTile');
             for (var i = 1; i <= 42; i++) {
                 var pos_in_img = i - 1;  // it's zero-based
                 // weight is 0 for all as they have no inherent weight
@@ -158,13 +151,37 @@ function (dojo, declare) {
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
 
             // "Static" quick help tooltips
-            this.addTooltip('myhand-wrap', _("TOP SECRET! Only you can see these."), '');
-            this.addTooltip('myevidence-wrap', _("These cards remind you which evidence is unrelated to your case. They are visible to everybody."), '');
+            this.addTooltip('casecards_help', _("The card cards of your left neighbour. TOP SECRET! Only you can see these."), '');
+            this.addTooltip('myevidence_help', _("These cards remind you which evidence is unrelated to your case. They are visible to everybody."), '');
 
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
         },
 
+        setupCaseCard: function(card_div, card_type_id, card_id) {
+            this.addTooltip(card_div.id, _(this.gamedatas.cardinfos[card_type_id].name), '');
+        },
+
+        setupEvidenceCard: function(card_div, card_type_id, card_id) {
+            this.addTooltip(card_div.id, _(this.gamedatas.cardinfos[card_type_id].name), '');
+        },
+
+        setupEvidenceDisplayCard: function(card_div, card_type_id, card_id) {
+            this.addTooltip(card_div.id, _(this.gamedatas.cardinfos[card_type_id].name), _('Follow this evidence…'));
+        },
+
+        setupTile: function (card_div, card_type_id, card_id) {
+            // The first 6 tiles are "NO XXX" tiles. Mark them as such.
+            if (card_type_id <= 6) {
+                dojo.addClass(card_id, "no_x_tile");
+            }
+            // Delete the background from our "fake tiles" for the locations.
+            if (card_type_id >= 29) {
+                dojo.addClass(card_id, "fake_tile");
+                dojo.setStyle(card_id, "background", "none");
+            }
+            this.addTooltip(card_div.id, _(this.gamedatas.tileinfos[card_type_id].name), '');
+        },
 
         ///////////////////////////////////////////////////
         //// Game & client states
@@ -218,7 +235,15 @@ function (dojo, declare) {
                 case 'client_playerPlacesInvestigator':
                     dojo.query('.agentarea').addClass('active_slot');
                     this.addEventToClass("agentarea", 'onclick', 'onAgentAreaClicked');
-
+                    for (var i=1; i<=14; i++) {
+                        this.addTooltip(
+                            'agentarea_' + i,
+                            '',
+                            dojo.string.substitute(_("Send investigator to ${location_name}."), {
+                                location_name: this.gamedatas.locationinfos[i].name
+                            })
+                        );
+                    }
                     // Clear UI
                     this.hideCardDisplay();
                     break;
@@ -238,6 +263,7 @@ function (dojo, declare) {
                     break;
                 case 'client_playerPlacesInvestigator':
                     this.showCardDisplay();
+                    for (var i=1; i<=14; i++) { this.removeTooltip('agentarea_' + i) }
                     break;
             }
 
@@ -350,7 +376,6 @@ function (dojo, declare) {
             for (i in display) {
                 var card = display[i];
                 this.evidenceDisplay.addToStockWithId(card.type_arg, card.id);
-                this.addTooltip('evidence_item_' + card.id, _(this.gamedatas.cardinfos[card.type_arg].name), _('Follow this evidence…'));
             }
             this.evidenceDiscard.removeAll();
             for (i in discard) {
