@@ -91,6 +91,9 @@ var jstpl_token_disc = '<div id="${key}" class="token disc30 disc30_${color}"></
 var jstpl_token_penalty = '<div id="${key}" class="token penalty penalty_${color}"></div>';
 var jstpl_token_pi = '<div id="${key}" class="token investigator investigator_${color}"></div>';
 var jstpl_token_vp = '<div id="${key}" class="token vpmarker"></div>';
+var jstpl_card_tooltip = '<div class="cardtooltip">${name}</div>';
+var jstpl_casecard_tooltip = '<div class="cardtooltip casecardtooltip">${name}</div>';
+var jstpl_displaycard_tooltip = '<div class="cardtooltip">${name}</div><hr><span class="help_click">${action}</span>';
 
 </script>
 

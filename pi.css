@@ -47,7 +47,7 @@
 /********* You can start writing your CSS below this line: **********/
 
 
-@import url('https://fonts.googleapis.com/css?family=Oswald:400,500,600');
+@import url('https://fonts.googleapis.com/css?family=Oswald:500,600,700');
 
 
 .whiteblock {
@@ -541,7 +541,7 @@
     background:#f2904b;
     background-image: url(img/namebg.png);
     background-position: center;
-    color:#111;
+    color:#251815;
     text-align:center;
     width: 92%;
     padding:3px 2px;
@@ -562,7 +562,7 @@
     background:#f2904b;
     background-image: url(img/namebg.png);
     background-position: center;
-    color:#111;
+    color:#251815;
     text-align:center;
     width:81%;
     padding:1px 2px;
@@ -580,4 +580,24 @@
 .cardname,
 .tilename {
     display:none;
+}
+
+.cardtooltip {
+    background-image: url(img/namebg.png);
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.25em;
+    font-weight: 700;
+    color:#251815;
+    padding:0 10px 1px;
+    border-radius: 3px;
+}
+.casecardtooltip {
+    background-image: url(img/casenamebg.png);
+    color:#f3f1ec;
+}
+
+.help_click {
+    background-image: url(img/common/help_click.png);
+    background-repeat: no-repeat;
+    padding-left:20px;
 }

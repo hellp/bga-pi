@@ -159,16 +159,28 @@ function (dojo, declare) {
         },
 
         setupCaseCard: function(card_div, card_type_id, card_id) {
-            this.addTooltip(card_div.id, _(this.gamedatas.cardinfos[card_type_id].name), '');
+            this.addTooltipHtml(
+                card_div.id,
+                this.format_block('jstpl_casecard_tooltip', {name: _(this.gamedatas.cardinfos[card_type_id].name).toUpperCase()})
+            );
         },
 
         setupEvidenceCard: function(card_div, card_type_id, card_id) {
             dojo.place('<div class="cardname">' + _(this.gamedatas.cardinfos[card_type_id].name) + '</div>', card_div.id);
-            this.addTooltip(card_div.id, _(this.gamedatas.cardinfos[card_type_id].name), '');
+            this.addTooltipHtml(
+                card_div.id,
+                this.format_block('jstpl_card_tooltip', {name: _(this.gamedatas.cardinfos[card_type_id].name).toUpperCase()})
+            );
         },
 
         setupEvidenceDisplayCard: function(card_div, card_type_id, card_id) {
-            this.addTooltip(card_div.id, _(this.gamedatas.cardinfos[card_type_id].name), _('Follow this evidence…'));
+            this.addTooltipHtml(
+                card_div.id,
+                this.format_block('jstpl_displaycard_tooltip', {
+                    name: _(this.gamedatas.cardinfos[card_type_id].name).toUpperCase(),
+                    action: _('Follow this evidence…')
+                })
+            );
         },
 
         setupTile: function (card_div, card_type_id, card_id) {
@@ -185,7 +197,10 @@ function (dojo, declare) {
             if (!name.startsWith('NO ')) {
                 dojo.place('<div class="tilename">' + _(name) + '</div>', card_div.id);
             }
-            this.addTooltip(card_div.id, _(name), '');
+            this.addTooltipHtml(
+                card_div.id,
+                this.format_block('jstpl_card_tooltip', {name: _(name).toUpperCase()})
+            );
         },
 
         ///////////////////////////////////////////////////
