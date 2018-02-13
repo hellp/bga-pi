@@ -1054,7 +1054,7 @@ class pi extends Table
         (ex: pass).
     */
 
-    function zombieTurn( $state, $active_player )
+    function zombieTurn($state, $active_player)
     {
         $statename = $state['name'];
 
@@ -1064,18 +1064,16 @@ class pi extends Table
                     $this->gamestate->nextState( "zombiePass" );
                     break;
             }
-
             return;
         }
 
         if ($state['type'] === "multipleactiveplayer") {
             // Make sure player is in a non blocking status for role turn
             $this->gamestate->setPlayerNonMultiactive( $active_player, '' );
-
             return;
         }
 
-        throw new feException( "Zombie mode not supported at this game state: ".$statename );
+        throw new feException("Zombie mode not supported at this game state: " . $statename);
     }
 
 ///////////////////////////////////////////////////////////////////////////////////:
