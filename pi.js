@@ -163,6 +163,7 @@ function (dojo, declare) {
         },
 
         setupEvidenceCard: function(card_div, card_type_id, card_id) {
+            dojo.place('<div class="cardname">' + _(this.gamedatas.cardinfos[card_type_id].name) + '</div>', card_div.id);
             this.addTooltip(card_div.id, _(this.gamedatas.cardinfos[card_type_id].name), '');
         },
 
@@ -180,7 +181,11 @@ function (dojo, declare) {
                 dojo.addClass(card_id, "fake_tile");
                 dojo.setStyle(card_id, "background", "none");
             }
-            this.addTooltip(card_div.id, _(this.gamedatas.tileinfos[card_type_id].name), '');
+            var name = _(this.gamedatas.tileinfos[card_type_id].name);
+            if (!name.startsWith('NO ')) {
+                dojo.place('<div class="tilename">' + _(name) + '</div>', card_div.id);
+            }
+            this.addTooltip(card_div.id, _(name), '');
         },
 
         ///////////////////////////////////////////////////

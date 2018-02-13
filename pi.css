@@ -47,7 +47,7 @@
 /********* You can start writing your CSS below this line: **********/
 
 
-@import url('https://fonts.googleapis.com/css?family=Copse');
+@import url('https://fonts.googleapis.com/css?family=Oswald:400,500,600');
 
 
 .whiteblock {
@@ -59,14 +59,15 @@
 .whiteblock h3,
 .whiteblock h4,
 .whiteblock h5 {
-    font-family:Copse, Roboto, Arial, sans-serif;
+    font-family:Oswald, Roboto, Arial, sans-serif;
+    font-weight: 600;
     color:#222;
     margin-top:0;
     text-transform: uppercase;
     text-shadow: 0 1px #fff;
 }
 .whiteblock h4 {
-    font-size: .8rem;
+    font-size: .85rem;
 }
 .whiteblock h5 {
     font-size: .75rem;
@@ -531,4 +532,52 @@
 .vpbox .vpmarker:nth-of-type(4n) {
     margin-left:-6px;
     margin-top:-6px;
+}
+
+.cardname {
+    position: absolute;
+    top:0;
+    left:0;
+    background:#f2904b;
+    background-image: url(img/namebg.png);
+    background-position: center;
+    color:#111;
+    text-align:center;
+    width: 92%;
+    padding:3px 2px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    border: solid 2px #f9eee3;
+    border-radius: 10px 10px 0 0;
+    font-family: 'Oswald', sans-serif;
+    font-size: .8em;
+    font-weight: 600;
+}
+
+.tilename {
+    position: absolute;
+    top:0;
+    left:4px;
+    background:#f2904b;
+    background-image: url(img/namebg.png);
+    background-position: center;
+    color:#111;
+    text-align:center;
+    width:81%;
+    padding:1px 2px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    border-bottom:solid 1px #f9eee3;
+    border-radius: 3px 3px 0 0;
+    font-size: .7em;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+}
+
+/* Hide for now. Later these will be able to be switched on via a UI option. */
+.cardname,
+.tilename {
+    display:none;
 }
