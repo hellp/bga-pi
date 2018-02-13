@@ -73,7 +73,7 @@
     margin:0;
 }
 
-.icon20 {
+.myicon20 {
     display: inline-block;
     background-image: url("img/common/icons20.png");
     width: 20px;
@@ -81,7 +81,7 @@
     position: relative;
     top: 4px;
 }
-.icon20_help {
+.myicon20_help {
     background-position:0 0;
 }
 
