@@ -1053,23 +1053,29 @@ class pi extends Table
         You can do whatever you want in order to make sure the turn of this player ends appropriately
         (ex: pass).
     */
-
     function zombieTurn($state, $active_player)
     {
         $statename = $state['name'];
+        $player_id = $active_player;
 
-        if ($state['type'] === "activeplayer") {
-            switch ($statename) {
-                default:
-                    $this->gamestate->nextState( "zombiePass" );
-                    break;
-            }
-            return;
-        }
-
-        if ($state['type'] === "multipleactiveplayer") {
-            // Make sure player is in a non blocking status for role turn
-            $this->gamestate->setPlayerNonMultiactive( $active_player, '' );
+        if ($statename === "playerTurn") {
+            // For the zombie player not to block the mini-game to be able to
+            // finish, the zombie must not count as a "still unsolved player".
+            // Thus we let zombie fake-solve, but giving 0 VP. This makes the
+            // player inactive and lets all real players finish.
+            self::DbQuery("
+                UPDATE player
+                SET player_solved_in_round = " . self::getGameStateValue('minigame_round') . "
+                WHERE player_id = $player_id
+            ");
+            self::notifyAllPlayers(
+                'playerSolved',
+                '',
+                array(
+                    'player_id' => $player_id,
+                )
+            );
+            $this->gamestate->nextState('nextTurn');
             return;
         }
 
