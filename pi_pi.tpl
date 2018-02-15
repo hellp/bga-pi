@@ -50,26 +50,28 @@
 </div>
 </div>
 
-<div id="myhand-wrap" class="whiteblock">
-    <h4>{CASE_CARDS_OF_PLAYER} <span style="color:#{LEFT_NEIGHBOR_COLOR}">{LEFT_NEIGHBOR_NAME}</span></h4>
-    <div id="myhand"></div>
-    <span id="casecards_help" class="myicon20 myicon20_help"></span>
-</div>
-<div id="myevidence-wrap" class="whiteblock">
-    <h4>{MY_EVIDENCE_CARDS}</h4>
-    <div id="myevidence"></div>
-    <span id="myevidence_help" class="myicon20 myicon20_help"></span>
-</div>
-
-<div style="clear:both"></div>
-
-<div id="playerdisplays">
-    <!-- BEGIN player -->
-    <div class="whiteblock">
-        <h4>{EVIDENCE_CARDS_OF_PLAYER} <span style="color:#{PLAYER_COLOR}">{PLAYER_NAME}</span></h4>
-        <div id="playerdisplay_{PLAYER_ID}"></div>
+<div id="belowboard">
+    <div id="myhand-wrap" class="whiteblock">
+        <h4>{CASE_CARDS_OF_PLAYER} <span style="color:#{LEFT_NEIGHBOR_COLOR}">{LEFT_NEIGHBOR_NAME}</span></h4>
+        <div id="myhand"></div>
+        <span id="casecards_help" class="myicon20 myicon20_help"></span>
     </div>
-    <!-- END player -->
+    <div id="myevidence-wrap" class="whiteblock">
+        <h4>{MY_EVIDENCE_CARDS}</h4>
+        <div id="myevidence"></div>
+        <span id="myevidence_help" class="myicon20 myicon20_help"></span>
+    </div>
+
+    <div style="clear:both"></div>
+
+    <div id="playerdisplays">
+        <!-- BEGIN player -->
+        <div class="whiteblock">
+            <h4>{EVIDENCE_CARDS_OF_PLAYER} <span style="color:#{PLAYER_COLOR}">{PLAYER_NAME}</span></h4>
+            <div id="playerdisplay_{PLAYER_ID}"></div>
+        </div>
+        <!-- END player -->
+    </div>
 </div>
 
 <script type="text/javascript">

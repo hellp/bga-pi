@@ -158,6 +158,10 @@
     background-size: 1000px;
     background-position: -10px -12px;
 }
+#belowboard {
+    margin:0 auto;
+    max-width:960px;
+}
 
 #minigamecounter {
     position: absolute;
@@ -304,7 +308,7 @@
     display:inline-block;
     height:166px;
     width:455px;
-    margin-right: 10px;
+    margin-right: 6px;
 }
 #playerdisplays > .whiteblock:nth-of-type(2n) {
     margin-right: 0;
