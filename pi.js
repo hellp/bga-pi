@@ -647,7 +647,7 @@ function (dojo, declare) {
             dojo.subscribe('newScores', this, "notif_newScores");
 
             dojo.subscribe('playerFailed', this, function () {});
-            this.notifqueue.setSynchronous('playerFailed', 1000);
+            this.notifqueue.setSynchronous('playerFailed', 800);
 
             dojo.subscribe('placeToken', this, "notif_placeToken");
             this.notifqueue.setSynchronous('placeToken', 300);
@@ -655,6 +655,7 @@ function (dojo, declare) {
             this.notifqueue.setSynchronous('placeTokens', 300);
 
             dojo.subscribe('playerSolved', this, "notif_playerSolved");
+            this.notifqueue.setSynchronous('playerSolved', 800);
         },
 
         notif_evidenceExhausted: function(notif) {
