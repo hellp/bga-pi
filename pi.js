@@ -622,7 +622,7 @@ function (dojo, declare) {
         onSolveCaseClicked: function () {
             this.setClientState(
                 "client_playerPicksSolution", {
-                    descriptionmyturn: _("Solve Case: ${you} must select the correct location, crime, and suspect…"),
+                    descriptionmyturn: _("Solve Case: ${you} must select the correct suspect, location, and crime…"),
                 });
         },
 
