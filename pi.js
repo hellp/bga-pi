@@ -107,12 +107,17 @@ function (dojo, declare) {
             // Create cards types:
             for (var i = 1; i <= 36; i++) {
                 var pos_in_img = i - 1;  // it's zero-based
-                // weight is 0 for all as they have no inherent weight
-                this.playerHand.addItemType(i + 36, 0, g_gamethemeurl + 'img/casecards.jpg', pos_in_img);
-                this.evidenceDisplay.addItemType(i, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
+
+                // Weight. Sort cards by (suspect|location|crime, card name) so they appear kind of grouped.
+                var cardinfo = this.gamedatas.cardinfos[i];
+                var weight = {suspect: 100, location: 200, crime:300}[cardinfo.casetype] + cardinfo.name.charCodeAt();
+
+                this.playerHand.addItemType(i + 36, weight, g_gamethemeurl + 'img/casecards.jpg', pos_in_img);
+                this.evidenceDisplay.addItemType(i, weight, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
+                // Weight on discard is always zero, as the cards should not be sorted there. Latest on top!
                 this.evidenceDiscard.addItemType(i, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
                 for (var player_id in gamedatas.players) {
-                    this.playerDisplays[player_id].addItemType(i, 0, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
+                    this.playerDisplays[player_id].addItemType(i, weight, g_gamethemeurl + 'img/evidencecards.jpg', pos_in_img);
                 }
             }
 
