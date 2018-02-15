@@ -10,12 +10,13 @@
 -->
 
 <div id="carddisplay">
-    <div id="evidence_wrap" class="whiteblock" style="float:left; width:950px"><div id="evidence"></div></div>
-    <div class="whiteblock" style="display:inline-block;background:none; opacity:0.75; width:110px;">
+    <div id="evidence_wrap" class="whiteblock" style="float:left; width:838px; padding:5px 8px;"><div id="evidence"></div></div>
+    <div class="whiteblock" style="display:inline-block; background:none; margin-right:0; padding:5px 8px; opacity:0.75; width:90px;">
         <div id="evidence_discard"></div>
     </div>
 </div>
 
+<div id="boardwrap">
 <div id="board" style="clear:both">
     <div id="tilestock"></div>
     <!-- BEGIN loccont -->
@@ -46,6 +47,7 @@
     <div id="minigamecounter" class="whiteblock">
         <h5>Mini-game<br><span id="current_minigame"></span> of 3</h5>
     </div>
+</div>
 </div>
 
 <div id="myhand-wrap" class="whiteblock">

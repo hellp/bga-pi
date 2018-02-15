@@ -26,10 +26,15 @@ function (dojo, declare) {
     return declare("bgagame.pi", ebg.core.gamegui, {
         constructor: function(){
             // Here, you can init the global variables of your user interface
-            this.CARD_WIDTH = 102;
-            this.CARD_HEIGHT = 156;
+            this.CARD_WIDTH = 90;
+            this.CARD_HEIGHT = 138;
             this.TILE_HEIGHT = 64;
             this.TILE_WIDTH = 64;
+
+            // A "convenience store". For each tile we place, we store its DIV
+            // here, so we can reference it easily for the highlight tile when
+            // mouse is over the associated card feature.
+            this.tileDivsByName = {};
         },
 
         /*
@@ -164,6 +169,7 @@ function (dojo, declare) {
         },
 
         setupCaseCard: function(card_div, card_type_id, card_id) {
+            dojo.place('<div class="cardname casecard">' + _(this.gamedatas.cardinfos[card_type_id].name) + '</div>', card_div.id);
             this.addTooltipHtml(
                 card_div.id,
                 this.format_block('jstpl_casecard_tooltip', {name: _(this.gamedatas.cardinfos[card_type_id].name).toUpperCase()})
@@ -179,6 +185,16 @@ function (dojo, declare) {
         },
 
         setupEvidenceDisplayCard: function(card_div, card_type_id, card_id) {
+            var name = this.gamedatas.cardinfos[card_type_id].name;
+            dojo.place('<div class="cardname">' + _(name) + '</div>', card_div.id);
+
+            dojo.connect(card_div, 'mouseover', this, function (e) {
+                dojo.addClass(this.tileDivsByName[name], 'highlight');
+            });
+            dojo.connect(card_div, 'click,mouseout', this, function (e) {
+                dojo.removeClass(this.tileDivsByName[name], 'highlight');
+            });
+
             this.addTooltipHtml(
                 card_div.id,
                 this.format_block('jstpl_displaycard_tooltip', {
@@ -206,6 +222,7 @@ function (dojo, declare) {
                 card_div.id,
                 this.format_block('jstpl_card_tooltip', {name: _(name).toUpperCase()})
             );
+            this.tileDivsByName[name] = card_div;
         },
 
         ///////////////////////////////////////////////////
