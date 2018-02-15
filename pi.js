@@ -93,7 +93,8 @@ function (dojo, declare) {
             this.evidenceDiscard.image_items_per_row = CARD_ITEMS_PER_ROW;
             this.evidenceDiscard.setOverlap(.01, 0); // basically on top of eachother
             this.evidenceDiscard.item_margin = 0;
-            this.addTooltip('evidence_discard', _("Discard pile"), '');
+            dojo.connect(this.evidenceDiscard, 'onItemCreate', this, 'setupEvidenceDiscardCard');
+            dojo.connect(this.evidenceDiscard, 'onItemCreate', this, 'updateDiscardTooltip');
 
             this.playerDisplays = {};
             for (var player_id in gamedatas.players) {
@@ -184,6 +185,10 @@ function (dojo, declare) {
             );
         },
 
+        setupEvidenceDiscardCard: function(card_div, card_type_id, card_id) {
+            dojo.place('<div class="cardname">' + _(this.gamedatas.cardinfos[card_type_id].name) + '</div>', card_div.id);
+        },
+
         setupEvidenceDisplayCard: function(card_div, card_type_id, card_id) {
             var name = this.gamedatas.cardinfos[card_type_id].name;
             dojo.place('<div class="cardname">' + _(name) + '</div>', card_div.id);
@@ -223,6 +228,17 @@ function (dojo, declare) {
                 this.format_block('jstpl_card_tooltip', {name: _(name).toUpperCase()})
             );
             this.tileDivsByName[name] = card_div;
+        },
+
+        updateDiscardTooltip: function () {
+            var html = '<b>' + _("Discard pile") + '</b><hr>';
+            html += this.evidenceDiscard.getAllItems().map(dojo.hitch(this, function(card) {
+                return _(this.gamedatas.cardinfos[card.type].name);
+            }))
+            .sort()
+            .join('<br>');
+            this.removeTooltip('evidence_discard');
+            this.addTooltipHtml('evidence_discard', html);
         },
 
         ///////////////////////////////////////////////////
