@@ -803,8 +803,7 @@ class pi extends Table
             );
             self::notifyAllPlayers(
                 'playerFailed',
-                // TODO: friendlier wording
-                clienttranslate('${player_name} tried to solve (${suspect}, ${crime}, ${location}), but failed.'),
+                clienttranslate('${player_name} tried to solve (${suspect}, ${location}, ${crime}), without success.'),
                 array(
                     'i18n' => array('crime', 'location', 'suspect'),
                     'crime' => $proposed_solution['crime'],
