@@ -169,19 +169,37 @@ function (dojo, declare) {
             this.setupNotifications();
         },
 
+        setupCardTileHighlightConnection: function(card_div, name) {
+            dojo.connect(card_div, 'mouseover', this, function (e) {
+                // First reset all others. A bit of a hack, so that if we lose a
+                // card in the UI (e.g. goes to discard), we are not stuck with
+                // the highlight. With this line, it does as soon as we want
+                // another highlight.
+                dojo.query('.locslot div.stockitem').removeClass('highlight');
+                dojo.addClass(this.tileDivsByName[name], 'highlight');
+            });
+            dojo.connect(card_div, 'mouseout', this, function (e) {
+                dojo.removeClass(this.tileDivsByName[name], 'highlight');
+            });
+        },
+
         setupCaseCard: function(card_div, card_type_id, card_id) {
-            dojo.place('<div class="cardname casecard">' + _(this.gamedatas.cardinfos[card_type_id].name) + '</div>', card_div.id);
+            var name = this.gamedatas.cardinfos[card_type_id].name;
+            this.setupCardTileHighlightConnection(card_div, name);
+            dojo.place('<div class="cardname casecard">' + _(name) + '</div>', card_div.id);
             this.addTooltipHtml(
                 card_div.id,
-                this.format_block('jstpl_casecard_tooltip', {name: _(this.gamedatas.cardinfos[card_type_id].name).toUpperCase()})
+                this.format_block('jstpl_casecard_tooltip', {name: _(name).toUpperCase()})
             );
         },
 
         setupEvidenceCard: function(card_div, card_type_id, card_id) {
-            dojo.place('<div class="cardname">' + _(this.gamedatas.cardinfos[card_type_id].name) + '</div>', card_div.id);
+            var name = this.gamedatas.cardinfos[card_type_id].name;
+            this.setupCardTileHighlightConnection(card_div, name);
+            dojo.place('<div class="cardname">' + _(name) + '</div>', card_div.id);
             this.addTooltipHtml(
                 card_div.id,
-                this.format_block('jstpl_card_tooltip', {name: _(this.gamedatas.cardinfos[card_type_id].name).toUpperCase()})
+                this.format_block('jstpl_card_tooltip', {name: _(name).toUpperCase()})
             );
         },
 
@@ -191,19 +209,13 @@ function (dojo, declare) {
 
         setupEvidenceDisplayCard: function(card_div, card_type_id, card_id) {
             var name = this.gamedatas.cardinfos[card_type_id].name;
+            this.setupCardTileHighlightConnection(card_div, name);
             dojo.place('<div class="cardname">' + _(name) + '</div>', card_div.id);
-
-            dojo.connect(card_div, 'mouseover', this, function (e) {
-                dojo.addClass(this.tileDivsByName[name], 'highlight');
-            });
-            dojo.connect(card_div, 'click,mouseout', this, function (e) {
-                dojo.removeClass(this.tileDivsByName[name], 'highlight');
-            });
 
             this.addTooltipHtml(
                 card_div.id,
                 this.format_block('jstpl_displaycard_tooltip', {
-                    name: _(this.gamedatas.cardinfos[card_type_id].name).toUpperCase(),
+                    name: _(name).toUpperCase(),
                     action: _('Follow this evidence…')
                 })
             );
