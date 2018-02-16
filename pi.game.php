@@ -586,19 +586,24 @@ class pi extends Table
             throw new BgaUserException(self::_("Card is not on display. Press F5 in case of problems."));
         }
 
-        // TODO: don't allow asking for the same location twice. It's too
-        // obvious a mistake.
-
-        // Various infos we need
-        $card_name = $this->cardBasis[$currentCard['type_arg']]['name'];
+        // Player infos
         $player_id = self::getActivePlayerId();
         $player = self::loadPlayersBasicInfos()[$player_id];
         $color = $this->constants['HEX2COLORNAME'][$player['player_color']];
+
+        // Find corresponding tile and locslot
         $tile = $this->getCorrespondingTile($currentCard['id']);
+        $target_id = "locslot_{$tile['location_arg']}";
+
+        // Abort if there is already a token of that player on the tile.
+        if (count($this->tokens->getTokensOfTypeInLocation("%_{$color}_%", $target_id))) {
+            throw new BgaUserException(self::_("You already have a cube or disc there."));
+        }
+
+        // Various other infos we need
+        $card_name = $this->cardBasis[$currentCard['type_arg']]['name'];
         $location_id = $this->getLocationIdOfTile($tile);
         $agent_area = "agentarea_{$location_id}";
-        // The locslot to place a token on, in case of success
-        $target_id = "locslot_{$tile['location_arg']}";
 
         // The solution
         $solution = $this->getPlayerCaseSolution($player_id);
