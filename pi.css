@@ -306,7 +306,7 @@
 
 #playerdisplays > .whiteblock {
     display:inline-block;
-    height:166px;
+    min-height:166px;
     width:455px;
     margin-right: 6px;
 }
