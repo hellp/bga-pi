@@ -25,6 +25,7 @@ $this->constants = array(
   "MINIGAMES" => 3,
   "DISCS_PER_PLAYER" => 3,
   "CUBES_PER_PLAYER" => 10,
+  "PIS_PER_PLAYER" => 5,
   "BOARD_H" => 740,
   "BOARD_W" => 980,
   "CASETYPES" => array(
@@ -40,6 +41,7 @@ $this->constants = array(
     "ff00ff" => 'purple',
     "ffa500" => 'yellow',
   ),
+  "AVG_LOCATION_NEIGHBORS" => 58.0/14, // ~4.14; all location together have 58 neighbors / number of locations
 );
 
 
@@ -371,23 +373,23 @@ $this->tiles = array(
 
 
 $this->tokeninfos = array(
-  array('key' => 'cube_blue_{INDEX}', 'nbr' => 10),
-  array('key' => 'cube_green_{INDEX}', 'nbr' => 10),
-  array('key' => 'cube_purple_{INDEX}', 'nbr' => 10),
-  array('key' => 'cube_red_{INDEX}', 'nbr' => 10),
-  array('key' => 'cube_yellow_{INDEX}', 'nbr' => 10),
-  array('key' => 'disc_blue_{INDEX}', 'nbr' => 3),
-  array('key' => 'disc_green_{INDEX}', 'nbr' => 3),
-  array('key' => 'disc_purple_{INDEX}', 'nbr' => 3),
-  array('key' => 'disc_red_{INDEX}', 'nbr' => 3),
-  array('key' => 'disc_yellow_{INDEX}', 'nbr' => 3),
+  array('key' => 'cube_blue_{INDEX}', 'nbr' => $this->constants["CUBES_PER_PLAYER"]),
+  array('key' => 'cube_green_{INDEX}', 'nbr' => $this->constants["CUBES_PER_PLAYER"]),
+  array('key' => 'cube_purple_{INDEX}', 'nbr' => $this->constants["CUBES_PER_PLAYER"]),
+  array('key' => 'cube_red_{INDEX}', 'nbr' => $this->constants["CUBES_PER_PLAYER"]),
+  array('key' => 'cube_yellow_{INDEX}', 'nbr' => $this->constants["CUBES_PER_PLAYER"]),
+  array('key' => 'disc_blue_{INDEX}', 'nbr' => $this->constants["DISCS_PER_PLAYER"]),
+  array('key' => 'disc_green_{INDEX}', 'nbr' => $this->constants["DISCS_PER_PLAYER"]),
+  array('key' => 'disc_purple_{INDEX}', 'nbr' => $this->constants["DISCS_PER_PLAYER"]),
+  array('key' => 'disc_red_{INDEX}', 'nbr' => $this->constants["DISCS_PER_PLAYER"]),
+  array('key' => 'disc_yellow_{INDEX}', 'nbr' => $this->constants["DISCS_PER_PLAYER"]),
 
   // The 'private investigators'
-  array('key' => 'pi_blue_{INDEX}', 'nbr' => 5),
-  array('key' => 'pi_green_{INDEX}', 'nbr' => 5),
-  array('key' => 'pi_purple_{INDEX}', 'nbr' => 5),
-  array('key' => 'pi_red_{INDEX}', 'nbr' => 5),
-  array('key' => 'pi_yellow_{INDEX}', 'nbr' => 5),
+  array('key' => 'pi_blue_{INDEX}', 'nbr' => $this->constants["PIS_PER_PLAYER"]),
+  array('key' => 'pi_green_{INDEX}', 'nbr' => $this->constants["PIS_PER_PLAYER"]),
+  array('key' => 'pi_purple_{INDEX}', 'nbr' => $this->constants["PIS_PER_PLAYER"]),
+  array('key' => 'pi_red_{INDEX}', 'nbr' => $this->constants["PIS_PER_PLAYER"]),
+  array('key' => 'pi_yellow_{INDEX}', 'nbr' => $this->constants["PIS_PER_PLAYER"]),
 
   // The VP markers (1st case, 2nd case, 3rd case; but indexed 0, 1, 2!)
   array('key' => 'vp_blue_{INDEX}', 'nbr' => 3),

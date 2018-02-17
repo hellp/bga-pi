@@ -151,10 +151,29 @@ class pi extends Table
             $this->tokens->moveToken("penalty_{$color}", "penalty_0");
         }
 
-        // TODO: Init game statistics
-        // (note: statistics used in this file must be defined in your stats.inc.php file)
-        //self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
-        //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
+        // Init game statistics
+        self::initStat('table', 'turns_number', 0);
+        self::initStat('table', 'rounds_1', 0);
+        self::initStat('table', 'rounds_2', 0);
+        self::initStat('table', 'rounds_3', 0);
+        self::initStat('player', 'turns_number', 0);
+        self::initStat('player', 'cards_taken_1', 0);
+        self::initStat('player', 'cards_taken_2', 0);
+        self::initStat('player', 'cards_taken_3', 0);
+        self::initStat('player', 'investigators_used_1', 0);
+        self::initStat('player', 'investigators_used_2', 0);
+        self::initStat('player', 'investigators_used_3', 0);
+        self::initStat('player', 'penalty_1', 0);
+        self::initStat('player', 'penalty_2', 0);
+        self::initStat('player', 'penalty_3', 0);
+        self::initStat('player', 'vp_1', 0);
+        self::initStat('player', 'vp_2', 0);
+        self::initStat('player', 'vp_3', 0);
+        self::initStat('player', 'solved_minigames', 0);
+        self::initStat('player', 'avg_investigator_neighborhood', $this->constants['AVG_LOCATION_NEIGHBORS']);
+        self::initStat('player', 'neighbor_case_cards_taken', 0);
+        self::initStat('player', 'avg_cubes_to_solve', $this->constants['CUBES_PER_PLAYER']);
+        self::initStat('player', 'avg_discs_to_solve', $this->constants['DISCS_PER_PLAYER']);
 
         // Setup the initial game situation here
         self::setGameStateInitialValue('minigame', 0);  // will be increased in st_setupMinigame
@@ -460,9 +479,10 @@ class pi extends Table
         $player = self::loadPlayersBasicInfos()[$player_id];
         $color = $this->constants['HEX2COLORNAME'][$player['player_color']];
         $agent_area = "agentarea_{$location_id}";
+        $pis_in_supply = $this->tokens->countTokensInLocation("pi_supply_{$player_id}");
 
         // No more investigator. Should be handled in the UI, but safety first.
-        if ($this->tokens->countTokensInLocation("pi_supply_{$player_id}") == 0) {
+        if ($pis_in_supply == 0) {
             throw new BgaUserException(self::_("You have no investigators left."));
         }
 
@@ -470,6 +490,20 @@ class pi extends Table
         if (count($this->tokens->getTokensOfTypeInLocation("pi_{$color}_%", $agent_area))) {
             throw new BgaUserException(self::_("You already have an investigator at this location."));
         }
+
+        // Increase the 'investigators used' stats.
+        self::incStat(1, "investigators_used_" . self::getGameStateValue('minigame'), $player_id);
+
+        // Calculate the 'average investigator location neighborhood' stat.
+        $number_of_loc_neighbors = count($this->locations[$location_id]['neighbors']);
+        $total_pis_used = $this->constants["PIS_PER_PLAYER"] - $pis_in_supply;
+        $current_val = self::getStat('avg_investigator_neighborhood', $player_id);
+        // Calculate the "rolling average".
+        self::setStat(
+            ($current_val * $total_pis_used + $number_of_loc_neighbors) / ($total_pis_used + 1),
+            'avg_investigator_neighborhood',
+            $player_id
+        );
 
         // Place investigator token here.
         $_temp = $this->tokens->pickTokensForLocation(1, "pi_supply_{$player_id}", $agent_area);
@@ -604,6 +638,15 @@ class pi extends Table
         $card_name = $this->cardBasis[$currentCard['type_arg']]['name'];
         $location_id = $this->getLocationIdOfTile($tile);
         $agent_area = "agentarea_{$location_id}";
+
+        // Increase the 'cards taken' stats.
+        self::incStat(1, "cards_taken_" . self::getGameStateValue('minigame'), $player_id);
+        // If card takes was one of the aspects from the player's hand,
+        // increase that stat too.
+        $hand_cards = $this->cards->getPlayerHand($player_id);
+        if (in_array($currentCard['type_arg'] + 36, array_pluck($hand_cards, 'type_arg'))) {
+            self::incStat(1, "neighbor_case_cards_taken", $player_id);
+        }
 
         // The solution
         $solution = $this->getPlayerCaseSolution($player_id);
@@ -753,6 +796,32 @@ class pi extends Table
                 WHERE player_id = $player_id
             ");
             $this->tokens->moveToken("vp_{$color}_" . ($minigame - 1), "vp_{$points_winnable}");
+            self::setStat($points_winnable, "vp_{$minigame}", $player_id);
+
+            // Calculate the 'average cubes required to solve' stats
+            $cubes_on_board = $this->constants['CUBES_PER_PLAYER'] - $this->tokens->countTokensInLocation("cubes_{$player_id}");
+            $solved_mg_so_far = self::getStat("solved_minigames", $player_id);
+            $current_val = self::getStat('avg_cubes_to_solve', $player_id);
+            // Calculate the "rolling average".
+            self::setStat(
+                ($current_val * $solved_mg_so_far + $cubes_on_board) / ($solved_mg_so_far + 1),
+                'avg_cubes_to_solve',
+                $player_id
+            );
+
+            // Calculate the 'average discs required to solve' stats
+            $discs_on_board = $this->constants['DISCS_PER_PLAYER'] - $this->tokens->countTokensInLocation("discs_{$player_id}");
+            $solved_mg_so_far = self::getStat("solved_minigames", $player_id);
+            $current_val = self::getStat('avg_discs_to_solve', $player_id);
+            // Calculate the "rolling average".
+            self::setStat(
+                ($current_val * $solved_mg_so_far + $discs_on_board) / ($solved_mg_so_far + 1),
+                'avg_discs_to_solve',
+                $player_id
+            );
+
+            // Increment the solve_minigames stat.
+            self::incStat(1, "solved_minigames", $player_id);
 
             // Move cubes back to player supply; puts discs on solution.
             $this->tokens->moveTokens(
@@ -794,6 +863,7 @@ class pi extends Table
                     player_penalty = player_penalty - 2
                 WHERE player_id = $player_id
             ");
+            self::incStat(-2, "penalty_" . self::getGameStateValue('minigame'), $player_id);
             // Move token to appropriate penalty slot. Note: the max here is
             // -10. To be discussed: is -10 the max penalty we can give; or is
             // it just a UI thing. The rules say nothing about it.
@@ -878,11 +948,12 @@ class pi extends Table
     function st_setupMinigame()
     {
         self::incGameStateValue('minigame', 1);
+        $minigame = self::getGameStateValue('minigame');
+
         self::setGameStateValue('minigame_round', 1);
+        self::setStat(1, "rounds_{$minigame}");
         self::setGameStateValue('points_winnable', 7);
         self::DbQuery("UPDATE `player` SET `player_solved_in_round` = NULL");
-
-        $minigame = self::getGameStateValue('minigame');
 
         // Get all cards, sort into piles, shuffle piles.
         $this->cards->moveAllCardsInLocation(null, "offtable");
@@ -968,7 +1039,9 @@ class pi extends Table
         $next_player_no = $this->getStartPlayerNo($minigame);
         $next_player_id = self::getUniqueValueFromDB("SELECT player_id FROM player WHERE player_no = $next_player_no");
         $this->gamestate->changeActivePlayer($next_player_id);
-        $this->gamestate->nextState(); // always a player turn
+        self::incStat(1, "turns_number");
+        self::incStat(1, "turns_number", $next_player_id);
+        $this->gamestate->nextState(); // always STATE_PLAYER_TURN
     }
 
     function st_gameTurn()
@@ -1031,6 +1104,7 @@ class pi extends Table
                     max(0, self::getGameStateValue('points_winnable') - 2));
             }
             self::incGameStateValue('minigame_round', 1);
+            self::incStat(1, "rounds_{$minigame}");
         }
 
         // TODO: Warn the next active player when it's their last chance to
@@ -1042,7 +1116,9 @@ class pi extends Table
 
         $this->gamestate->changeActivePlayer($next_player_id);
         self::giveExtraTime($next_player_id);
-        $this->gamestate->nextState('nextPlayer');
+        self::incStat(1, "turns_number");
+        self::incStat(1, "turns_number", $next_player_id);
+        $this->gamestate->nextState('nextPlayer'); // -> STATE_PLAYER_TURN
     }
 
 

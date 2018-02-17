@@ -1,5 +1,4 @@
 <?php
-
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
@@ -53,43 +52,88 @@ $stats_type = array(
     "table" => array(
 
         "turns_number" => array("id"=> 10,
-                    "name" => totranslate("Number of turns"),
-                    "type" => "int" ),
+            "name" => totranslate("Number of turns"),
+            "type" => "int"),
 
-/*
-        Examples:
+        "rounds_1" => array("id"=> 20,
+            "name" => totranslate("Number of rounds (1. mini-game)"),
+            "type" => "int"),
+        "rounds_2" => array("id"=> 21,
+            "name" => totranslate("Number of rounds (2. mini-game)"),
+            "type" => "int"),
+        "rounds_3" => array("id"=> 22,
+            "name" => totranslate("Number of rounds (3. mini-game)"),
+            "type" => "int"),
 
-
-        "table_teststat1" => array(   "id"=> 10,
-                                "name" => totranslate("table test stat 1"), 
-                                "type" => "int" ),
-                                
-        "table_teststat2" => array(   "id"=> 11,
-                                "name" => totranslate("table test stat 2"), 
-                                "type" => "float" )
-*/  
     ),
     
     // Statistics existing for each player
     "player" => array(
 
         "turns_number" => array("id"=> 10,
-                    "name" => totranslate("Number of turns"),
-                    "type" => "int" ),
-    
-/*
-        Examples:    
-        
-        
-        "player_teststat1" => array(   "id"=> 10,
-                                "name" => totranslate("player test stat 1"), 
-                                "type" => "int" ),
-                                
-        "player_teststat2" => array(   "id"=> 11,
-                                "name" => totranslate("player test stat 2"), 
-                                "type" => "float" )
+            "name" => totranslate("Number of turns"),
+            "type" => "int"),
 
-*/    
+        "investigators_used_1" => array("id"=> 20,
+            "name" => totranslate("Investigators used (1. mini-game)"),
+            "type" => "int"),
+        "investigators_used_2" => array("id"=> 21,
+            "name" => totranslate("Investigators used (2. mini-game)"),
+            "type" => "int"),
+        "investigators_used_3" => array("id"=> 22,
+            "name" => totranslate("Investigators used (3. mini-game)"),
+            "type" => "int"),
+
+        "cards_taken_1" => array("id"=> 30,
+            "name" => totranslate("Cards taken (1. mini-game)"),
+            "type" => "int"),
+        "cards_taken_2" => array("id"=> 31,
+            "name" => totranslate("Cards taken (2. mini-game)"),
+            "type" => "int"),
+        "cards_taken_3" => array("id"=> 32,
+            "name" => totranslate("Cards taken (3. mini-game)"),
+            "type" => "int"),
+
+        "penalty_1" => array("id"=> 40,
+            "name" => totranslate("Penalty points (1. mini-game)"),
+            "type" => "int"),
+        "penalty_2" => array("id"=> 41,
+            "name" => totranslate("Penalty points (2. mini-game)"),
+            "type" => "int"),
+        "penalty_3" => array("id"=> 42,
+            "name" => totranslate("Penalty points (3. mini-game)"),
+            "type" => "int"),
+
+        // Achievable VPs are dependent on player count, so this is not too
+        // expressive.
+        "vp_1" => array("id"=> 50,
+            "name" => totranslate("VP scored, ignoring penalty (1. mini-game)"),
+            "type" => "int"),
+        "vp_2" => array("id"=> 51,
+            "name" => totranslate("VP scored, ignoring penalty (2. mini-game)"),
+            "type" => "int"),
+        "vp_3" => array("id"=> 52,
+            "name" => totranslate("VP scored, ignoring penalty (3. mini-game)"),
+            "type" => "int"),
+
+        // *How* the player plays (strategy?)
+        "avg_investigator_neighborhood" => array("id"=> 80,
+            "name" => totranslate("Avg. neighborhood size of investigator placements (3-6; 4.143 means 'no preference')"),
+            "type" => "float"),
+        "neighbor_case_cards_taken" => array("id"=> 81,
+            "name" => totranslate("Cards taken that are part of the neighbor's case solution"),
+            "type" => "int"),
+
+        // How quick the player can solve...
+        "solved_minigames" => array("id"=> 90,
+            "name" => totranslate("Solved mini-games"),
+            "type" => "int"),
+        "avg_cubes_to_solve" => array("id"=> 91,
+            "name" => totranslate("Cubes on board before able to solve"),
+            "type" => "float"),
+        "avg_discs_to_solve" => array("id"=> 92,
+            "name" => totranslate("Discs on board before able to solve"),
+            "type" => "float"),
+
     )
-
 );
