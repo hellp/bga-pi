@@ -668,6 +668,15 @@ class pi extends Table
                 throw new BgaUserException(self::_("No more discs in your supply. You should be able to solve the case!"));
             }
 
+            // Move token
+            $this->tokens->moveToken($disc['key'], $target_id);
+            self::notifyAllPlayers(
+                'placeToken', '',
+                array(
+                    'token' => $disc,
+                    'target_id' => $target_id,
+                ));
+
             // Put card on discard
             $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
             self::notifyAllPlayers(
@@ -680,15 +689,6 @@ class pi extends Table
                     'card_type' => $currentCard['type_arg'],
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName()
-                ));
-
-            // Move token
-            $this->tokens->moveToken($disc['key'], $target_id);
-            self::notifyAllPlayers(
-                'placeToken', '',
-                array(
-                    'token' => $disc,
-                    'target_id' => $target_id,
                 ));
 
             $this->gamestate->nextState('nextTurn');
@@ -724,6 +724,16 @@ class pi extends Table
             // Put card on discard
             $this->cards->insertCardOnExtremePosition($card_id, "discard", true);
 
+            // Move token
+            $this->tokens->moveToken($cube['key'], $target_id);
+            self::notifyAllPlayers(
+                'placeToken', '',
+                array(
+                    'token' => $cube,
+                    'target_id' => $target_id,
+                )
+            );
+
             self::notifyAllPlayers(
                 'evidenceClose',
                 clienttranslate('${player_name} found out that ${card_name} <b>is close</b> to the actual ${casetype}.'),
@@ -735,16 +745,6 @@ class pi extends Table
                     'casetype' => $this->constants['CASETYPES'][$match_casetype],
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName(),
-                )
-            );
-
-            // Move token
-            $this->tokens->moveToken($cube['key'], $target_id);
-            self::notifyAllPlayers(
-                'placeToken', '',
-                array(
-                    'token' => $cube,
-                    'target_id' => $target_id,
                 )
             );
 
