@@ -664,9 +664,6 @@ class pi extends Table
             } else {
                 $disc = $this->tokens->getTokenOnTop("discs_{$player_id}");
             }
-            if (!$disc) {
-                throw new BgaUserException(self::_("No more discs in your supply. You should be able to solve the case!"));
-            }
 
             // Move token
             $this->tokens->moveToken($disc['key'], $target_id);
