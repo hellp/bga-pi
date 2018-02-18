@@ -685,6 +685,8 @@ function (dojo, declare) {
         */
         setupNotifications: function()
         {
+            this.notifqueue.setSynchronous('minigameEnds', 2000);
+
             dojo.subscribe('evidenceClose', this, "notif_evidenceClose");
             this.notifqueue.setSynchronous('evidenceClose', 800);
             dojo.subscribe('evidenceCorrect', this, "notif_evidenceCorrect");

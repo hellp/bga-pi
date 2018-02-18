@@ -1052,6 +1052,11 @@ class pi extends Table
 
         if (count($unsolved_player_ids) == 0) {
             // Great, everybody finished successfully! Let's move on!
+            self::notifyAllPlayers(
+                'minigameEnds',
+                clienttranslate('All players solved their cases! This ends the mini-game.'),
+                array()
+            );
             return $this->gotoNextMinigameOrEndGame();
         }
 
@@ -1083,13 +1088,16 @@ class pi extends Table
                 $this->tokens->moveToken($token_key, $token_target);
                 self::notifyAllPlayers(
                     'placeToken',
-                    clienttranslate('${player_name} did not solve in this mini-game and gets 0 points.'),
+                    '',
+                    array('token' => array("key" => $token_key, "location" => $token_target))
+                );
+                self::notifyAllPlayers(
+                    'minigameEnds',
+                    clienttranslate('The round is over and only 1 player (${player_name}) remains with an unsolved case. This ends the mini-game.'),
                     array(
-                        'token' => array("key" => $token_key, "location" => $token_target),
                         'player_name' => $unsolved_player['player_name'],
                     )
                 );
-                // Mini-game is over
                 return $this->gotoNextMinigameOrEndGame();
             }
             // Did any player solve in that round? Then decrease points_winnable
