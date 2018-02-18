@@ -541,11 +541,13 @@ function (dojo, declare) {
         },
 
         /**
-         * Place tokens on the table.
+         * Place an array of tokens on the table.
          */
         placeTokens: function (tokens, target_id, delay) {
-            delay = delay || 500;
-            for (i in tokens) { this.placeToken(tokens[i], target_id, i * delay) }
+            delay = (delay === undefined) ? 100 : delay;
+            tokens.forEach(function (token, i) {
+                this.placeToken(token, target_id, i * delay);
+            }.bind(this));
         },
 
         /**

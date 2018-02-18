@@ -835,13 +835,12 @@ class pi extends Table
             }
             self::notifyAllPlayers(
                 'placeTokens', '',
-                array('tokens' => array_merge(
-                    array(),
+                array('tokens' => array_values(array_merge(
                     $this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"),
                     $this->tokens->getTokensOfTypeInLocation("disc_{$color}_%"),
                     $this->tokens->getTokensOfTypeInLocation("pi_{$color}_%"),
                     $this->tokens->getTokensOfTypeInLocation("vp_{$color}_%")
-                ))
+                )))
             );
             self::notifyAllPlayers(
                 'playerSolved',
@@ -867,11 +866,8 @@ class pi extends Table
             $total_pen = self::getUniqueValueFromDB("SELECT player_penalty FROM player WHERE player_id = $player_id");
             $this->tokens->moveToken("penalty_{$color}", "penalty_" . min(abs($total_pen), 10));
             self::notifyAllPlayers(
-                'placeTokens', '',
-                array('tokens' => array_merge(
-                    array(),
-                    $this->tokens->getTokensOfTypeInLocation("penalty_{$color}")
-                ))
+                'placeToken', '',
+                array('token' => $this->tokens->getTokenInfo("penalty_{$color}"))
             );
             self::notifyAllPlayers(
                 'playerFailed',
