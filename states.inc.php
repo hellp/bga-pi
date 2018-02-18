@@ -72,7 +72,7 @@ $machinestates = array(
     // Note: ID=2 => your first state
     STATE_SETUP_MINIGAME => array(
         "name" => "setupMinigame",
-        "description" => clienttranslate('Setting up the next minigame.'),
+        "description" => clienttranslate('Preparing next mini-game…'),
         "type" => "game",
         "action" => "st_setupMinigame",
         "transitions" => array("" => STATE_START_MINIGAME)
@@ -80,7 +80,7 @@ $machinestates = array(
 
     STATE_START_MINIGAME => array(
         "name" => "startMinigame",
-        "description" => clienttranslate('Starting the next minigame.'),
+        "description" => clienttranslate('Starting mini-game…'),
         "type" => "game",
         "args" => "argStartMinigame",
         "action" => "st_startMinigame",
@@ -106,7 +106,7 @@ $machinestates = array(
 
     STATE_GAME_TURN => array(
         "name" => "gameTurn",
-        "description" => "",
+        "description" => clienttranslate('Updating game situation…'),
         "type" => "game",
         "action" => "st_gameTurn",
         "updateGameProgression" => true,
