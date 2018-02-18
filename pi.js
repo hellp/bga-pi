@@ -302,12 +302,19 @@ function (dojo, declare) {
                     // Clear UI
                     this.hideCardDisplay();
                     break;
+
                 case 'client_playerPlacesInvestigator':
-                    dojo.query('.agentarea').addClass('active_slot');
-                    this.addEventToClass("agentarea", 'onclick', 'onAgentAreaClicked');
                     for (var i=1; i<=14; i++) {
+                        var node_id = 'agentarea_' + i;
+                        // If player has already investigator in that location, continue.
+                        var color = this.gamedatas.players[this.player_id].colorname;
+                        if (dojo.query('.investigator_' + color, node_id).length) {
+                            continue;
+                        }
+                        dojo.addClass(node_id, 'active_slot');
+                        ehdls.push(dojo.connect($(node_id), 'onclick', this, 'onAgentAreaClicked'));
                         this.addTooltip(
-                            'agentarea_' + i,
+                            node_id,
                             '',
                             dojo.string.substitute(_("Send investigator to ${location_name}."), {
                                 location_name: this.gamedatas.locationinfos[i].name
@@ -611,6 +618,8 @@ function (dojo, declare) {
             var location_id = e.currentTarget.id.split('_')[1];
             var action = 'placeInvestigator';
             if (this.checkAction(action, true)) {
+                // Remove clickable indicator immediately
+                dojo.query('.agentarea.active_slot').removeClass('active_slot');
                 this.ajaxcall("/" + this.game_name + "/" + this.game_name + "/" + action + ".html", {
                     location_id: location_id,
                     lock : true
