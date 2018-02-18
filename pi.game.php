@@ -845,7 +845,7 @@ class pi extends Table
             );
             self::notifyAllPlayers(
                 'playerSolved',
-                clienttranslate('${player_name} solved their case successfully!'),
+                clienttranslate('${player_name} solved their case!'),
                 array(
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName(),
