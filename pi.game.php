@@ -983,10 +983,6 @@ class pi extends Table
         // Main display of evidence cards
         $this->cards->pickCardsForLocation($this->constants['EVIDENCE_DISPLAY_SIZE'], 'deck', 'evidence_display');
 
-        // Tokens: first, all cubes and discs back into the supply
-        $this->tokens->moveTokens(array_pluck($this->tokens->getTokensOfTypeInLocation('cube_%'), 'key'), 'supply');
-        $this->tokens->moveTokens(array_pluck($this->tokens->getTokensOfTypeInLocation('disc_%'), 'key'), 'supply');
-
         // Investigators that have been used go back to the box.
         $used_investigators = $this->tokens->getTokensOfTypeInLocation('pi_%', 'agentarea_%');
         if ($used_investigators) {
