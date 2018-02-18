@@ -733,7 +733,7 @@ class pi extends Table
 
             self::notifyAllPlayers(
                 'evidenceClose',
-                clienttranslate('${player_name} found out that ${card_name} <b>is close</b> to the actual ${casetype}.'),
+                clienttranslate('${player_name} found out that ${card_name} is close to the actual ${casetype}.'),
                 array(
                     'i18n' => array('card_name'),
                     'card_id' => $card_id,
@@ -749,7 +749,7 @@ class pi extends Table
             // No match at all
             self::notifyAllPlayers(
                 'evidenceWrong',
-                clienttranslate('${player_name} had no luck following evidence ${card_name}.'),
+                clienttranslate('${player_name} found out that ${card_name} is unrelated to their case.'),
                 array(
                     'i18n' => array('card_name'),
                     'card_id' => $card_id,
