@@ -409,6 +409,14 @@ class pi extends Table
     }
 
     /**
+     * Send a blank 'animate' notification to all players. Used to delay UI.
+     */
+    function notifyAnimate()
+    {
+        self::notifyAllPlayers("animate", "", array());
+    }
+
+    /**
      * Send a notification to all player with the current scores.
      */
     function notifyNewScores()
@@ -606,6 +614,7 @@ class pi extends Table
                 )
             );
         }
+        $this->notifyAnimate();
 
         $this->gamestate->nextState('nextTurn');
     }
@@ -836,12 +845,13 @@ class pi extends Table
             self::notifyAllPlayers(
                 'placeTokens', '',
                 array('tokens' => array_values(array_merge(
-                    $this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"),
                     $this->tokens->getTokensOfTypeInLocation("disc_{$color}_%"),
-                    $this->tokens->getTokensOfTypeInLocation("pi_{$color}_%"),
-                    $this->tokens->getTokensOfTypeInLocation("vp_{$color}_%")
+                    $this->tokens->getTokensOfTypeInLocation("vp_{$color}_%"),
+                    $this->tokens->getTokensOfTypeInLocation("cube_{$color}_%"),
+                    $this->tokens->getTokensOfTypeInLocation("pi_{$color}_%")
                 )))
             );
+            $this->notifyAnimate();
             self::notifyAllPlayers(
                 'playerSolved',
                 clienttranslate('${player_name} solved their case!'),
@@ -1006,7 +1016,20 @@ class pi extends Table
                 array_pluck($this->tokens->getTokensOfTypeInLocation("disc_{$color}_%"), 'key'),
                 "discs_{$player_id}");
         }
-        $this->gamestate->nextState();  // start minigame
+
+        // Trigger clean up in frontend. Sending only tokens that are to be
+        // moved away.
+        self::notifyAllPlayers("cleanBoard", "", array(
+            'tokens' => array_values(array_merge(
+                $this->tokens->getTokensInLocation('box'),
+                $this->tokens->getTokensInLocation('offtable'),
+                $this->tokens->getTokensInLocation('cubes_%'),
+                $this->tokens->getTokensInLocation('discs_%')
+            ))
+        ));
+        $this->notifyAnimate();
+
+        $this->gamestate->nextState(); // start minigame
     }
 
     function st_startMinigame()

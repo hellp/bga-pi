@@ -705,6 +705,9 @@ function (dojo, declare) {
         {
             this.notifqueue.setSynchronous('minigameEnds', 2000);
 
+            dojo.subscribe('cleanBoard', this, "notif_cleanBoard");
+            this.notifqueue.setSynchronous('cleanBoard', 1000);
+
             dojo.subscribe('evidenceClose', this, "notif_evidenceClose");
             this.notifqueue.setSynchronous('evidenceClose', 800);
             dojo.subscribe('evidenceCorrect', this, "notif_evidenceCorrect");
@@ -716,16 +719,31 @@ function (dojo, declare) {
             dojo.subscribe('evidenceReplenished', this, "notif_evidenceReplenished");
             dojo.subscribe('newScores', this, "notif_newScores");
 
-            dojo.subscribe('playerFailed', this, function () {});
-            this.notifqueue.setSynchronous('playerFailed', 800);
+            this.notifqueue.setSynchronous('playerFailed', 1000);
 
             dojo.subscribe('placeToken', this, "notif_placeToken");
-            this.notifqueue.setSynchronous('placeToken', 300);
+            this.notifqueue.setSynchronous('placeToken', 500);
             dojo.subscribe('placeTokens', this, "notif_placeTokens");
-            this.notifqueue.setSynchronous('placeTokens', 300);
+            this.notifqueue.setSynchronous('placeTokens', 500);
 
             dojo.subscribe('playerSolved', this, "notif_playerSolved");
-            this.notifqueue.setSynchronous('playerSolved', 800);
+            this.notifqueue.setSynchronous('playerSolved', 1000);
+
+            this.notifqueue.setSynchronous('animate', 1000);
+        },
+
+        notif_cleanBoard: function(notif) {
+            this.playerHand.removeAll();
+            this.evidenceDisplay.removeAll();
+            this.evidenceDiscard.removeAll();
+            for (player_id in this.playerDisplays) {
+                this.playerDisplays[player_id].removeAll();
+            }
+            this.tiles.removeAll(); // from stock
+            dojo.query('.locslot > div.stockitem').forEach(function (node) { dojo.destroy(node) }); // visually
+            window.setTimeout(dojo.hitch(this, function () {
+                this.placeTokens(notif.args.tokens, null, 10);
+            }), 300);
         },
 
         notif_evidenceExhausted: function(notif) {
