@@ -733,7 +733,7 @@ class pi extends Table
 
             self::notifyAllPlayers(
                 'evidenceClose',
-                clienttranslate('${player_name} found out that ${card_name} is close to the actual ${casetype}.'),
+                clienttranslate('${player_name} found out that ${card_name} is adjacent to the actual ${casetype}.'),
                 array(
                     'i18n' => array('card_name'),
                     'card_id' => $card_id,
