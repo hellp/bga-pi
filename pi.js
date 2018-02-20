@@ -502,6 +502,7 @@ function (dojo, declare) {
             var ttype = keyparts[0]; // cube, disc
             var color = keyparts[1];
             var duration = 500;
+            delay = (delay === undefined) ? 0 : delay;
 
             // If no explicit target given; use the location from the DB.
             target_id = target_id || token.location;
@@ -532,18 +533,19 @@ function (dojo, declare) {
             }
 
             var $el = $(key);
-            if (!$el) {
+            if (!$el) { // DOM node does not exists -> nothing to animate; create + place
                 var html = this.format_block('jstpl_token_' + ttype, {key: key, color: color});
                 dojo.place(html, target_id);
-            } else {
+            } else { // DOM node does exists -> animate
                 // If it already exists *at* the target_id, then do nothing
                 if ($el.parentNode.id == target_id) return;
 
                 // Else: move it, destroy it, put it into the target
                 var html = $el.outerHTML;
-                delay = delay || 500;
                 this.slideToObjectAndDestroy(key, target_id, duration, delay);
                 window.setTimeout(dojo.hitch(this, function () {
+                    // Another check (in the timeout delay things may have changed.)
+                    if ($(key) && $(key).parentNode.id == target_id) return;
                     dojo.place(html, target_id);
                 }), delay + duration);
             }
@@ -552,8 +554,10 @@ function (dojo, declare) {
         /**
          * Place an array of tokens on the table.
          */
-        placeTokens: function (tokens, target_id, delay) {
+        placeTokens: function (tokens, target_id, delay, duration) {
+            duration = (duration === undefined) ? 1000 : duration; // max total duration for all tokens
             delay = (delay === undefined) ? 100 : delay;
+            delay = Math.min(delay, duration / tokens.length);
             tokens.forEach(function (token, i) {
                 this.placeToken(token, target_id, i * delay);
             }.bind(this));
