@@ -335,6 +335,7 @@ function (dojo, declare) {
             switch (stateName)
             {
                 case 'client_playerPicksSolution':
+                    this.tiles.unselectAll();
                     this.tiles.setSelectionMode(0);
                     this.showCardDisplay();
                     break;
@@ -449,7 +450,7 @@ function (dojo, declare) {
          */
         placeEvidenceCards: function(display, discard, player_display_cards) {
             // Put evidence cards on the table
-            this.evidenceDisplay.removeAll();
+            this.evidenceDisplay.removeAll(); // cleanup
             for (i in display) {
                 var card = display[i];
                 this.evidenceDisplay.addToStockWithId(card.type_arg, card.id);
@@ -473,7 +474,7 @@ function (dojo, declare) {
          * Place cards in player's (private) hand.
          */
         placePlayerHand: function (hand) {
-            this.playerHand.removeAll();
+            this.playerHand.removeAll(); // cleanup
             for (i in hand) {
                 var card = hand[i];
                 this.playerHand.addToStockWithId(card.type_arg, card.id);
@@ -484,6 +485,7 @@ function (dojo, declare) {
          * Place tiles on the table.
          */
         placeTiles: function (tiles) {
+            this.tiles.removeAll(); // cleanup
             for (i in tiles) {
                 var tile = tiles[i];
                 this.tiles.addToStockWithId(tile.type_arg, tile.id);
