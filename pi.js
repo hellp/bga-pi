@@ -291,6 +291,7 @@ function (dojo, declare) {
                     // Player hand
                     this.placePlayerHand(args._private.hand);
                     break;
+
                 case 'client_playerPicksSolution':
                     // Enable tile selection and wire up validation callback
                     this.tiles.setSelectionMode(2);
@@ -584,7 +585,7 @@ function (dojo, declare) {
 
                 // Tiles 1-6 are "NO CRIME/SUSPECT" tiles.
                 if (parseInt(tile_type_arg, 10) <= 6) {
-                    this.showMessage(_("You cannot select NO CRIME or NO SUSPECT tiles."), "error");
+                    this.showMessage(_("NO CRIME and NO SUSPECT tiles cannot be selected."), "error");
                     if (opts.clicked_id) this.tiles.unselectItem(opts.clicked_id);
                     return false;
                 }
