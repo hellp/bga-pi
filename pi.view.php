@@ -50,6 +50,11 @@
         $this->tpl['MY_EVIDENCE_CARDS'] = self::_("Evidence cards I collected");
         $this->tpl['EVIDENCE_CARDS_OF_PLAYER'] = self::_("Evidence cards collected by");
         $this->tpl['CASE_CARDS_OF_PLAYER'] = self::_("Case cards of player");
+        $this->tpl['MINIGAME_X_OF_Y'] = self::raw(sprintf(
+            self::_("Mini-game %s of %s"),
+            '<br><span id="current_minigame"></span>',
+            $this->game->constants["MINIGAMES"]
+        ));
 
         // Display player name to which my hand cards belong
         if (!$spectatorMode) {

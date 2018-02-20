@@ -45,7 +45,7 @@
     <div id="penalty_10" class="penaltybox"></div>
 
     <div id="minigamecounter" class="whiteblock">
-        <h5>Mini-game<br><span id="current_minigame"></span> of 3</h5>
+        <h5>{MINIGAME_X_OF_Y}</h5>
     </div>
 </div>
 </div>
