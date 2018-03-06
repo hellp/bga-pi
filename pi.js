@@ -147,7 +147,7 @@ function (dojo, declare) {
             this.placeEvidenceCards(
                 this.gamedatas.evidence_display,
                 this.gamedatas.evidence_discard,
-                this.gamedatas.player_display_cards,
+                this.gamedatas.player_display_cards
             );
             this.placeTiles(this.gamedatas.tiles);
 
