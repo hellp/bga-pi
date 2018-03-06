@@ -522,17 +522,6 @@ class pi extends Table
             $this->tokens->countTokensInLocation("pi_supply_$player_id"));
         // Adjust the tiebreaker score.
         self::DbQuery("UPDATE player SET player_score_aux = player_score_aux - 100 WHERE player_id = $player_id");
-        self::notifyAllPlayers(
-            'placeToken',
-            clienttranslate('${player_name} sends an investigator to ${location_name}.'),
-            array(
-                'i18n' => array('location_name'),
-                'counters' => $counters,
-                'token' => $pi_token,
-                'target_id' => $agent_area,
-                'player_name' => $player['player_name'],
-                'location_name' => $this->locations[$location_id]['name']
-            ));
 
         $solution = $this->getPlayerCaseSolution($player_id);
 
@@ -545,6 +534,8 @@ class pi extends Table
         // notify/place all at the same time. Also we go through the slots in a
         // random order, so we don't acidentally pick up tokens (they are
         // id'ed!) in a revealing order.
+        $exact_matches = 0;
+        $adjacent_matches = 0;
         $new_tokens = array();
         $locslots_copy = array_values($locslots);
         shuffle($locslots_copy);
@@ -569,6 +560,7 @@ class pi extends Table
             // Full match: put disc into the agent area
             $full_match = $mtile['name'] == $solution[$mtile['tiletype']];
             if ($full_match) {
+                $exact_matches++;
                 $disc = $this->tokens->getTokenOnTop("discs_{$player_id}");
                 $this->tokens->moveToken($disc['key'], $agent_area);
                 $new_tokens[] = $disc;
@@ -588,6 +580,7 @@ class pi extends Table
 
             // Adjacent match: put cube into the agent area
             if ($adjacent_match) {
+                $adjacent_matches++;
                 $cube = $this->tokens->getTokenOnTop("cubes_{$player_id}");
                 if (!$cube) {
                     // TODO: warning/error?? Player run out of cubes.
@@ -602,6 +595,29 @@ class pi extends Table
         // case of N cubes OR discs when N is the number of
         // non-NO-CRIME/NO-SUSPECT tiles on the location. If it's mixed (cubes
         // + disc), then it's not possible to tell!
+
+        if ($exact_matches + $adjacent_matches == 0) {
+            $investigation_result = clienttranslate('No matches');
+        } else {
+            $investigation_result = clienttranslate('Matches: ${n_exact} exact, ${n_adj} adjacent');
+        }
+        self::notifyAllPlayers(
+            'placeToken',
+            clienttranslate('${player_name} sends an investigator to ${location_name}.')
+            . ' '
+            . $investigation_result
+            . '.',
+            array(
+                'i18n' => array('location_name'),
+                'counters' => $counters,
+                'token' => $pi_token,
+                'target_id' => $agent_area,
+                'player_name' => $player['player_name'],
+                'location_name' => $this->locations[$location_id]['name'],
+                'n_exact' => $exact_matches,
+                'n_adj' => $adjacent_matches,
+            )
+        );
 
         if (count($new_tokens)) {
             shuffle($new_tokens);
