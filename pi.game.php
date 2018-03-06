@@ -565,7 +565,7 @@ class pi extends Table
             $tile = array_shift($_tiles);
             $tile_mid = $tile['type_arg'];
             $mtile = $this->tiles[$tile_mid]; // material tile
-            
+
             // Full match: put disc into the agent area
             $full_match = $mtile['name'] == $solution[$mtile['tiletype']];
             if ($full_match) {
@@ -575,19 +575,19 @@ class pi extends Table
                 // Done with this location slot
                 continue;
             }
-            
+
             // Not a full match; check adjacent locations now.
             $adjacent_tile_names = $this->getAdjacentTileNames($location_id, "tile_{$mtile['tiletype']}");
-            $close_match = false;
+            $adjacent_match = false;
             foreach ($solution as $name) {
                 if (in_array($name, $adjacent_tile_names)) {
-                    $close_match = true;
+                    $adjacent_match = true;
                     break;
                 }
             }
 
-            // Close match: put cube into the agent area
-            if ($close_match) {
+            // Adjacent match: put cube into the agent area
+            if ($adjacent_match) {
                 $cube = $this->tokens->getTokenOnTop("cubes_{$player_id}");
                 if (!$cube) {
                     // TODO: warning/error?? Player run out of cubes.
