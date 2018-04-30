@@ -162,7 +162,7 @@ function (dojo, declare) {
             dojo.connect(this.evidenceDisplay, 'onChangeSelection', this, 'onEvidenceDisplaySelectionChanged');
 
             // "Static" quick help tooltips
-            this.addTooltip('casecards_help', _("The card cards of your left neighbour. TOP SECRET! Only you can see these."), '');
+            this.addTooltip('casecards_help', _("The case cards of your left neighbour. TOP SECRET! Only you can see these."), '');
             this.addTooltip('myevidence_help', _("These cards remind you which evidence is unrelated to your case. They are visible to everybody."), '');
 
             // Setup game notifications to handle (see "setupNotifications" method below)
