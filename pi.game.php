@@ -757,7 +757,10 @@ class pi extends Table
                 'evidenceClose',
                 clienttranslate('${player_name} found out that ${card_name} is adjacent to the actual ${casetype}.'),
                 array(
-                    'i18n' => array('card_name'),
+                    'i18n' => array(
+                        'card_name',
+                        'casetype',
+                    ),
                     'card_id' => $card_id,
                     'card_name' => $card_name,
                     'card_type' => $currentCard['type_arg'],
