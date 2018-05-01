@@ -86,6 +86,9 @@
     background-position:0 0;
 }
 
+.player-board .boarditems {
+    margin-top: 3px;
+}
 .player-board .boarditem {
     display: inline-block;
     height:40px;

@@ -78,7 +78,7 @@
 // Javascript HTML templates
 
 var jstpl_player_board = '' +
-    '<div>' +
+    '<div class="boarditems">' +
     '<div class="boarditem" style="width:33%">' +
     '  <div class="investigator investigator_${colorname}"></div>&times;&nbsp;<span id="remaining_investigators_${id}"></span>' +
     '</div><div class="boarditem" style="width:25%">' +
