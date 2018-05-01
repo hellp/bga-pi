@@ -231,7 +231,7 @@ function (dojo, declare) {
                 dojo.addClass(card_id, "fake_tile");
                 dojo.setStyle(card_id, "background", "none");
             }
-            var name = _(this.gamedatas.tileinfos[card_type_id].name);
+            var name = this.gamedatas.tileinfos[card_type_id].name;
             if (!name.startsWith('NO ')) {
                 dojo.place('<div class="tilename">' + _(name) + '</div>', card_div.id);
             }
