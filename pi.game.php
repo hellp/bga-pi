@@ -597,16 +597,13 @@ class pi extends Table
         // + disc), then it's not possible to tell!
 
         if ($exact_matches + $adjacent_matches == 0) {
-            $investigation_result = clienttranslate('No matches');
+            $notif_msg = clienttranslate('${player_name} sends an investigator to ${location_name}: no matches.');
         } else {
-            $investigation_result = clienttranslate('Matches: ${n_exact} exact, ${n_adj} adjacent');
+            $notif_msg = clienttranslate('${player_name} sends an investigator to ${location_name}. Matches: ${n_exact} exact, ${n_adj} adjacent.');
         }
         self::notifyAllPlayers(
             'placeToken',
-            clienttranslate('${player_name} sends an investigator to ${location_name}.')
-            . ' '
-            . $investigation_result
-            . '.',
+            $notif_msg,
             array(
                 'i18n' => array('location_name'),
                 'counters' => $counters,
