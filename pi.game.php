@@ -870,10 +870,14 @@ class pi extends Table
             $this->notifyAnimate();
             self::notifyAllPlayers(
                 'playerSolved',
-                clienttranslate('${player_name} solved their case!'),
+                clienttranslate('${player_name} solved their case: ${suspect}, ${location}, ${crime}.'),
                 array(
+                    'i18n' => array('crime', 'location', 'suspect'),
                     'player_id' => $player_id,
                     'player_name' => self::getActivePlayerName(),
+                    'crime' => $solution['crime'],
+                    'location' => $solution['location'],
+                    'suspect' => $solution['suspect'],
                 )
             );
         } else {
@@ -1122,12 +1126,22 @@ class pi extends Table
                     '',
                     array('token' => array("key" => $token_key, "location" => $token_target))
                 );
+                $solution = $this->getPlayerCaseSolution($unsolved_player_id);
+                self::notifyAllPlayers(
+                    'message',
+                    clienttranslate('The round is over and only 1 player did not solve yet (${player_name}: ${suspect}, ${location}, ${crime}).'),
+                    array(
+                        'i18n' => array('crime', 'location', 'suspect'),
+                        'player_name' => $unsolved_player['player_name'],
+                        'crime' => $solution['crime'],
+                        'location' => $solution['location'],
+                        'suspect' => $solution['suspect'],
+                    )
+                );
                 self::notifyAllPlayers(
                     'minigameEnds',
-                    clienttranslate('The round is over and only 1 player (${player_name}) remains with an unsolved case. This ends the mini-game.'),
-                    array(
-                        'player_name' => $unsolved_player['player_name'],
-                    )
+                    clienttranslate('This ends the mini-game.'),
+                    array()
                 );
                 return $this->gotoNextMinigameOrEndGame();
             }
