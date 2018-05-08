@@ -545,9 +545,19 @@ class pi extends Table
 
             // First, check if there's a disc/cube of player color on it
             // already. If so, we have as much information for this aspect as
-            // we can get: continue.
-            if (count($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%", $locslot_location)) ||
-                count($this->tokens->getTokensOfTypeInLocation("disc_{$color}_%", $locslot_location))) {
+            // we can get: continue. BUT: still count it as a match. As per BGA
+            // Bug #9837 it confuses players if the log says, for example, "1
+            // exact match, 0 adjacent" in the case that there was already a
+            // cube in one of the slots and only the exact match was new; they
+            // rather want to read "1 exact match, 1 adjacent", even though
+            // only one token will appear on the investigator. Discussion:
+            // https://de.boardgamearena.com/#!bug?id=9837
+            if (count($this->tokens->getTokensOfTypeInLocation("cube_{$color}_%", $locslot_location))) {
+                $adjacent_matches++;
+                continue;
+            }
+            if (count($this->tokens->getTokensOfTypeInLocation("disc_{$color}_%", $locslot_location))) {
+                $exact_matches++;
                 continue;
             }
 
@@ -590,11 +600,9 @@ class pi extends Table
             }
         }
 
-        // TODO: in case of 3 full matches, we could place the tokens on the
-        // tiles directly. More of a convenience feature, however. Same in the
-        // case of N cubes OR discs when N is the number of
-        // non-NO-CRIME/NO-SUSPECT tiles on the location. If it's mixed (cubes
-        // + disc), then it's not possible to tell!
+        // TODO/FEATURE: in case of 3 matches (either all exact or all
+        // adjacent), we could place the tokens on the tiles directly. Not
+        // necessary, but convenient.
 
         if ($exact_matches + $adjacent_matches == 0) {
             $notif_msg = clienttranslate('${player_name} sends an investigator to ${location_name}: no matches.');
